@@ -43,10 +43,10 @@ export function Navbar({ credits, email, isAdmin }: { credits: number; email: st
       </div>
 
       <div className="flex items-center gap-2.5">
-        <span className="inline-flex items-center gap-2 rounded-full border border-[#262626] px-3 py-1.5 text-xs text-neutral-200">
+        <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-[#262626] px-3 py-1.5 text-xs text-neutral-200 cursor-pointer transition hover:border-[#2e2e2e]">
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
           {credits} {t('nav.credits')}
-        </span>
+        </Link>
         <LanguageToggle />
         {isAdmin && (
           <Link
