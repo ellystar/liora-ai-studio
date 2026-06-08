@@ -6,6 +6,7 @@ import { Check, X, Plus, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRi
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
+import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { ratios, qualities, type Category, type Ratio, type Quality } from '@/lib/ecom/mock-data'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
@@ -15,15 +16,6 @@ type ClothItem = { id: string; file: File; previewUrl: string; category: Categor
 
 const STEPS = ['clothes', 'model', 'background', 'pose', 'size'] as const
 const CATEGORIES: Category[] = ['top', 'bottom', 'outerwear', 'onepiece', 'shoes', 'accessory']
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve((reader.result as string).split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
 
 function ItemCard({ selected, onClick, name, imageUrl, badge, multi }: {
   selected: boolean
@@ -148,20 +140,20 @@ export default function EcomStudioPage() {
     try {
       const supabase = createClient()
       const clothesPayload = await Promise.all(
-        clothes.map(async (c) => ({
-          base64: await fileToBase64(c.file),
-          mimeType: c.file.type || 'image/png',
-          category: c.category,
-        }))
+        clothes.map(async (item) => {
+          const { base64, mimeType } = await fileToScaledBase64(item.file)
+          return { base64, mimeType, category: item.category }
+        })
       )
-      const model = models.find((m) => m.id === modelId)
+      const selectedModel = models.find((m) => m.id === modelId)
       const background = backgrounds.find((b) => b.id === bgId)
+      const model = await urlToScaledBase64(selectedModel!.image_url)
 
       for (const pose of selectedPoses) {
         const { data, error } = await supabase.functions.invoke('generate-ecom', {
           body: {
             clothes: clothesPayload,
-            modelImageUrl: model?.image_url,
+            model,
             backgroundPrompt: background?.prompt ?? '',
             poses: [pose],
             ratio,
