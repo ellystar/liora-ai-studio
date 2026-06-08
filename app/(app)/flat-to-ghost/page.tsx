@@ -6,6 +6,7 @@ import { Check, X, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRight, U
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
+import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
 const STEPS = ['photo', 'bg'] as const
@@ -52,6 +53,8 @@ export default function FlatToGhostPage() {
     if (!file) return
     setPhoto({ file, previewUrl: URL.createObjectURL(file) })
   }
+
+  const { isDragging, dropHandlers } = useDropzone((files) => selectPhoto(files))
 
   const canContinue = step === 'photo' ? photo !== null : bgId !== null
 
@@ -179,7 +182,11 @@ export default function FlatToGhostPage() {
               </button>
             </div>
           ) : (
-            <button onClick={() => fileInputRef.current?.click()} className="flex h-64 w-full max-w-sm flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#333] text-neutral-500 transition hover:text-neutral-300">
+            <button
+              {...dropHandlers}
+              onClick={() => fileInputRef.current?.click()}
+              className={`flex h-64 w-full max-w-sm flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#333] text-neutral-500 transition hover:text-neutral-300${isDragging ? ' border-white bg-[#161616]' : ''}`}
+            >
               <Upload className="h-7 w-7" />
               <span className="text-sm">{t('ghost.upload.title')}</span>
             </button>

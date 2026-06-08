@@ -7,6 +7,7 @@ import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
+import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { ratios, qualities, type Category, type Ratio, type Quality } from '@/lib/ecom/mock-data'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
@@ -110,6 +111,8 @@ export default function EcomStudioPage() {
   function togglePose(id: string) {
     setPoseIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
   }
+
+  const { isDragging, dropHandlers } = useDropzone((files) => addFiles(files))
 
   const canContinue =
     step === 'clothes' ? clothes.length > 0 && clothes.every((c) => c.category) :
@@ -305,7 +308,11 @@ export default function EcomStudioPage() {
               </div>
             ))}
             {clothes.length < 6 && (
-              <button onClick={() => fileInputRef.current?.click()} className="flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#333] text-neutral-500 transition hover:text-neutral-300">
+              <button
+                {...dropHandlers}
+                onClick={() => fileInputRef.current?.click()}
+                className={`flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#333] text-neutral-500 transition hover:text-neutral-300${isDragging ? ' border-white bg-[#161616]' : ''}`}
+              >
                 <Plus className="h-6 w-6" />
                 <span className="text-xs">{t('ecom.clothes.add')}</span>
                 <span className="text-[10px] text-neutral-600">{clothes.length} / 6</span>

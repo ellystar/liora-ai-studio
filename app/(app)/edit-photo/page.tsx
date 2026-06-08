@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Paperclip, X, ArrowUp, Download } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { createClient } from '@/lib/supabase/client'
+import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type Msg = { id: string; role: 'user' | 'assistant'; text?: string; images: string[] }
 
@@ -50,6 +51,8 @@ export default function EditPhotoPage() {
   function removeAttachment(i: number) {
     setAttachments((prev) => prev.filter((_, idx) => idx !== i))
   }
+
+  const { isDragging, dropHandlers } = useDropzone((files) => addFiles(files))
 
   async function handleSend() {
     if (!canSend) return
@@ -144,7 +147,7 @@ export default function EditPhotoPage() {
 
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
 
-      <div className="mt-3 rounded-2xl border border-[#242424] bg-[#141414] p-2.5">
+      <div {...dropHandlers} className={`mt-3 rounded-2xl border border-[#242424] bg-[#141414] p-2.5${isDragging ? ' border-white bg-[#161616]' : ''}`}>
         {attachments.length > 0 && (
           <div className="mb-2 flex gap-2">
             {attachments.map((a, i) => (

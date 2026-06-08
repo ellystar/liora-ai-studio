@@ -6,6 +6,7 @@ import { Check, X, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRight, U
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
+import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type Pose = { id: string; name: string; thumbnail_url: string; prompt: string }
 const STEPS = ['photo', 'pose'] as const
@@ -55,6 +56,8 @@ export default function PoseGeneratorPage() {
   function togglePose(id: string) {
     setPoseIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
   }
+
+  const { isDragging, dropHandlers } = useDropzone((files) => selectPhoto(files))
 
   const canContinue = step === 'photo' ? photo !== null : poseIds.length > 0
 
@@ -182,7 +185,11 @@ export default function PoseGeneratorPage() {
               </button>
             </div>
           ) : (
-            <button onClick={() => fileInputRef.current?.click()} className="flex h-64 w-full max-w-sm flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#333] text-neutral-500 transition hover:text-neutral-300">
+            <button
+              {...dropHandlers}
+              onClick={() => fileInputRef.current?.click()}
+              className={`flex h-64 w-full max-w-sm flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#333] text-neutral-500 transition hover:text-neutral-300${isDragging ? ' border-white bg-[#161616]' : ''}`}
+            >
               <Upload className="h-7 w-7" />
               <span className="text-sm">{t('pose.upload.title')}</span>
             </button>
