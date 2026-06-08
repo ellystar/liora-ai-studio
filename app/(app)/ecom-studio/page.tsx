@@ -135,6 +135,7 @@ export default function EcomStudioPage() {
     setGenProgress({ done: 0, total: selectedPoses.length })
 
     let stoppedInsufficient = false
+    let busy = false
     const collectedImages: string[] = []
 
     try {
@@ -168,6 +169,7 @@ export default function EcomStudioPage() {
             stoppedInsufficient = true
             break
           }
+          if (code === 'model_busy') busy = true
           setGenProgress((p) => ({ ...p, done: p.done + 1 }))
           continue
         }
@@ -183,7 +185,11 @@ export default function EcomStudioPage() {
       if (collectedImages.length > 0) {
         setResults(collectedImages)
       } else {
-        setGenError(stoppedInsufficient ? t('ecom.error.insufficient') : t('ecom.error.blocked'))
+        setGenError(
+          stoppedInsufficient ? t('ecom.error.insufficient') :
+          busy ? t('ecom.error.busy') :
+          t('ecom.error.blocked')
+        )
       }
     } catch {
       setGenError(t('ecom.error.generic'))
