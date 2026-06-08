@@ -79,6 +79,7 @@ export default function EcomStudioPage() {
   const [results, setResults] = useState<string[] | null>(null)
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
+  const [genProgress, setGenProgress] = useState({ done: 0, total: 0 })
 
   const step = STEPS[stepIndex]
 
@@ -137,6 +138,13 @@ export default function EcomStudioPage() {
     setShowConfirm(false)
     setGenError(null)
     setGenerating(true)
+
+    const selectedPoses = poses.filter((p) => poseIds.includes(p.id)).map((p) => ({ id: p.id, prompt: p.prompt }))
+    setGenProgress({ done: 0, total: selectedPoses.length })
+
+    let stoppedInsufficient = false
+    const collectedImages: string[] = []
+
     try {
       const supabase = createClient()
       const clothesPayload = await Promise.all(
@@ -148,30 +156,43 @@ export default function EcomStudioPage() {
       )
       const model = models.find((m) => m.id === modelId)
       const background = backgrounds.find((b) => b.id === bgId)
-      const selectedPoses = poses.filter((p) => poseIds.includes(p.id)).map((p) => ({ id: p.id, prompt: p.prompt }))
 
-      const { data, error } = await supabase.functions.invoke('generate-ecom', {
-        body: {
-          clothes: clothesPayload,
-          modelImageUrl: model?.image_url,
-          backgroundPrompt: background?.prompt ?? '',
-          poses: selectedPoses,
-          ratio,
-          quality,
-        },
-      })
+      for (const pose of selectedPoses) {
+        const { data, error } = await supabase.functions.invoke('generate-ecom', {
+          body: {
+            clothes: clothesPayload,
+            modelImageUrl: model?.image_url,
+            backgroundPrompt: background?.prompt ?? '',
+            poses: [pose],
+            ratio,
+            quality,
+          },
+        })
 
-      if (error) {
-        let code = ''
-        try { const ctx = await (error as any).context.json(); code = ctx.error } catch {}
-        setGenError(code === 'insufficient_credits' ? t('ecom.error.insufficient') : t('ecom.error.generic'))
-        setGenerating(false)
-        return
+        if (error) {
+          let code = ''
+          try { const ctx = await (error as { context: Response }).context.json(); code = ctx.error } catch {}
+          if (code === 'insufficient_credits') {
+            stoppedInsufficient = true
+            break
+          }
+          setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+          continue
+        }
+
+        const img = (data?.images as string[] | undefined)?.[0]
+        if (img) collectedImages.push(img)
+        setGenProgress((p) => ({ ...p, done: p.done + 1 }))
       }
 
-      setResults((data.images as string[]) ?? [])
       setGenerating(false)
       router.refresh()
+
+      if (collectedImages.length > 0) {
+        setResults(collectedImages)
+      } else {
+        setGenError(stoppedInsufficient ? t('ecom.error.insufficient') : t('ecom.error.blocked'))
+      }
     } catch {
       setGenError(t('ecom.error.generic'))
       setGenerating(false)
@@ -181,6 +202,7 @@ export default function EcomStudioPage() {
   function resetFlow() {
     setStepIndex(0); setClothes([]); setModelId(null); setBgId(null)
     setPoseIds([]); setRatio('2:3'); setQuality('1k'); setResults(null); setLightbox(null); setGenError(null)
+    setGenProgress({ done: 0, total: 0 })
   }
 
   if (generating) {
@@ -188,6 +210,7 @@ export default function EcomStudioPage() {
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-700 border-t-white" />
         <p className="text-sm text-neutral-400">{t('ecom.generating')}</p>
+        <p className="text-sm text-neutral-500">{genProgress.done}/{genProgress.total}</p>
       </main>
     )
   }
