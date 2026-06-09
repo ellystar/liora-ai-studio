@@ -23,8 +23,8 @@ export default function PoseGeneratorPage() {
   const [stepIndex, setStepIndex] = useState(0)
   const [photo, setPhoto] = useState<{ file: File; previewUrl: string } | null>(null)
   const [poseIds, setPoseIds] = useState<string[]>([])
-  const [poseMode, setPoseMode] = useState<'preset' | 'custom'>('preset')
-  const [customPose, setCustomPose] = useState('')
+  const [customInput, setCustomInput] = useState('')
+  const [customPoses, setCustomPoses] = useState<string[]>([])
   const [showConfirm, setShowConfirm] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [results, setResults] = useState<string[] | null>(null)
@@ -51,15 +51,27 @@ export default function PoseGeneratorPage() {
   function togglePose(id: string) {
     setPoseIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
   }
+  function addCustomPose() {
+    const trimmed = customInput.trim()
+    if (!trimmed) return
+    setCustomPoses((prev) => [...prev, trimmed])
+    setCustomInput('')
+  }
+  function removeCustomPose(i: number) {
+    setCustomPoses((prev) => prev.filter((_, idx) => idx !== i))
+  }
+
+  const selectedPoses = poses.filter((p) => poseIds.includes(p.id))
+  const posesToRun = [
+    ...selectedPoses.map((p) => ({ id: p.id, prompt: p.prompt })),
+    ...customPoses.map((txt, i) => ({ id: `custom-${i}`, prompt: txt })),
+  ]
 
   const { isDragging, dropHandlers } = useDropzone((files) => selectPhoto(files))
 
   const canContinue =
     step === 'photo' ? photo !== null :
-    poseMode === 'preset' ? poseIds.length > 0 :
-    customPose.trim().length > 0
-
-  const creditCount = poseMode === 'custom' ? 1 : poseIds.length
+    posesToRun.length > 0
 
   function handleBack() {
     if (stepIndex === 0) { router.push('/'); return }
@@ -74,11 +86,6 @@ export default function PoseGeneratorPage() {
     setGenError(null)
     setGenerating(true)
 
-    const selectedPoses = poses.filter((p) => poseIds.includes(p.id)).map((p) => ({ id: p.id, prompt: p.prompt }))
-    const posesToRun =
-      poseMode === 'custom'
-        ? [{ id: 'custom', prompt: customPose.trim() }]
-        : selectedPoses
     setGenProgress({ done: 0, total: posesToRun.length })
 
     let stoppedInsufficient = false
@@ -130,7 +137,7 @@ export default function PoseGeneratorPage() {
   }
 
   function resetFlow() {
-    setStepIndex(0); setPhoto(null); setPoseIds([]); setPoseMode('preset'); setCustomPose('')
+    setStepIndex(0); setPhoto(null); setPoseIds([]); setCustomInput(''); setCustomPoses([])
     setResults(null); setLightbox(null); setGenError(null)
     setGenProgress({ done: 0, total: 0 })
   }
@@ -238,57 +245,63 @@ export default function PoseGeneratorPage() {
           <p className="text-base font-medium text-neutral-100">{t('ecom.pose.title')}</p>
           <p className="mb-4 text-sm text-neutral-500">{t('ecom.pose.subtitle')}</p>
 
-          <div className="mb-4 flex gap-1">
-            <button
-              type="button"
-              onClick={() => { setPoseMode('preset'); setCustomPose('') }}
-              className={`rounded-lg px-4 py-2 text-sm transition ${poseMode === 'preset' ? 'bg-white text-black' : 'border border-[#2a2a2a] bg-[#1c1c1c] text-gray-400'}`}
-            >
-              {t('pose.modePreset')}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setPoseMode('custom'); setPoseIds([]) }}
-              className={`rounded-lg px-4 py-2 text-sm transition ${poseMode === 'custom' ? 'bg-white text-black' : 'border border-[#2a2a2a] bg-[#1c1c1c] text-gray-400'}`}
-            >
-              {t('pose.modeCustom')}
-            </button>
-          </div>
-
-          {poseMode === 'preset' ? (
-            loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : poses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {poses.map((p) => {
-                  const selected = poseIds.includes(p.id)
-                  return (
-                    <button key={p.id} onClick={() => togglePose(p.id)} className={`relative overflow-hidden rounded-xl bg-[#141414] text-left transition ${selected ? 'border-[1.5px] border-white' : 'border border-[#242424] hover:border-[#2e2e2e]'}`}>
-                      <div className="relative aspect-[3/4] bg-[#1c1c1c]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.thumbnail_url} alt={p.name} className="h-full w-full object-cover" />
-                        {selected && (
-                          <span className="absolute right-1.5 top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded bg-white">
-                            <Check className="h-3 w-3 text-[#0a0a0a]" />
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-2"><p className="text-xs text-neutral-200">{p.name}</p></div>
-                    </button>
-                  )
-                })}
-              </div>
-            )
-          ) : (
-            <div>
-              <label className="mb-1.5 block text-xs text-neutral-400">{t('pose.customLabel')}</label>
-              <textarea
-                value={customPose}
-                onChange={(e) => setCustomPose(e.target.value)}
-                placeholder={t('pose.customPlaceholder')}
-                rows={5}
-                className="min-h-[120px] w-full rounded-lg border border-[#242424] bg-[#141414] p-3 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
-              />
+          <p className="mb-2 text-sm font-medium text-neutral-200">{t('poses.presetTitle')}</p>
+          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : poses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {poses.map((p) => {
+                const selected = poseIds.includes(p.id)
+                return (
+                  <button key={p.id} onClick={() => togglePose(p.id)} className={`relative overflow-hidden rounded-xl bg-[#141414] text-left transition ${selected ? 'border-[1.5px] border-white' : 'border border-[#242424] hover:border-[#2e2e2e]'}`}>
+                    <div className="relative aspect-[3/4] bg-[#1c1c1c]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.thumbnail_url} alt={p.name} className="h-full w-full object-cover" />
+                      {selected && (
+                        <span className="absolute right-1.5 top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded bg-white">
+                          <Check className="h-3 w-3 text-[#0a0a0a]" />
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-2"><p className="text-xs text-neutral-200">{p.name}</p></div>
+                  </button>
+                )
+              })}
             </div>
           )}
+
+          <div className="mt-6 rounded-2xl border border-[#242424] bg-[#141414] p-4">
+            <p className="mb-3 text-sm font-medium text-neutral-200">{t('poses.customTitle')}</p>
+            <textarea
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addCustomPose() } }}
+              placeholder={t('poses.customPlaceholder')}
+              rows={4}
+              className="min-h-[90px] w-full rounded-lg border border-[#242424] bg-[#141414] p-3 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+            />
+            <button
+              type="button"
+              onClick={addCustomPose}
+              disabled={!customInput.trim()}
+              className="mt-2 rounded-lg border border-[#2a2a2a] px-4 py-1.5 text-sm text-neutral-200 transition hover:bg-[#1c1c1c] disabled:opacity-40"
+            >
+              {t('poses.addBtn')}
+            </button>
+            {customPoses.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-2 text-xs text-neutral-500">{t('poses.customAdded')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {customPoses.map((txt, i) => (
+                    <span key={i} className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#2a2a2a] bg-[#1c1c1c] px-2.5 py-1 text-xs text-neutral-300">
+                      <span className="truncate">{txt}</span>
+                      <button type="button" onClick={() => removeCustomPose(i)} aria-label="Kaldir" className="shrink-0 text-neutral-500 hover:text-white">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -316,7 +329,7 @@ export default function PoseGeneratorPage() {
           <div className="w-full max-w-sm rounded-2xl border border-[#242424] bg-[#141414] p-6 text-center">
             <p className="text-base font-medium text-neutral-100">{t('ecom.confirm.title')}</p>
             <p className="mt-2 text-sm text-neutral-400">{t('ecom.confirm.body')}</p>
-            <p className="mt-4 text-3xl font-medium text-white">{creditCount} <span className="text-base text-neutral-400">{t('nav.credits')}</span></p>
+            <p className="mt-4 text-3xl font-medium text-white">{posesToRun.length} <span className="text-base text-neutral-400">{t('nav.credits')}</span></p>
             <div className="mt-6 flex gap-3">
               <button onClick={() => setShowConfirm(false)} className="flex-1 rounded-lg border border-[#2a2a2a] py-2.5 text-sm text-neutral-300">{t('ecom.confirm.cancel')}</button>
               <button onClick={handleGenerate} className="flex-1 rounded-lg bg-white py-2.5 text-sm font-medium text-[#0a0a0a]">{t('ecom.confirm.confirm')}</button>
