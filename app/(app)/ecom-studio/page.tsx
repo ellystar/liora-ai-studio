@@ -8,12 +8,22 @@ import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
+import { AssetPicker } from '@/components/asset-picker'
+import { saveAsset, type Asset } from '@/lib/assets/assets'
 import { ratios, qualities, type Category, type Ratio, type Quality } from '@/lib/ecom/mock-data'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
 type Pose = { id: string; name: string; thumbnail_url: string; prompt: string }
-type ClothItem = { id: string; file: File; previewUrl: string; category: Category | null }
+type ClothItem = {
+  id: string
+  previewUrl: string
+  category: Category | null
+  file?: File
+  url?: string
+  assetId?: string
+  savedAsAsset?: boolean
+}
 
 const STEPS = ['clothes', 'model', 'background', 'pose', 'size'] as const
 const CATEGORIES: Category[] = ['top', 'bottom', 'outerwear', 'onepiece', 'shoes', 'accessory']
@@ -75,6 +85,7 @@ export default function EcomStudioPage() {
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
   const [genProgress, setGenProgress] = useState({ done: 0, total: 0 })
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false)
 
   const step = STEPS[stepIndex]
 
@@ -103,6 +114,28 @@ export default function EcomStudioPage() {
       category: null as Category | null,
     }))
     setClothes((prev) => [...prev, ...toAdd])
+  }
+  function addAssetCloth(asset: Asset) {
+    const signedUrl = asset.signedUrl
+    if (clothes.length >= 6 || !signedUrl) return
+    const category = asset.category && CATEGORIES.includes(asset.category as Category)
+      ? (asset.category as Category)
+      : null
+    setClothes((prev) => [...prev, {
+      id: crypto.randomUUID(),
+      url: signedUrl,
+      assetId: asset.id,
+      previewUrl: signedUrl,
+      category,
+    }])
+  }
+  async function handleSaveAsAsset(id: string) {
+    const item = clothes.find((c) => c.id === id)
+    if (!item?.file || item.savedAsAsset) return
+    try {
+      await saveAsset(item.file, { category: item.category ?? undefined })
+      setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, savedAsAsset: true } : c)))
+    } catch (e) { console.error(e) }
   }
   function removeCloth(id: string) {
     setClothes((prev) => prev.filter((c) => c.id !== id))
@@ -161,7 +194,9 @@ export default function EcomStudioPage() {
       const supabase = createClient()
       const clothesPayload = await Promise.all(
         clothes.map(async (item) => {
-          const { base64, mimeType } = await fileToScaledBase64(item.file)
+          const { base64, mimeType } = item.file
+            ? await fileToScaledBase64(item.file)
+            : await urlToScaledBase64(item.url!)
           return { base64, mimeType, category: item.category }
         })
       )
@@ -320,19 +355,43 @@ export default function EcomStudioPage() {
                       </button>
                     ))}
                   </div>
+                  {c.file && (
+                    <button
+                      type="button"
+                      onClick={() => handleSaveAsAsset(c.id)}
+                      disabled={c.savedAsAsset}
+                      className="mt-2 w-full rounded-lg border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] disabled:opacity-50"
+                    >
+                      {c.savedAsAsset ? t('assets.saved') : t('assets.saveAsAsset')}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
             {clothes.length < 6 && (
-              <button
+              <div
                 {...dropHandlers}
-                onClick={() => fileInputRef.current?.click()}
-                className={`flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#333] text-neutral-500 transition hover:text-neutral-300${isDragging ? ' border-white bg-[#161616]' : ''}`}
+                className={`flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#333] p-3 text-neutral-500 transition${isDragging ? ' border-white bg-[#161616]' : ''}`}
               >
                 <Plus className="h-6 w-6" />
-                <span className="text-xs">{t('ecom.clothes.add')}</span>
+                <div className="flex w-full flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="rounded-lg border border-[#2a2a2a] px-2 py-1.5 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
+                  >
+                    {t('assets.fromComputer')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAssetPickerOpen(true)}
+                    className="rounded-lg border border-[#2a2a2a] px-2 py-1.5 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
+                  >
+                    {t('assets.fromAssets')}
+                  </button>
+                </div>
                 <span className="text-[10px] text-neutral-600">{clothes.length} / 6</span>
-              </button>
+              </div>
             )}
           </div>
           <p className="mt-3 text-[11px] text-neutral-600">{t('ecom.clothes.max')}</p>
@@ -469,6 +528,12 @@ export default function EcomStudioPage() {
           </div>
         </div>
       )}
+
+      <AssetPicker
+        open={assetPickerOpen}
+        onClose={() => setAssetPickerOpen(false)}
+        onSelect={addAssetCloth}
+      />
     </main>
   )
 }

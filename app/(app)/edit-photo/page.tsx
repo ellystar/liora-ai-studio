@@ -2,13 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Paperclip, X, ArrowUp, Download } from 'lucide-react'
+import { X, ArrowUp, Download } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { createClient } from '@/lib/supabase/client'
-import { fileToScaledBase64 } from '@/lib/image/scale'
+import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
+import { AssetPicker } from '@/components/asset-picker'
+import { saveAsset, type Asset } from '@/lib/assets/assets'
 
 type Msg = { id: string; role: 'user' | 'assistant'; text?: string; images: string[] }
+type Attachment = {
+  previewUrl: string
+  file?: File
+  url?: string
+  saved?: boolean
+}
 
 const RATIOS = ['original', '1:1', '2:3', '3:4', '4:3'] as const
 const QUALITIES = ['1k', '2k'] as const
@@ -28,12 +36,13 @@ export default function EditPhotoPage() {
 
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
-  const [attachments, setAttachments] = useState<{ file: File; previewUrl: string }[]>([])
+  const [attachments, setAttachments] = useState<Attachment[]>([])
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
   const [ratio, setRatio] = useState<'original' | '1:1' | '2:3' | '3:4' | '4:3'>('original')
   const [quality, setQuality] = useState<'1k' | '2k'>('1k')
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -50,6 +59,19 @@ export default function EditPhotoPage() {
   function removeAttachment(i: number) {
     setAttachments((prev) => prev.filter((_, idx) => idx !== i))
   }
+  function addAssetAttachment(asset: Asset) {
+    const signedUrl = asset.signedUrl
+    if (attachments.length >= 2 || !signedUrl) return
+    setAttachments((prev) => [...prev, { url: signedUrl, previewUrl: signedUrl }].slice(0, 2))
+  }
+  async function handleSaveAsAsset(i: number) {
+    const a = attachments[i]
+    if (!a?.file || a.saved) return
+    try {
+      await saveAsset(a.file)
+      setAttachments((prev) => prev.map((item, idx) => (idx === i ? { ...item, saved: true } : item)))
+    } catch (e) { console.error(e) }
+  }
 
   const { isDragging, dropHandlers } = useDropzone((files) => addFiles(files))
 
@@ -59,7 +81,11 @@ export default function EditPhotoPage() {
 
     let images: { base64: string; mimeType: string }[]
     if (attachments.length > 0) {
-      images = await Promise.all(attachments.map(async (a) => fileToScaledBase64(a.file)))
+      images = await Promise.all(
+        attachments.map(async (a) =>
+          a.file ? fileToScaledBase64(a.file) : urlToScaledBase64(a.url!)
+        )
+      )
     } else if (lastAssistantImage) {
       images = [await scaledFromDataUrl(lastAssistantImage)]
     } else {
@@ -188,15 +214,40 @@ export default function EditPhotoPage() {
                 <button onClick={() => removeAttachment(i)} className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/80">
                   <X className="h-3 w-3 text-white" />
                 </button>
+                {a.file && (
+                  <button
+                    type="button"
+                    onClick={() => handleSaveAsAsset(i)}
+                    disabled={a.saved}
+                    className="absolute -bottom-1 left-0 right-0 rounded bg-black/70 px-0.5 py-0.5 text-[8px] text-neutral-300 disabled:opacity-50"
+                  >
+                    {a.saved ? t('assets.saved') : t('assets.saveAsAsset')}
+                  </button>
+                )}
               </div>
             ))}
           </div>
         )}
         <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
-        <div className="flex items-end gap-2">
-          <button onClick={() => fileInputRef.current?.click()} disabled={attachments.length >= 2} title={t('edit.maxPhotos')} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-[#1f1f1f] disabled:opacity-30">
-            <Paperclip className="h-4 w-4" />
+        <div className="mb-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={attachments.length >= 2}
+            className="rounded-lg border border-[#2a2a2a] px-3 py-1 text-[11px] text-neutral-300 transition hover:bg-[#1c1c1c] disabled:opacity-40"
+          >
+            {t('assets.fromComputer')}
           </button>
+          <button
+            type="button"
+            onClick={() => setAssetPickerOpen(true)}
+            disabled={attachments.length >= 2}
+            className="rounded-lg border border-[#2a2a2a] px-3 py-1 text-[11px] text-neutral-300 transition hover:bg-[#1c1c1c] disabled:opacity-40"
+          >
+            {t('assets.fromAssets')}
+          </button>
+        </div>
+        <div className="flex items-end gap-2">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -211,6 +262,12 @@ export default function EditPhotoPage() {
         </div>
         <p className="mt-1.5 px-1 text-[11px] text-neutral-600">{t('edit.costNote')}</p>
       </div>
+
+      <AssetPicker
+        open={assetPickerOpen}
+        onClose={() => setAssetPickerOpen(false)}
+        onSelect={addAssetAttachment}
+      />
 
       {lightbox && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 px-4">
