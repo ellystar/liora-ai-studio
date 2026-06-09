@@ -6,19 +6,11 @@ import { Check, X, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRight, U
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
+import { fileToScaledBase64 } from '@/lib/image/scale'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type Pose = { id: string; name: string; thumbnail_url: string; prompt: string }
 const STEPS = ['photo', 'pose'] as const
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve((reader.result as string).split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
 
 export default function PoseGeneratorPage() {
   const router = useRouter()
@@ -36,6 +28,7 @@ export default function PoseGeneratorPage() {
   const [results, setResults] = useState<string[] | null>(null)
   const [lightbox, setLightbox] = useState<number | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
+  const [genProgress, setGenProgress] = useState({ done: 0, total: 0 })
 
   const step = STEPS[stepIndex]
 
@@ -73,23 +66,52 @@ export default function PoseGeneratorPage() {
     setShowConfirm(false)
     setGenError(null)
     setGenerating(true)
+
+    const selectedPoses = poses.filter((p) => poseIds.includes(p.id)).map((p) => ({ id: p.id, prompt: p.prompt }))
+    setGenProgress({ done: 0, total: selectedPoses.length })
+
+    let stoppedInsufficient = false
+    let busy = false
+    const collectedImages: string[] = []
+
     try {
       const supabase = createClient()
-      const base64 = await fileToBase64(photo!.file)
-      const selectedPoses = poses.filter((p) => poseIds.includes(p.id)).map((p) => ({ id: p.id, prompt: p.prompt }))
-      const { data, error } = await supabase.functions.invoke('generate-pose', {
-        body: { photo: { base64, mimeType: photo!.file.type || 'image/png' }, poses: selectedPoses },
-      })
-      if (error) {
-        let code = ''
-        try { const ctx = await (error as any).context.json(); code = ctx.error } catch {}
-        setGenError(code === 'insufficient_credits' ? t('ecom.error.insufficient') : t('ecom.error.generic'))
-        setGenerating(false)
-        return
+      const { base64, mimeType } = await fileToScaledBase64(photo!.file)
+
+      for (const pose of selectedPoses) {
+        const { data, error } = await supabase.functions.invoke('generate-pose', {
+          body: { photo: { base64, mimeType }, poses: [pose] },
+        })
+
+        if (error) {
+          let code = ''
+          try { const ctx = await (error as { context: Response }).context.json(); code = ctx.error } catch {}
+          if (code === 'insufficient_credits') {
+            stoppedInsufficient = true
+            break
+          }
+          if (code === 'model_busy') busy = true
+          setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+          continue
+        }
+
+        const img = (data?.images as string[] | undefined)?.[0]
+        if (img) collectedImages.push(img)
+        setGenProgress((p) => ({ ...p, done: p.done + 1 }))
       }
-      setResults((data.images as string[]) ?? [])
+
       setGenerating(false)
       router.refresh()
+
+      if (collectedImages.length > 0) {
+        setResults(collectedImages)
+      } else {
+        setGenError(
+          stoppedInsufficient ? t('ecom.error.insufficient') :
+          busy ? t('ecom.error.busy') :
+          t('ecom.error.blocked')
+        )
+      }
     } catch {
       setGenError(t('ecom.error.generic'))
       setGenerating(false)
@@ -98,6 +120,7 @@ export default function PoseGeneratorPage() {
 
   function resetFlow() {
     setStepIndex(0); setPhoto(null); setPoseIds([]); setResults(null); setLightbox(null); setGenError(null)
+    setGenProgress({ done: 0, total: 0 })
   }
 
   if (generating) {
@@ -105,6 +128,7 @@ export default function PoseGeneratorPage() {
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-700 border-t-white" />
         <p className="text-sm text-neutral-400">{t('ecom.generating')}</p>
+        <p className="text-sm text-neutral-500">{genProgress.done}/{genProgress.total}</p>
       </main>
     )
   }

@@ -6,19 +6,11 @@ import { Check, X, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRight, U
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
+import { fileToScaledBase64 } from '@/lib/image/scale'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
 const STEPS = ['photo', 'bg'] as const
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve((reader.result as string).split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
 
 export default function FlatToGhostPage() {
   const router = useRouter()
@@ -72,19 +64,32 @@ export default function FlatToGhostPage() {
     setGenerating(true)
     try {
       const supabase = createClient()
-      const base64 = await fileToBase64(photo!.file)
-      const bg = backgrounds.find((b) => b.id === bgId)
+      const { base64, mimeType } = await fileToScaledBase64(photo!.file)
+      const selectedBackground = backgrounds.find((b) => b.id === bgId)
       const { data, error } = await supabase.functions.invoke('generate-ghost', {
-        body: { photo: { base64, mimeType: photo!.file.type || 'image/png' }, backgroundPrompt: bg?.prompt ?? '' },
+        body: {
+          photo: { base64, mimeType },
+          backgroundPrompt: selectedBackground?.prompt ?? '',
+        },
       })
       if (error) {
         let code = ''
-        try { const ctx = await (error as any).context.json(); code = ctx.error } catch {}
-        setGenError(code === 'insufficient_credits' ? t('ecom.error.insufficient') : t('ecom.error.generic'))
+        try { const ctx = await (error as { context: Response }).context.json(); code = ctx.error } catch {}
+        setGenError(
+          code === 'insufficient_credits' ? t('ecom.error.insufficient') :
+          code === 'content_blocked' ? t('ecom.error.blocked') :
+          code === 'model_busy' ? t('ecom.error.busy') :
+          t('ecom.error.generic')
+        )
         setGenerating(false)
         return
       }
-      setResults((data.images as string[]) ?? [])
+      const img = (data?.images as string[] | undefined)?.[0]
+      if (img) {
+        setResults([img])
+      } else {
+        setGenError(t('ecom.error.generic'))
+      }
       setGenerating(false)
       router.refresh()
     } catch {
