@@ -5,22 +5,19 @@ import { useRouter } from 'next/navigation'
 import { Paperclip, X, ArrowUp, Download } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { createClient } from '@/lib/supabase/client'
+import { fileToScaledBase64 } from '@/lib/image/scale'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type Msg = { id: string; role: 'user' | 'assistant'; text?: string; images: string[] }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve((reader.result as string).split(',')[1])
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-function dataUrlToParts(dataUrl: string) {
-  const [head, data] = dataUrl.split(',')
-  const mime = head.match(/data:(.*?);/)?.[1] ?? 'image/png'
-  return { base64: data, mimeType: mime }
+const RATIOS = ['original', '1:1', '2:3', '3:4', '4:3'] as const
+const QUALITIES = ['1k', '2k'] as const
+
+async function scaledFromDataUrl(dataUrl: string) {
+  const res = await fetch(dataUrl)
+  const blob = await res.blob()
+  const file = new File([blob], 'image.jpg', { type: blob.type || 'image/jpeg' })
+  return fileToScaledBase64(file)
 }
 
 export default function EditPhotoPage() {
@@ -35,6 +32,8 @@ export default function EditPhotoPage() {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState<string | null>(null)
+  const [ratio, setRatio] = useState<'original' | '1:1' | '2:3' | '3:4' | '4:3'>('original')
+  const [quality, setQuality] = useState<'1k' | '2k'>('1k')
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -56,22 +55,20 @@ export default function EditPhotoPage() {
 
   async function handleSend() {
     if (!canSend) return
-    const instruction = input.trim()
+    const message = input.trim()
 
-    let apiImages: { base64: string; mimeType: string }[]
+    let images: { base64: string; mimeType: string }[]
     if (attachments.length > 0) {
-      apiImages = await Promise.all(
-        attachments.map(async (a) => ({ base64: await fileToBase64(a.file), mimeType: a.file.type || 'image/png' })),
-      )
+      images = await Promise.all(attachments.map(async (a) => fileToScaledBase64(a.file)))
     } else if (lastAssistantImage) {
-      apiImages = [dataUrlToParts(lastAssistantImage)]
+      images = [await scaledFromDataUrl(lastAssistantImage)]
     } else {
       setError(t('edit.needPhoto'))
       return
     }
 
     const userPreviews = attachments.map((a) => a.previewUrl)
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', text: instruction, images: userPreviews }])
+    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: 'user', text: message, images: userPreviews }])
     setInput('')
     setAttachments([])
     setError(null)
@@ -80,12 +77,17 @@ export default function EditPhotoPage() {
     try {
       const supabase = createClient()
       const { data, error: invokeErr } = await supabase.functions.invoke('generate-edit', {
-        body: { images: apiImages, instruction },
+        body: { images, message, ratio, quality },
       })
       if (invokeErr) {
         let code = ''
-        try { const ctx = await (invokeErr as any).context.json(); code = ctx.error } catch {}
-        setError(code === 'insufficient_credits' ? t('ecom.error.insufficient') : t('ecom.error.generic'))
+        try { const ctx = await (invokeErr as { context: Response }).context.json(); code = ctx.error } catch {}
+        setError(
+          code === 'insufficient_credits' ? t('ecom.error.insufficient') :
+          code === 'content_blocked' ? t('ecom.error.blocked') :
+          code === 'model_busy' ? t('ecom.error.busy') :
+          t('ecom.error.generic')
+        )
         setSending(false)
         return
       }
@@ -147,7 +149,36 @@ export default function EditPhotoPage() {
 
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
 
-      <div {...dropHandlers} className={`mt-3 rounded-2xl border border-[#242424] bg-[#141414] p-2.5${isDragging ? ' border-white bg-[#161616]' : ''}`}>
+      <div className="mt-3 space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-neutral-500">{t('edit.ratio')}</span>
+          {RATIOS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRatio(r)}
+              className={`rounded px-3 py-1 text-xs bg-[#1c1c1c] transition ${ratio === r ? 'border border-white text-neutral-100' : 'border border-[#2a2a2a] text-neutral-400'}`}
+            >
+              {r === 'original' ? t('edit.ratioOriginal') : r}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-neutral-500">{t('edit.quality')}</span>
+          {QUALITIES.map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => setQuality(q)}
+              className={`rounded px-3 py-1 text-xs uppercase bg-[#1c1c1c] transition ${quality === q ? 'border border-white text-neutral-100' : 'border border-[#2a2a2a] text-neutral-400'}`}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div {...dropHandlers} className={`mt-2 rounded-2xl border border-[#242424] bg-[#141414] p-2.5${isDragging ? ' border-white bg-[#161616]' : ''}`}>
         {attachments.length > 0 && (
           <div className="mb-2 flex gap-2">
             {attachments.map((a, i) => (
