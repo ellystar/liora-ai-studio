@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Sparkles, PersonStanding, Shirt, Wand2, Shield } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
 
 const tools = [
   { href: '/ecom-studio', Icon: Sparkles },
+  { href: '/batch-studio', Icon: LayoutGrid },
   { href: '/pose-generator', Icon: PersonStanding },
   { href: '/flat-to-ghost', Icon: Shirt },
   { href: '/edit-photo', Icon: Wand2 },

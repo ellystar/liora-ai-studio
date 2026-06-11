@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, PersonStanding, Shirt, Wand2, ArrowRight, Layers } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, ArrowRight, Layers, LayoutGrid } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 
 export default function Home() {
@@ -9,6 +9,7 @@ export default function Home() {
 
   const cards = [
     { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title'), desc: t('tool.ecom.desc') },
+    { href: '/batch-studio', Icon: LayoutGrid, title: t('batch.title'), desc: t('batch.cardDesc') },
     { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title'), desc: t('tool.pose.desc') },
     { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title'), desc: t('tool.flat.desc') },
     { href: '/assets', Icon: Layers, title: t('assets.cardTitle'), desc: t('assets.cardDesc') },
