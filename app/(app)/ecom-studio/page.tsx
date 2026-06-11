@@ -20,6 +20,7 @@ type ClothItem = {
   id: string
   previewUrl: string
   category: Category | null
+  notes: string
   file?: File
   url?: string
   assetId?: string
@@ -114,6 +115,7 @@ export default function EcomStudioPage() {
       file,
       previewUrl: URL.createObjectURL(file),
       category: null as Category | null,
+      notes: '',
     }))
     setClothes((prev) => [...prev, ...toAdd])
   }
@@ -129,6 +131,7 @@ export default function EcomStudioPage() {
       assetId: asset.id,
       previewUrl: signedUrl,
       category,
+      notes: '',
     }])
   }
   async function handleSaveAsAsset(id: string) {
@@ -144,6 +147,9 @@ export default function EcomStudioPage() {
   }
   function setClothCategory(id: string, category: Category) {
     setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, category } : c)))
+  }
+  function setClothNotes(id: string, notes: string) {
+    setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, notes } : c)))
   }
   function togglePose(id: string) {
     setPoseIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
@@ -199,7 +205,7 @@ export default function EcomStudioPage() {
           const { base64, mimeType } = item.file
             ? await fileToScaledBase64(item.file)
             : await urlToScaledBase64(item.url!)
-          return { base64, mimeType, category: item.category }
+          return { base64, mimeType, category: item.category, notes: item.notes ?? '' }
         })
       )
       const selectedModel = models.find((m) => m.id === modelId)
@@ -368,6 +374,16 @@ export default function EcomStudioPage() {
                       {c.savedAsAsset ? t('assets.saved') : t('assets.saveAsAsset')}
                     </button>
                   )}
+                  <div className="mt-2">
+                    <label className="mb-1 block text-[10px] text-neutral-500">{t('ecom.stylingNotes.label')}</label>
+                    <textarea
+                      value={c.notes}
+                      onChange={(e) => setClothNotes(c.id, e.target.value)}
+                      placeholder={t('ecom.stylingNotes.placeholder')}
+                      rows={2}
+                      className="min-h-[60px] w-full rounded-lg border border-[#242424] bg-[#141414] p-2 text-xs text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+                    />
+                  </div>
                 </div>
               </div>
             ))}
