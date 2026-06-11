@@ -87,6 +87,7 @@ export default function EcomStudioPage() {
   const [genError, setGenError] = useState<string | null>(null)
   const [genProgress, setGenProgress] = useState({ done: 0, total: 0 })
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
+  const [tuck, setTuck] = useState<'in' | 'out' | null>(null)
 
   const step = STEPS[stepIndex]
 
@@ -214,6 +215,7 @@ export default function EcomStudioPage() {
             poses: [pose],
             ratio,
             quality,
+            tuck: tuck ?? undefined,
           },
         })
 
@@ -396,6 +398,26 @@ export default function EcomStudioPage() {
             )}
           </div>
           <p className="mt-3 text-[11px] text-neutral-600">{t('ecom.clothes.max')}</p>
+
+          <div className="mt-6">
+            <p className="text-xs text-neutral-500">{t('ecom.tuck.title')}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setTuck(tuck === 'out' ? null : 'out')}
+                className={`rounded-lg border px-4 py-2 text-sm transition ${tuck === 'out' ? 'border-white text-neutral-100' : 'border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}
+              >
+                {t('ecom.tuck.out')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTuck(tuck === 'in' ? null : 'in')}
+                className={`rounded-lg border px-4 py-2 text-sm transition ${tuck === 'in' ? 'border-white text-neutral-100' : 'border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}
+              >
+                {t('ecom.tuck.in')}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
