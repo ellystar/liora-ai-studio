@@ -7,6 +7,7 @@ import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
 import { fileToScaledBase64 } from '@/lib/image/scale'
+import { downloadAsJpg } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type Pose = { id: string; name: string; thumbnail_url: string; prompt: string }
@@ -187,10 +188,10 @@ export default function PoseGeneratorPage() {
                 <ChevronRight className="h-8 w-8" />
               </button>
             </div>
-            <a href={results[lightbox]} download={`liora-pose-${lightbox + 1}.png`} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
+            <button type="button" onClick={() => downloadAsJpg(results[lightbox], `liora-pose-${lightbox + 1}`)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
               <Download className="h-4 w-4" />
               {t('ecom.result.download')}
-            </a>
+            </button>
           </div>
         )}
       </main>

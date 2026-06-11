@@ -6,6 +6,7 @@ import { X, ArrowUp, Download } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { createClient } from '@/lib/supabase/client'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
+import { downloadAsJpg } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { AssetPicker } from '@/components/asset-picker'
 import { saveAsset, type Asset } from '@/lib/assets/assets'
@@ -276,10 +277,10 @@ export default function EditPhotoPage() {
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={lightbox} alt="" className="max-h-[75vh] w-auto rounded-xl" />
-          <a href={lightbox} download="liora-edit.png" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
+          <button type="button" onClick={() => downloadAsJpg(lightbox, 'liora-edit-1')} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
             <Download className="h-4 w-4" />
             {t('ecom.result.download')}
-          </a>
+          </button>
         </div>
       )}
     </main>
