@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, Plus, Trash2, X } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Plus, Trash2, X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
@@ -38,6 +38,7 @@ type BatchProduct = {
 const RATIOS = ['1:1', '2:3', '3:4', '4:3', '9:16'] as const
 const QUALITIES = ['1k', '2k'] as const
 const CATEGORIES: GarmentCategory[] = ['top', 'bottom', 'shoes', 'dress', 'accessory']
+const PER_PAGE = 4
 
 type Ratio = (typeof RATIOS)[number]
 type Quality = (typeof QUALITIES)[number]
@@ -127,6 +128,7 @@ export default function BatchStudioPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [stage, setStage] = useState<1 | 2 | 3>(1)
+  const [page, setPage] = useState(0)
   const [products, setProducts] = useState<BatchProduct[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [pickModelId, setPickModelId] = useState<string | null>(null)
@@ -264,6 +266,24 @@ export default function BatchStudioPage() {
     )
   }
 
+  function removeProduct(id: string) {
+    setProducts((prev) => {
+      const nextLength = prev.length - 1
+      setPage((p) => Math.min(p, Math.max(0, Math.ceil(nextLength / PER_PAGE) - 1)))
+      return prev.filter((p) => p.id !== id)
+    })
+  }
+
+  function addProduct() {
+    if (products.length >= 50) return
+    setPage(Math.floor(products.length / PER_PAGE))
+    setProducts((prev) => [...prev, emptyProduct()])
+  }
+
+  const totalPages = Math.max(1, Math.ceil(products.length / PER_PAGE))
+  const pageProducts = products.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE)
+  const showAddTileInGrid = page === totalPages - 1 && pageProducts.length < PER_PAGE && products.length < 50
+
   const canCompleteStage1 =
     products.length > 0 &&
     products.every((p) => p.garments.length > 0) &&
@@ -298,20 +318,22 @@ export default function BatchStudioPage() {
       {/* STAGE 1 */}
       {stage === 1 && (
         <>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {products.map((product, index) => (
+          <div
+            className="grid gap-3"
+            style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}
+          >
+            {pageProducts.map((product, slotIndex) => (
               <div
                 key={product.id}
-                className="flex shrink-0 flex-col rounded-xl border border-[#242424] bg-[#141414] p-3"
-                style={{ flex: '0 0 230px', width: 230 }}
+                className="flex min-w-0 flex-col rounded-xl border border-[#242424] bg-[#141414] p-3"
               >
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-medium text-neutral-200">
-                    {locale === 'tr' ? 'Ürün' : 'Product'} {index + 1}
+                    {locale === 'tr' ? 'Ürün' : 'Product'} {page * PER_PAGE + slotIndex + 1}
                   </span>
                   <button
                     type="button"
-                    onClick={() => setProducts((prev) => prev.filter((p) => p.id !== product.id))}
+                    onClick={() => removeProduct(product.id)}
                     className="text-neutral-600 hover:text-red-400"
                     aria-label="Sil"
                   >
@@ -409,27 +431,29 @@ export default function BatchStudioPage() {
                 {loadingData ? (
                   <p className="text-[10px] text-neutral-600">{t('ecom.loading')}</p>
                 ) : (
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {poses.map((pose) => {
-                      const selected = product.poseIds.includes(pose.id)
-                      return (
-                        <button
-                          key={pose.id}
-                          type="button"
-                          onClick={() => togglePose(product.id, pose.id)}
-                          className={`relative overflow-hidden rounded-md text-left transition ${selected ? 'ring-2 ring-sky-400' : 'ring-1 ring-[#242424]'}`}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={pose.thumbnail_url} alt={pose.name} className="aspect-[3/4] w-full object-cover" />
-                          {selected && (
-                            <span className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-400">
-                              <Check className="h-2 w-2 text-[#0a0a0a]" />
-                            </span>
-                          )}
-                          <p className="truncate px-0.5 py-0.5 text-[7px] text-neutral-400">{pose.name}</p>
-                        </button>
-                      )
-                    })}
+                  <div className="max-h-[230px] overflow-y-auto">
+                    <div className="flex flex-wrap gap-1.5">
+                      {poses.map((pose) => {
+                        const selected = product.poseIds.includes(pose.id)
+                        return (
+                          <button
+                            key={pose.id}
+                            type="button"
+                            onClick={() => togglePose(product.id, pose.id)}
+                            className={`relative w-[56px] shrink-0 overflow-hidden rounded-md text-left transition ${selected ? 'ring-2 ring-sky-400' : 'ring-1 ring-[#242424]'}`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={pose.thumbnail_url} alt={pose.name} className="aspect-[3/4] w-[56px] object-cover" />
+                            {selected && (
+                              <span className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-400">
+                                <Check className="h-2 w-2 text-[#0a0a0a]" />
+                              </span>
+                            )}
+                            <p className="truncate px-0.5 py-0.5 text-[10px] text-neutral-400">{pose.name}</p>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 )}
                 <button
@@ -479,18 +503,52 @@ export default function BatchStudioPage() {
               </div>
             ))}
 
-            {/* Add product tile */}
+            {showAddTileInGrid && (
+              <button
+                type="button"
+                onClick={addProduct}
+                className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-[#333] text-neutral-500 transition hover:border-[#444] hover:text-neutral-400"
+              >
+                <Plus className="h-5 w-5" />
+                <span className="mt-1 text-[10px]">{locale === 'tr' ? 'Ürün ekle' : 'Add product'}</span>
+              </button>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
-              disabled={atMax}
-              onClick={() => setProducts((prev) => [...prev, emptyProduct()])}
-              className="flex shrink-0 flex-col items-center justify-center rounded-xl border border-dashed border-[#333] text-neutral-500 transition hover:border-[#444] disabled:opacity-40"
-              style={{ flex: '0 0 130px', width: 130, minHeight: 200 }}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="inline-flex items-center gap-1 rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-neutral-300 hover:bg-[#161616] disabled:opacity-40"
             >
-              <Plus className="h-5 w-5" />
-              <span className="mt-1 text-[10px]">{locale === 'tr' ? 'Ürün ekle' : 'Add product'}</span>
+              <ChevronLeft className="h-3.5 w-3.5" />
+              {t('batch.back')}
+            </button>
+            <span className="text-xs text-neutral-500">
+              {locale === 'tr' ? 'Sayfa' : 'Page'} {page + 1} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="inline-flex items-center gap-1 rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-neutral-300 hover:bg-[#161616] disabled:opacity-40"
+            >
+              {t('batch.next')}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={addProduct}
+              disabled={atMax}
+              className="rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-neutral-300 hover:bg-[#161616] disabled:opacity-40"
+            >
+              {t('batch.addProduct')}
             </button>
           </div>
+          {atMax && (
+            <p className="mt-2 text-center text-[11px] text-neutral-600">{t('batch.maxProducts')}</p>
+          )}
 
           <div className="mt-4 flex items-end justify-between">
             <span className="text-xs text-neutral-500">{products.length} / 50 {locale === 'tr' ? 'ürün' : 'products'}</span>
