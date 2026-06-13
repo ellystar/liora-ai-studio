@@ -41,7 +41,12 @@ const CATEGORIES: GarmentCategory[] = ['top', 'bottom', 'shoes', 'dress', 'acces
 
 type Ratio = (typeof RATIOS)[number]
 type Quality = (typeof QUALITIES)[number]
-type GarmentFlow = { productId: string; category: GarmentCategory | null; menu: 'category' | 'source' }
+type GarmentFlow = {
+  productId: string
+  step: 'category' | 'source'
+  category?: GarmentCategory
+  pendingFile?: File
+}
 type AssetTarget = { productId: string; category: GarmentCategory }
 
 function emptyProduct(): BatchProduct {
@@ -95,20 +100,20 @@ function StageIndicator({ stage }: { stage: 1 | 2 | 3 }) {
 
 function AddGarmentTile({
   onStartFlow,
-  onDropFile,
+  onDropPending,
 }: {
   onStartFlow: () => void
-  onDropFile: (file: File) => void
+  onDropPending: (file: File) => void
 }) {
   const { t } = useI18n()
   const { isDragging, dropHandlers } = useDropzone((files) => {
-    if (files[0]) onDropFile(files[0])
+    if (files[0]) onDropPending(files[0])
   })
   return (
     <button
       type="button"
       {...dropHandlers}
-      onClick={onStartFlow}
+      onClick={(e) => { e.stopPropagation(); onStartFlow() }}
       className={`flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-lg border border-dashed border-[#333] text-neutral-500 transition hover:border-[#444] hover:text-neutral-400${isDragging ? ' border-white bg-[#161616]' : ''}`}
     >
       <Plus className="h-3.5 w-3.5" />
@@ -174,6 +179,33 @@ export default function BatchStudioPage() {
         p.id === productId ? { ...p, garments: p.garments.filter((g) => g.id !== garmentId) } : p
       )
     )
+  }
+
+  function updateGarmentCategory(productId: string, garmentId: string, category: GarmentCategory) {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? { ...p, garments: p.garments.map((g) => (g.id === garmentId ? { ...g, category } : g)) }
+          : p
+      )
+    )
+  }
+
+  function selectGarmentCategory(productId: string, category: GarmentCategory) {
+    if (garmentFlow?.productId === productId && garmentFlow.pendingFile) {
+      addGarment(productId, category, fileSource(garmentFlow.pendingFile))
+      setGarmentFlow(null)
+      return
+    }
+    setGarmentFlow({ productId, step: 'source', category })
+  }
+
+  function openGarmentCategoryMenu(productId: string) {
+    setGarmentFlow({ productId, step: 'category' })
+  }
+
+  function openGarmentCategoryMenuWithFile(productId: string, file: File) {
+    setGarmentFlow({ productId, step: 'category', pendingFile: file })
   }
 
   function handleFileInput(files: FileList | null) {
@@ -293,14 +325,20 @@ export default function BatchStudioPage() {
                 </p>
                 <div className="mb-3 flex flex-wrap gap-1.5">
                   {product.garments.map((g) => (
-                    <div key={g.id} className="relative">
+                    <div key={g.id} className="relative w-16">
                       <div className="h-16 w-16 overflow-hidden rounded-lg border border-[#242424]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={garmentPreview(g.source)} alt="" className="h-full w-full object-cover" />
                       </div>
-                      <span className="absolute bottom-0 left-0 right-0 truncate bg-black/70 px-0.5 text-center text-[7px] text-neutral-300">
-                        {t(`batch.cat.${g.category}` as TranslationKey)}
-                      </span>
+                      <select
+                        value={g.category}
+                        onChange={(e) => updateGarmentCategory(product.id, g.id, e.target.value as GarmentCategory)}
+                        className="mt-0.5 w-full rounded border border-[#242424] bg-[#141414] px-0.5 py-0 text-[7px] text-neutral-300 outline-none"
+                      >
+                        {CATEGORIES.map((cat) => (
+                          <option key={cat} value={cat}>{t(`batch.cat.${cat}` as TranslationKey)}</option>
+                        ))}
+                      </select>
                       <button
                         type="button"
                         onClick={() => removeGarment(product.id, g.id)}
@@ -313,10 +351,10 @@ export default function BatchStudioPage() {
 
                   <div className="relative">
                     <AddGarmentTile
-                      onStartFlow={() => setGarmentFlow({ productId: product.id, category: null, menu: 'category' })}
-                      onDropFile={(file) => addGarment(product.id, 'top', fileSource(file))}
+                      onStartFlow={() => openGarmentCategoryMenu(product.id)}
+                      onDropPending={(file) => openGarmentCategoryMenuWithFile(product.id, file)}
                     />
-                    {garmentFlow?.productId === product.id && garmentFlow.menu === 'category' && (
+                    {garmentFlow?.productId === product.id && garmentFlow.step === 'category' && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setGarmentFlow(null)} />
                         <div className="absolute left-0 top-full z-20 mt-1 w-28 rounded-lg border border-[#242424] bg-[#1c1c1c] py-1 shadow-lg">
@@ -324,7 +362,7 @@ export default function BatchStudioPage() {
                             <button
                               key={cat}
                               type="button"
-                              onClick={() => setGarmentFlow({ productId: product.id, category: cat, menu: 'source' })}
+                              onClick={(e) => { e.stopPropagation(); selectGarmentCategory(product.id, cat) }}
                               className="block w-full px-2 py-1 text-left text-[10px] text-neutral-300 hover:bg-[#242424]"
                             >
                               {t(`batch.cat.${cat}` as TranslationKey)}
@@ -333,14 +371,16 @@ export default function BatchStudioPage() {
                         </div>
                       </>
                     )}
-                    {garmentFlow?.productId === product.id && garmentFlow.menu === 'source' && garmentFlow.category && (
+                    {garmentFlow?.productId === product.id && garmentFlow.step === 'source' && garmentFlow.category && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setGarmentFlow(null)} />
                         <div className="absolute left-0 top-full z-20 mt-1 w-32 rounded-lg border border-[#242424] bg-[#1c1c1c] py-1 shadow-lg">
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation()
                               setFileTarget({ productId: product.id, category: garmentFlow.category! })
+                              setGarmentFlow(null)
                               fileInputRef.current?.click()
                             }}
                             className="block w-full px-2 py-1 text-left text-[10px] text-neutral-300 hover:bg-[#242424]"
@@ -349,7 +389,8 @@ export default function BatchStudioPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation()
                               setAssetTarget({ productId: product.id, category: garmentFlow.category! })
                               setGarmentFlow(null)
                             }}
