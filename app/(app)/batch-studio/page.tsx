@@ -129,6 +129,7 @@ export default function BatchStudioPage() {
 
   const [stage, setStage] = useState<1 | 2 | 3>(1)
   const [page, setPage] = useState(0)
+  const [dir, setDir] = useState<'next' | 'prev'>('next')
   const [products, setProducts] = useState<BatchProduct[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [pickModelId, setPickModelId] = useState<string | null>(null)
@@ -274,8 +275,19 @@ export default function BatchStudioPage() {
     })
   }
 
+  function goPrevPage() {
+    setDir('prev')
+    setPage((p) => Math.max(0, p - 1))
+  }
+
+  function goNextPage() {
+    setDir('next')
+    setPage((p) => Math.min(totalPages - 1, p + 1))
+  }
+
   function addProduct() {
     if (products.length >= 50) return
+    setDir('next')
     setPage(Math.floor(products.length / PER_PAGE))
     setProducts((prev) => [...prev, emptyProduct()])
   }
@@ -318,14 +330,22 @@ export default function BatchStudioPage() {
       {/* STAGE 1 */}
       {stage === 1 && (
         <>
-          <div
-            className="grid gap-3"
-            style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}
-          >
-            {pageProducts.map((product, slotIndex) => (
+          <div className="min-h-[560px]">
+            <div
+              key={page}
+              className="grid gap-3"
+              style={{
+                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                animation: `${dir === 'next' ? 'batchSlideNext' : 'batchSlidePrev'} 260ms ease-out`,
+              }}
+            >
+            {Array.from({ length: PER_PAGE }, (_, slotIndex) => {
+              const product = pageProducts[slotIndex]
+              if (product) {
+                return (
               <div
                 key={product.id}
-                className="flex min-w-0 flex-col rounded-xl border border-[#242424] bg-[#141414] p-3"
+                className="flex h-[560px] min-w-0 flex-col overflow-y-auto rounded-xl border border-[#242424] bg-[#141414] p-3"
               >
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-xs font-medium text-neutral-200">
@@ -501,24 +521,30 @@ export default function BatchStudioPage() {
                   </div>
                 )}
               </div>
-            ))}
-
-            {showAddTileInGrid && (
-              <button
-                type="button"
-                onClick={addProduct}
-                className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-[#333] text-neutral-500 transition hover:border-[#444] hover:text-neutral-400"
-              >
-                <Plus className="h-5 w-5" />
-                <span className="mt-1 text-[10px]">{locale === 'tr' ? 'Ürün ekle' : 'Add product'}</span>
-              </button>
-            )}
+                )
+              }
+              if (showAddTileInGrid && slotIndex === pageProducts.length) {
+                return (
+                  <button
+                    key="add-tile"
+                    type="button"
+                    onClick={addProduct}
+                    className="flex h-[560px] flex-col items-center justify-center rounded-xl border border-dashed border-[#333] text-neutral-500 transition hover:border-[#444] hover:text-neutral-400"
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span className="mt-1 text-[10px]">{locale === 'tr' ? 'Ürün ekle' : 'Add product'}</span>
+                  </button>
+                )
+              }
+              return <div key={`empty-${slotIndex}`} className="h-[560px]" aria-hidden />
+            })}
+            </div>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              onClick={goPrevPage}
               disabled={page === 0}
               className="inline-flex items-center gap-1 rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-neutral-300 hover:bg-[#161616] disabled:opacity-40"
             >
@@ -530,7 +556,7 @@ export default function BatchStudioPage() {
             </span>
             <button
               type="button"
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              onClick={goNextPage}
               disabled={page >= totalPages - 1}
               className="inline-flex items-center gap-1 rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-neutral-300 hover:bg-[#161616] disabled:opacity-40"
             >
