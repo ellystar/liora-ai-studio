@@ -1,13 +1,17 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, ChevronLeft, ChevronRight, Plus, Trash2, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import JSZip from 'jszip'
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { AssetPicker } from '@/components/asset-picker'
 import type { Asset } from '@/lib/assets/assets'
+import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
+import { downloadAsJpg, imageToJpegBlob } from '@/lib/image/download'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
@@ -35,6 +39,18 @@ type BatchProduct = {
   modelId: string | null
 }
 
+type JobStatus = 'pending' | 'running' | 'done' | 'failed'
+type Job = {
+  id: string
+  productId: string
+  productIndex: number
+  poseId: string
+  poseName: string
+  status: JobStatus
+  image?: string
+  errorCode?: string
+}
+
 const RATIOS = ['1:1', '2:3', '3:4', '4:3', '9:16'] as const
 const QUALITIES = ['1k', '2k'] as const
 const CATEGORIES: GarmentCategory[] = ['top', 'bottom', 'shoes', 'dress', 'accessory']
@@ -42,6 +58,15 @@ const PER_PAGE = 4
 
 type Ratio = (typeof RATIOS)[number]
 type Quality = (typeof QUALITIES)[number]
+
+type PreparedProduct = {
+  model: { base64: string; mimeType: string }
+  clothes: { base64: string; mimeType: string; category: GarmentCategory; notes?: string }[]
+  backgroundPrompt: string
+  ratio: Ratio
+  quality: Quality
+  tuck: 'in' | 'out' | undefined
+}
 type GarmentFlow = {
   productId: string
   step: 'category' | 'source'
@@ -76,6 +101,19 @@ function firstGarmentPreview(product: BatchProduct): string | null {
 
 function hasDetailCustom(p: BatchProduct): boolean {
   return p.tuck !== null || p.notes.trim() !== ''
+}
+
+function jobErrorKey(code?: string): TranslationKey {
+  if (code === 'content_blocked') return 'batch.error.blocked'
+  if (code === 'model_busy') return 'batch.error.busy'
+  if (code === 'insufficient_credits') return 'batch.error.insufficient'
+  return 'batch.error.generic'
+}
+
+function productLabel(t: (k: TranslationKey) => string, job: Job): string {
+  return t('batch.productLabel')
+    .replace('{index}', String(job.productIndex + 1))
+    .replace('{pose}', job.poseName)
 }
 
 function StageIndicator({ stage }: { stage: 1 | 2 | 3 }) {
@@ -125,7 +163,19 @@ function AddGarmentTile({
 
 export default function BatchStudioPage() {
   const { t, locale } = useI18n()
+  const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const prepareCache = useRef(new Map<string, Promise<PreparedProduct>>())
+  const cancelRef = useRef(false)
+  const stopRef = useRef(false)
+
+  const [view, setView] = useState<'input' | 'results'>('input')
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [running, setRunning] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [stoppedForCredits, setStoppedForCredits] = useState(false)
+  const [lightboxJob, setLightboxJob] = useState<Job | null>(null)
+  const [zipBusy, setZipBusy] = useState(false)
 
   const [stage, setStage] = useState<1 | 2 | 3>(1)
   const [page, setPage] = useState(0)
@@ -161,6 +211,194 @@ export default function BatchStudioPage() {
       setLoadingData(false)
     })()
   }, [])
+
+  useEffect(() => {
+    if (!running) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [running])
+
+  function getPrepared(product: BatchProduct): Promise<PreparedProduct> {
+    const cached = prepareCache.current.get(product.id)
+    if (cached) return cached
+
+    const promise = (async () => {
+      const modelRecord = models.find((m) => m.id === product.modelId)!
+      const model = await urlToScaledBase64(modelRecord.image_url)
+      const clothes = await Promise.all(
+        product.garments.map(async (g, idx) => {
+          const { base64, mimeType } =
+            g.source.kind === 'file'
+              ? await fileToScaledBase64(g.source.file)
+              : await urlToScaledBase64(g.source.url)
+          return {
+            base64,
+            mimeType,
+            category: g.category,
+            ...(idx === 0 && product.notes.trim() ? { notes: product.notes.trim() } : {}),
+          }
+        })
+      )
+      const bg = backgrounds.find((b) => b.id === backgroundId)
+      return {
+        model,
+        clothes,
+        backgroundPrompt: bg?.prompt ?? '',
+        ratio,
+        quality,
+        tuck: product.tuck ?? undefined,
+      }
+    })()
+
+    prepareCache.current.set(product.id, promise)
+    return promise
+  }
+
+  function buildJobList(): Job[] {
+    const list: Job[] = []
+    products.forEach((product, productIndex) => {
+      product.poseIds.forEach((poseId) => {
+        const pose = poses.find((p) => p.id === poseId)
+        list.push({
+          id: crypto.randomUUID(),
+          productId: product.id,
+          productIndex,
+          poseId,
+          poseName: pose?.name ?? poseId,
+          status: 'pending',
+        })
+      })
+    })
+    return list
+  }
+
+  async function runQueue(jobList: Job[]) {
+    const supabase = createClient()
+    let idx = 0
+
+    const work = async () => {
+      while (true) {
+        if (cancelRef.current || stopRef.current) return
+        const my = idx++
+        if (my >= jobList.length) return
+        const job = jobList[my]
+        setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, status: 'running' } : j)))
+        try {
+          const product = products.find((p) => p.id === job.productId)!
+          const prep = await getPrepared(product)
+          const pose = poses.find((p) => p.id === job.poseId)!
+          const { data, error } = await supabase.functions.invoke('generate-ecom', {
+            body: {
+              model: prep.model,
+              clothes: prep.clothes,
+              backgroundPrompt: prep.backgroundPrompt,
+              poses: [{ id: pose.id, prompt: pose.prompt }],
+              ratio: prep.ratio,
+              quality: prep.quality,
+              tuck: prep.tuck,
+            },
+          })
+          if (error) {
+            let code = 'generation_failed'
+            try {
+              const ctx = await (error as { context?: Response }).context?.json?.()
+              code = ctx?.error ?? 'generation_failed'
+            } catch { /* ignore */ }
+            if (code === 'insufficient_credits') {
+              stopRef.current = true
+              setStoppedForCredits(true)
+            }
+            setJobs((prev) =>
+              prev.map((j) => (j.id === job.id ? { ...j, status: 'failed', errorCode: code } : j))
+            )
+          } else {
+            const img = (data?.images as string[] | undefined)?.[0]
+            setJobs((prev) =>
+              prev.map((j) =>
+                j.id === job.id
+                  ? { ...j, status: img ? 'done' : 'failed', image: img, errorCode: img ? undefined : 'generation_failed' }
+                  : j
+              )
+            )
+          }
+        } catch {
+          setJobs((prev) =>
+            prev.map((j) => (j.id === job.id ? { ...j, status: 'failed', errorCode: 'generation_failed' } : j))
+          )
+        }
+      }
+    }
+
+    await Promise.all([work(), work(), work()])
+  }
+
+  async function startBatch() {
+    setConfirmOpen(false)
+    prepareCache.current.clear()
+    const jobList = buildJobList()
+    setJobs(jobList)
+    cancelRef.current = false
+    stopRef.current = false
+    setStoppedForCredits(false)
+    setRunning(true)
+    setView('results')
+    await runQueue(jobList)
+    setRunning(false)
+    router.refresh()
+  }
+
+  async function retryFailed() {
+    const failed = jobs.filter((j) => j.status === 'failed')
+    if (failed.length === 0) return
+    setJobs((prev) =>
+      prev.map((j) =>
+        j.status === 'failed' ? { ...j, status: 'pending', image: undefined, errorCode: undefined } : j
+      )
+    )
+    cancelRef.current = false
+    stopRef.current = false
+    setStoppedForCredits(false)
+    setRunning(true)
+    await runQueue(failed.map((j) => ({ ...j, status: 'pending' as const, image: undefined, errorCode: undefined })))
+    setRunning(false)
+    router.refresh()
+  }
+
+  function handleCancelBatch() {
+    cancelRef.current = true
+    setRunning(false)
+  }
+
+  async function downloadAllZip() {
+    const doneJobs = jobs.filter((j) => j.status === 'done' && j.image)
+    if (doneJobs.length === 0) return
+    setZipBusy(true)
+    try {
+      const zip = new JSZip()
+      await Promise.all(
+        doneJobs.map(async (job) => {
+          const blob = await imageToJpegBlob(job.image!)
+          const safePose = job.poseName.replace(/[^a-zA-Z0-9-_]/g, '_')
+          zip.file(`urun-${job.productIndex + 1}-${safePose}.jpg`, blob)
+        })
+      )
+      const blob = await zip.generateAsync({ type: 'blob' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'liora-batch.zip'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } finally {
+      setZipBusy(false)
+    }
+  }
 
   function updateProduct(id: string, patch: Partial<BatchProduct>) {
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
@@ -310,14 +548,20 @@ export default function BatchStudioPage() {
   const atMax = products.length >= 50
   const allSelected = products.length > 0 && selectedIds.size === products.length
 
-  async function handleStartBatch() {
-    console.log('batch start', { products, backgroundId, ratio, quality })
-  }
+  const completedCount = jobs.filter((j) => j.status === 'done' || j.status === 'failed').length
+  const progressPct = jobs.length > 0 ? (completedCount / jobs.length) * 100 : 0
+  const hasFailedJobs = jobs.some((j) => j.status === 'failed')
+  const hasDoneJobs = jobs.some((j) => j.status === 'done' && j.image)
+  const confirmMsg = t('batch.confirmMsg').replace(/\{count\}/g, String(totalJobs))
+  const progressText = t('batch.progress')
+    .replace('{done}', String(completedCount))
+    .replace('{total}', String(jobs.length))
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-8">
       <p className="mb-2 text-xs text-neutral-500">{t('batch.title')}</p>
-      <StageIndicator stage={stage} />
+
+      {view === 'input' && <StageIndicator stage={stage} />}
 
       <input
         ref={fileInputRef}
@@ -328,7 +572,7 @@ export default function BatchStudioPage() {
       />
 
       {/* STAGE 1 */}
-      {stage === 1 && (
+      {view === 'input' && stage === 1 && (
         <>
           <div className="min-h-[560px]">
             <div
@@ -596,7 +840,7 @@ export default function BatchStudioPage() {
       )}
 
       {/* STAGE 2 */}
-      {stage === 2 && (
+      {view === 'input' && stage === 2 && (
         <>
           <div className="sticky top-16 z-10 mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#242424] bg-[#141414] p-3">
             <label className="flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
@@ -716,7 +960,7 @@ export default function BatchStudioPage() {
       )}
 
       {/* STAGE 3 */}
-      {stage === 3 && (
+      {view === 'input' && stage === 3 && (
         <>
           <div className="rounded-2xl border border-[#242424] bg-[#141414] p-4">
             <p className="mb-2 text-xs text-neutral-400">{t('batch.background')}</p>
@@ -782,7 +1026,7 @@ export default function BatchStudioPage() {
             </button>
             <button
               type="button"
-              onClick={handleStartBatch}
+              onClick={() => setConfirmOpen(true)}
               disabled={!canStart}
               className="rounded-lg bg-white px-5 py-2 text-sm font-medium text-[#0a0a0a] disabled:opacity-40"
             >
@@ -790,6 +1034,161 @@ export default function BatchStudioPage() {
             </button>
           </div>
         </>
+      )}
+
+      {/* RESULTS */}
+      {view === 'results' && (
+        <>
+          <div className="mb-4 rounded-xl border border-[#242424] bg-[#141414] p-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm text-neutral-300">{progressText}</span>
+              {running && (
+                <button
+                  type="button"
+                  onClick={handleCancelBatch}
+                  className="rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-xs text-neutral-300 hover:bg-[#161616]"
+                >
+                  {t('batch.cancel')}
+                </button>
+              )}
+            </div>
+            <div className="h-1 overflow-hidden rounded-full bg-[#242424]">
+              <div
+                className="h-full bg-sky-400 transition-all duration-300"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            {stoppedForCredits && (
+              <p className="mt-2 text-xs text-amber-400">{t('batch.creditsStopped')}</p>
+            )}
+          </div>
+
+          <div
+            className="grid gap-3"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}
+          >
+            {jobs.map((job) => (
+              <div
+                key={job.id}
+                className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414]"
+              >
+                <div className="relative aspect-[3/4] bg-[#0a0a0a]">
+                  {job.status === 'pending' && (
+                    <div className="flex h-full items-center justify-center bg-[#141414] opacity-40" />
+                  )}
+                  {job.status === 'running' && (
+                    <div className="flex h-full items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-neutral-500" />
+                    </div>
+                  )}
+                  {job.status === 'done' && job.image && (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxJob(job)}
+                      className="block h-full w-full"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={job.image} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  )}
+                  {job.status === 'failed' && (
+                    <div className="flex h-full flex-col items-center justify-center gap-1 px-2 text-center">
+                      <AlertCircle className="h-5 w-5 text-red-400/80" />
+                      <p className="text-[10px] text-neutral-500">{t(jobErrorKey(job.errorCode))}</p>
+                    </div>
+                  )}
+                </div>
+                <p className="truncate px-2 py-1.5 text-[10px] text-neutral-400">
+                  {productLabel(t, job)}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {!running && (
+            <div className="mt-6 flex flex-wrap gap-3">
+              {hasDoneJobs && (
+                <button
+                  type="button"
+                  onClick={downloadAllZip}
+                  disabled={zipBusy}
+                  className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-[#0a0a0a] disabled:opacity-40"
+                >
+                  {zipBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  {t('batch.downloadZip')}
+                </button>
+              )}
+              {hasFailedJobs && (
+                <button
+                  type="button"
+                  onClick={retryFailed}
+                  className="rounded-lg border border-[#2a2a2a] px-4 py-2 text-sm text-neutral-300 hover:bg-[#161616]"
+                >
+                  {t('batch.retryFailed')}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => { setView('input'); setJobs([]) }}
+                className="rounded-lg border border-[#2a2a2a] px-4 py-2 text-sm text-neutral-300 hover:bg-[#161616]"
+              >
+                {t('batch.back')}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-[#242424] bg-[#141414] p-5">
+            <p className="text-sm text-neutral-200">{confirmMsg}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                className="rounded-lg border border-[#2a2a2a] px-4 py-2 text-sm text-neutral-300 hover:bg-[#161616]"
+              >
+                {t('batch.abort')}
+              </button>
+              <button
+                type="button"
+                onClick={startBatch}
+                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-[#0a0a0a]"
+              >
+                {t('batch.continue')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {lightboxJob?.image && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-4">
+          <button
+            type="button"
+            onClick={() => setLightboxJob(null)}
+            aria-label="Kapat"
+            className="absolute right-5 top-5 text-neutral-400 hover:text-white"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lightboxJob.image} alt="" className="max-h-[70vh] w-auto rounded-xl" />
+          <button
+            type="button"
+            onClick={() =>
+              downloadAsJpg(
+                lightboxJob.image!,
+                `urun-${lightboxJob.productIndex + 1}-${lightboxJob.poseName}`
+              )
+            }
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]"
+          >
+            <Download className="h-4 w-4" />
+            {t('batch.download')}
+          </button>
+        </div>
       )}
 
       <AssetPicker

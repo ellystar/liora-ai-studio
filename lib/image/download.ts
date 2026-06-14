@@ -34,3 +34,16 @@ export async function downloadAsJpg(src: string, filename = 'liora', quality = 0
   a.remove()
   URL.revokeObjectURL(url)
 }
+
+// data URL -> JPEG Blob (ZIP icin)
+export async function imageToJpegBlob(src: string, quality = 0.95): Promise<Blob> {
+  const img = await loadImage(src)
+  const canvas = document.createElement('canvas')
+  canvas.width = img.naturalWidth
+  canvas.height = img.naturalHeight
+  const ctx = canvas.getContext('2d')!
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(img, 0, 0)
+  return await new Promise((res) => canvas.toBlob((b) => res(b as Blob), 'image/jpeg', quality))
+}
