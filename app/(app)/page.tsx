@@ -25,17 +25,25 @@ export default function Home() {
         <div className="mt-6 flex flex-col gap-4 lg:flex-row">
           <Link
             href="/batch-studio"
-            className="flex min-h-[300px] flex-[1.25] flex-col justify-between rounded-2xl border border-[#242424] bg-[#141414] p-6 transition hover:border-[#2e2e2e]"
+            className="relative flex min-h-[300px] flex-[1.25] flex-col justify-between overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] p-6 transition hover:border-[#2e2e2e]"
           >
-            <span className="inline-flex items-center gap-2 text-neutral-400">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1f1f1f]">
-                <LayoutGrid className="h-5 w-5 text-neutral-100" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/batch-studio.jpg"
+              alt=""
+              className="absolute inset-0 z-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 z-10 bg-black/25" />
+            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/90 via-black/55 to-black/20" />
+            <span className="relative z-20 inline-flex items-center gap-2 rounded-lg bg-black/40 px-2 py-1">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/30">
+                <LayoutGrid className="h-5 w-5 text-white" />
               </span>
-              <span className="text-xs text-neutral-500">{t('batch.tag')}</span>
+              <span className="text-xs text-white/90">{t('batch.tag')}</span>
             </span>
-            <div>
-              <p className="text-xl font-medium text-neutral-100">{t('batch.title')}</p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-500">{t('batch.cardDesc')}</p>
+            <div className="relative z-20">
+              <p className="text-xl font-medium text-white">{t('batch.title')}</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/80">{t('batch.cardDesc')}</p>
             </div>
           </Link>
 
