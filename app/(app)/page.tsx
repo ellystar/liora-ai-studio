@@ -41,30 +41,33 @@ export default function Home() {
 
           <div className="grid flex-[1.6] grid-cols-2 gap-[14px]">
             {tools.map(({ href, Icon, title, desc }) => {
-              const isGhost = href === '/flat-to-ghost'
+              const bgImage =
+                href === '/ecom-studio' ? '/ecom-studio.jpg'
+                : href === '/flat-to-ghost' ? '/flat-to-ghost.jpg'
+                : null
               return (
               <Link
                 key={href}
                 href={href}
                 className="relative flex aspect-square flex-col items-start justify-between overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] p-4 transition hover:border-[#2e2e2e]"
               >
-                {isGhost && (
+                {bgImage && (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="/flat-to-ghost.jpg"
+                      src={bgImage}
                       alt=""
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
                   </>
                 )}
-                <span className={`relative z-20 flex h-10 w-10 items-center justify-center rounded-xl ${isGhost ? 'bg-black/30' : 'bg-[#1f1f1f]'}`}>
-                  <Icon className={`h-5 w-5 ${isGhost ? 'text-white' : 'text-neutral-100'}`} />
+                <span className={`relative z-20 flex h-10 w-10 items-center justify-center rounded-xl ${bgImage ? 'bg-black/30' : 'bg-[#1f1f1f]'}`}>
+                  <Icon className={`h-5 w-5 ${bgImage ? 'text-white' : 'text-neutral-100'}`} />
                 </span>
                 <div className="relative z-20">
-                  <p className={`text-sm font-medium ${isGhost ? 'text-white' : 'text-neutral-100'}`}>{title}</p>
-                  <p className={`mt-1 line-clamp-2 text-xs leading-relaxed ${isGhost ? 'text-white/80' : 'text-neutral-500'}`}>{desc}</p>
+                  <p className={`text-sm font-medium ${bgImage ? 'text-white' : 'text-neutral-100'}`}>{title}</p>
+                  <p className={`mt-1 line-clamp-2 text-xs leading-relaxed ${bgImage ? 'text-white/80' : 'text-neutral-500'}`}>{desc}</p>
                 </div>
               </Link>
               )
