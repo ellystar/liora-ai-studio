@@ -9,10 +9,10 @@ export default function Home() {
   const { t } = useI18n()
 
   const tools = [
-    { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title') },
-    { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title') },
-    { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title') },
-    { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title') },
+    { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title'), desc: t('tool.ecom.desc') },
+    { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title'), desc: t('tool.pose.desc') },
+    { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title'), desc: t('tool.flat.desc') },
+    { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title'), desc: t('tool.edit.desc') },
   ]
 
   return (
@@ -40,7 +40,7 @@ export default function Home() {
           </Link>
 
           <div className="grid flex-[1.6] grid-cols-2 gap-[14px]">
-            {tools.map(({ href, Icon, title }) => (
+            {tools.map(({ href, Icon, title, desc }) => (
               <Link
                 key={href}
                 href={href}
@@ -49,7 +49,10 @@ export default function Home() {
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1f1f1f]">
                   <Icon className="h-5 w-5 text-neutral-100" />
                 </span>
-                <p className="text-sm font-medium text-neutral-100">{title}</p>
+                <div>
+                  <p className="text-sm font-medium text-neutral-100">{title}</p>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-500">{desc}</p>
+                </div>
               </Link>
             ))}
           </div>
