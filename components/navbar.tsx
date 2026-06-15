@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid, FolderOpen } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
 
@@ -44,6 +44,15 @@ export function Navbar({ credits, email, isAdmin }: { credits: number; email: st
       </div>
 
       <div className="flex items-center gap-2.5">
+        <Link
+          href="/assets"
+          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition ${
+            pathname === '/assets' ? 'text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'
+          }`}
+        >
+          <FolderOpen className="h-4 w-4" />
+          {t('assets.cardTitle')}
+        </Link>
         <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-[#262626] px-3 py-1.5 text-xs text-neutral-200 cursor-pointer transition hover:border-[#2e2e2e]">
           <span className="h-1.5 w-1.5 rounded-full bg-white" />
           {credits} {t('nav.credits')}

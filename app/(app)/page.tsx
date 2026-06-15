@@ -1,56 +1,60 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, PersonStanding, Shirt, Wand2, ArrowRight, Layers, LayoutGrid } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, LayoutGrid } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
+import { PixelCursor } from '@/components/pixel-cursor'
 
 export default function Home() {
   const { t } = useI18n()
 
-  const cards = [
-    { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title'), desc: t('tool.ecom.desc') },
-    { href: '/batch-studio', Icon: LayoutGrid, title: t('batch.title'), desc: t('batch.cardDesc') },
-    { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title'), desc: t('tool.pose.desc') },
-    { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title'), desc: t('tool.flat.desc') },
-    { href: '/assets', Icon: Layers, title: t('assets.cardTitle'), desc: t('assets.cardDesc') },
+  const tools = [
+    { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title') },
+    { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title') },
+    { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title') },
+    { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title') },
   ]
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="text-lg font-medium text-neutral-100">{t('home.welcome.title')}</h1>
-      <p className="mt-1.5 text-sm text-neutral-500">{t('home.welcome.subtitle')}</p>
+    <>
+      <PixelCursor />
+      <main className="mx-auto max-w-5xl px-6 py-10">
+        <h1 className="text-lg font-medium text-neutral-100">{t('home.welcome.title')}</h1>
+        <p className="mt-1.5 text-sm text-neutral-500">{t('home.welcome.subtitle')}</p>
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map(({ href, Icon, title, desc }) => (
+        <div className="mt-6 flex flex-col gap-4 lg:flex-row">
           <Link
-            key={href}
-            href={href}
-            className="flex min-h-[150px] flex-col justify-between rounded-2xl border border-[#242424] bg-[#141414] p-4 transition hover:border-[#2e2e2e]"
+            href="/batch-studio"
+            className="flex min-h-[300px] flex-[1.25] flex-col justify-between rounded-2xl border border-[#242424] bg-[#141414] p-6 transition hover:border-[#2e2e2e]"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1f1f1f]">
-              <Icon className="h-5 w-5 text-neutral-100" />
+            <span className="inline-flex items-center gap-2 text-neutral-400">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1f1f1f]">
+                <LayoutGrid className="h-5 w-5 text-neutral-100" />
+              </span>
+              <span className="text-xs text-neutral-500">{t('batch.tag')}</span>
             </span>
             <div>
-              <p className="text-sm font-medium text-neutral-100">{title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-neutral-500">{desc}</p>
+              <p className="text-xl font-medium text-neutral-100">{t('batch.title')}</p>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-500">{t('batch.cardDesc')}</p>
             </div>
           </Link>
-        ))}
-      </div>
 
-      <Link
-        href="/edit-photo"
-        className="mt-3 flex items-center gap-4 rounded-2xl border border-[#242424] bg-[#141414] p-4 transition hover:border-[#2e2e2e]"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1f1f1f]">
-          <Wand2 className="h-5 w-5 text-neutral-100" />
-        </span>
-        <div className="flex-1">
-          <p className="text-sm font-medium text-neutral-100">{t('tool.edit.title')}</p>
-          <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">{t('tool.edit.desc')}</p>
+          <div className="grid flex-[1.6] grid-cols-2 gap-[14px]">
+            {tools.map(({ href, Icon, title }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex aspect-square flex-col items-start justify-between rounded-2xl border border-[#242424] bg-[#141414] p-4 transition hover:border-[#2e2e2e]"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1f1f1f]">
+                  <Icon className="h-5 w-5 text-neutral-100" />
+                </span>
+                <p className="text-sm font-medium text-neutral-100">{title}</p>
+              </Link>
+            ))}
+          </div>
         </div>
-        <ArrowRight className="h-5 w-5 text-neutral-600" />
-      </Link>
-    </main>
+      </main>
+    </>
   )
 }
