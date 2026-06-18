@@ -52,6 +52,7 @@ export default function Home() {
               const bgImage =
                 href === '/ecom-studio' ? '/ecom-studio.jpg'
                 : href === '/flat-to-ghost' ? '/flat-to-ghost.jpg'
+                : href === '/edit-photo' ? '/edit-photo.jpg'
                 : null
               return (
               <Link
