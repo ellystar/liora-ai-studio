@@ -164,42 +164,42 @@ export default function EditPhotoPage() {
   }
 
   return (
-    <main className="relative mx-auto flex h-[calc(100vh-130px)] max-w-3xl flex-col px-4 py-5">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_20%,rgba(139,92,246,0.08),transparent_55%),linear-gradient(180deg,rgba(99,102,241,0.04),transparent_40%)]"
-      />
-
-      <div className="relative mb-3 flex items-center justify-between">
+    <main className="flex h-[calc(100vh-130px)] flex-col">
+      <div className="relative z-10 flex items-center justify-between px-5 py-3">
         <p className="text-xs text-neutral-500">{t('tool.edit.title')}</p>
         <p className="text-[11px] text-neutral-600">{t('edit.warning')}</p>
       </div>
 
-      {isEmpty ? (
-        <div className="relative flex flex-1 flex-col items-center justify-center px-4 text-center">
-          <div
-            className="edit-orb h-16 w-16 rounded-full"
-            style={{
-              background: 'radial-gradient(circle at 35% 35%, #8b5cf6, #6366f1 55%, #3b82f6)',
-              boxShadow: '0 0 40px rgba(139,92,246,0.45), 0 0 80px rgba(99,102,241,0.2)',
-            }}
-          />
-          <h2 className="mt-6 text-xl font-medium text-neutral-100">{t('edit.emptyTitle')}</h2>
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
-            {QUICK_KEYS.map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setInput(t(key))}
-                className="rounded-full border border-[#2a2a2a] bg-[#1c1c1c]/80 px-3.5 py-1.5 text-xs text-neutral-300 transition hover:border-violet-500/40 hover:text-violet-200"
-              >
-                {t(key)}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div ref={scrollRef} className="relative flex-1 space-y-4 overflow-y-auto pr-1">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background:
+              'radial-gradient(85% 55% at 50% 42%, rgba(139,92,246,0.22), rgba(99,102,241,0.10) 45%, transparent 72%)',
+          }}
+        />
+
+        <div className="relative z-10 mx-auto flex w-full max-w-3xl min-h-0 flex-1 flex-col px-4 pb-5">
+          {isEmpty ? (
+            <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+              <div className="edit-orb h-16 w-16 rounded-full" />
+              <h2 className="mt-6 text-xl font-medium text-neutral-100">{t('edit.emptyTitle')}</h2>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {QUICK_KEYS.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setInput(t(key))}
+                    className="rounded-full border border-[#2a2a2a] bg-[#1c1c1c]/80 px-3.5 py-1.5 text-xs text-neutral-300 transition hover:border-violet-500/40 hover:text-violet-200"
+                  >
+                    {t(key)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
           {messages.map((m) => (
             <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] ${m.role === 'user' ? 'rounded-2xl rounded-br-sm bg-[#1f1f1f] px-4 py-2.5' : ''}`}>
@@ -237,14 +237,14 @@ export default function EditPhotoPage() {
         </div>
       )}
 
-      {error && <p className="relative mt-2 text-sm text-red-400">{error}</p>}
+          {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
 
-      <div
-        {...dropHandlers}
-        className={`relative mt-3 rounded-2xl border bg-[#1c1c1c]/90 p-3 backdrop-blur-sm transition ${
-          isDragging ? 'border-violet-500/50' : 'border-[#2a2a2a]'
-        }`}
-      >
+          <div
+            {...dropHandlers}
+            className={`edit-prompt-bar relative mt-3 rounded-2xl border bg-[#1c1c1c]/90 p-3 backdrop-blur-sm transition ${
+              isDragging ? 'border-violet-500/50' : 'border-[#2a2a2a]'
+            }`}
+          >
         {attachments.length > 0 && (
           <div className="mb-2 flex gap-2">
             {attachments.map((a, i) => (
@@ -366,7 +366,7 @@ export default function EditPhotoPage() {
             type="button"
             onClick={handleSend}
             disabled={!canSend}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-lg shadow-violet-500/20 transition disabled:opacity-30"
+            className="edit-send-btn flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-lg shadow-violet-500/20 transition disabled:opacity-30"
             style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}
           >
             <ArrowUp className="h-4 w-4" />
@@ -374,6 +374,8 @@ export default function EditPhotoPage() {
         </div>
 
         <p className="mt-2 px-0.5 text-[11px] text-neutral-600">{t('edit.costNote')}</p>
+          </div>
+        </div>
       </div>
 
       <AssetPicker
@@ -402,11 +404,26 @@ export default function EditPhotoPage() {
 
       <style jsx global>{`
         @keyframes editOrbPulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.04); opacity: 0.92; }
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 40px rgba(139, 92, 246, 0.45), 0 0 80px rgba(99, 102, 241, 0.2);
+          }
+          50% {
+            transform: scale(1.04);
+            box-shadow: 0 0 52px rgba(139, 92, 246, 0.58), 0 0 100px rgba(99, 102, 241, 0.3);
+          }
         }
         .edit-orb {
+          background: radial-gradient(circle at 35% 35%, #8b5cf6, #6366f1 55%, #3b82f6);
           animation: editOrbPulse 4s ease-in-out infinite;
+        }
+        .edit-prompt-bar:focus-within {
+          border-color: rgba(139, 92, 246, 0.35);
+          box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.2), 0 0 24px rgba(139, 92, 246, 0.12);
+        }
+        .edit-send-btn:not(:disabled):hover {
+          box-shadow: 0 0 28px rgba(139, 92, 246, 0.45), 0 4px 16px rgba(99, 102, 241, 0.35);
+          filter: brightness(1.08);
         }
       `}</style>
     </main>
