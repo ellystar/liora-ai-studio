@@ -51,9 +51,11 @@ export default function Home() {
             {tools.map(({ href, Icon, title, desc }) => {
               const bgImage =
                 href === '/ecom-studio' ? '/ecom-studio.jpg'
+                : href === '/pose-generator' ? '/pose-generator.jpg'
                 : href === '/flat-to-ghost' ? '/flat-to-ghost.jpg'
                 : href === '/edit-photo' ? '/edit-photo.jpg'
                 : null
+              const isPose = href === '/pose-generator'
               return (
               <Link
                 key={href}
@@ -68,7 +70,14 @@ export default function Home() {
                       alt=""
                       className="absolute inset-0 z-0 h-full w-full object-cover"
                     />
-                    <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+                    {isPose ? (
+                      <>
+                        <div className="absolute inset-0 z-10 bg-black/20" />
+                        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/85 via-black/50 to-black/15" />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+                    )}
                   </>
                 )}
                 <span className={`relative z-20 flex h-10 w-10 items-center justify-center rounded-xl ${bgImage ? 'bg-black/30' : 'bg-[#1f1f1f]'}`}>
