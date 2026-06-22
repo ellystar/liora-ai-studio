@@ -48,7 +48,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <div className="grid flex-[1.6] grid-cols-2 gap-4 lg:grid-cols-3">
+          <div className="grid flex-[1.6] grid-cols-1 gap-4 sm:grid-cols-2">
             {tools.map(({ href, Icon, title, desc }) => {
               const bgImage =
                 href === '/ecom-studio' ? '/ecom-studio.jpg'
@@ -60,39 +60,26 @@ export default function Home() {
               <Link
                 key={href}
                 href={href}
-                className="relative flex min-h-[220px] flex-col overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
+                className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
               >
-                {bgImage ? (
+                {bgImage && (
                   <>
-                    <div className="relative h-[55%] min-h-[121px] w-full shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={bgImage}
-                        alt=""
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/15" />
-                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent" />
-                      <span className="absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-xl bg-black/30">
-                        <Icon className="h-5 w-5 text-white" />
-                      </span>
-                    </div>
-                    <div className="flex flex-1 flex-col justify-end bg-[#141414] px-5 pb-5 pt-4">
-                      <p className="text-lg font-medium text-neutral-100">{title}</p>
-                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-neutral-500">{desc}</p>
-                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={bgImage}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
                   </>
-                ) : (
-                  <div className="flex flex-1 flex-col justify-between p-5">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1f1f1f]">
-                      <Icon className="h-5 w-5 text-neutral-100" />
-                    </span>
-                    <div>
-                      <p className="text-lg font-medium text-neutral-100">{title}</p>
-                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-neutral-500">{desc}</p>
-                    </div>
-                  </div>
                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+                <span className="absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-xl bg-black/30">
+                  <Icon className="h-5 w-5 text-white" />
+                </span>
+                <div className="absolute inset-x-0 bottom-0 z-20 p-5">
+                  <p className="line-clamp-1 text-base font-medium text-white">{title}</p>
+                  <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-white/80">{desc}</p>
+                </div>
               </Link>
               )
             })}
