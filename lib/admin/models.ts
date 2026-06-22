@@ -8,6 +8,7 @@ export type AdminModel = {
   image_url: string | null
   image_path: string | null
   owner_id: string | null
+  scope: string | null
   source: string | null
   created_at?: string
 }
@@ -56,6 +57,7 @@ export async function createGeneralModel(
     name,
     gender,
     owner_id: null,
+    scope: 'general',
     source: 'admin',
     image_url,
     image_path: null,
@@ -75,6 +77,7 @@ export async function createPrivateModel(
     name,
     gender,
     owner_id: ownerId,
+    scope: 'own',
     source: 'admin',
     image_path,
     image_url: null,
@@ -101,7 +104,7 @@ export async function listAdminModels(): Promise<AdminModel[]> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('models')
-    .select('id,name,gender,image_url,image_path,owner_id,source,created_at')
+    .select('id,name,gender,image_url,image_path,owner_id,scope,source,created_at')
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data as AdminModel[]) ?? []
