@@ -12,7 +12,7 @@ import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { PoseFilterTabs } from '@/components/pose-filter-tabs'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 
-type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null }
+type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null; category?: string | null }
 const STEPS = ['photo', 'pose'] as const
 
 export default function PoseGeneratorPage() {
@@ -42,7 +42,7 @@ export default function PoseGeneratorPage() {
   useEffect(() => {
     ;(async () => {
       const supabase = createClient()
-      const { data } = await supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type').order('created_at', { ascending: false })
+      const { data } = await supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type,category').order('created_at', { ascending: false })
       setPoses((data as Pose[]) ?? [])
       setLoadingData(false)
     })()
@@ -52,7 +52,8 @@ export default function PoseGeneratorPage() {
     listFavoritePoseIds().then(setFavIds)
   }, [])
 
-  const filteredPoses = filterPoses(poses, poseFilter, favIds)
+  const generalPoses = poses.filter((p) => p.category !== 'shoe')
+  const filteredPoses = filterPoses(generalPoses, poseFilter, favIds)
 
   async function handleToggleFavorite(poseId: string) {
     const wasFav = favIds.has(poseId)
@@ -92,7 +93,7 @@ export default function PoseGeneratorPage() {
     setCustomPoses((prev) => prev.filter((_, idx) => idx !== i))
   }
 
-  const selectedPoses = poses.filter((p) => poseIds.includes(p.id))
+  const selectedPoses = generalPoses.filter((p) => poseIds.includes(p.id))
   const posesToRun = [
     ...selectedPoses.map((p) => ({ id: p.id, prompt: p.prompt })),
     ...customPoses.map((txt, i) => ({ id: `custom-${i}`, prompt: txt })),
@@ -278,7 +279,7 @@ export default function PoseGeneratorPage() {
 
           <p className="mb-2 text-sm font-medium text-neutral-200">{t('poses.presetTitle')}</p>
           <PoseFilterTabs value={poseFilter} onChange={setPoseFilter} className="mb-3" />
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : poses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : filteredPoses.length === 0 ? (
+          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : generalPoses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : filteredPoses.length === 0 ? (
             <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

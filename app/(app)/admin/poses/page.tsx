@@ -6,12 +6,14 @@ import { createClient } from '@/lib/supabase/client'
 import { uploadAsset } from '@/lib/admin/upload'
 
 type ShotType = 'full_body' | 'medium_shot' | 'close_up'
+type PoseCategory = 'general' | 'shoe'
 type Pose = {
   id: string
   name: string
   thumbnail_url: string
   prompt: string
   shot_type: ShotType | null
+  category: PoseCategory
 }
 
 const SHOT_TYPE_OPTIONS: { value: '' | ShotType; label: string }[] = [
@@ -19,6 +21,11 @@ const SHOT_TYPE_OPTIONS: { value: '' | ShotType; label: string }[] = [
   { value: 'full_body', label: 'Tam boy' },
   { value: 'medium_shot', label: 'Orta plan' },
   { value: 'close_up', label: 'Yakın çekim' },
+]
+
+const CATEGORY_OPTIONS: { value: PoseCategory; label: string }[] = [
+  { value: 'general', label: 'Genel' },
+  { value: 'shoe', label: 'Ayakkabı' },
 ]
 
 const inputCls = 'w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white outline-none focus:border-neutral-600'
@@ -31,6 +38,7 @@ export default function PosesAdmin() {
   const [name, setName] = useState('')
   const [prompt, setPrompt] = useState('')
   const [shotType, setShotType] = useState<'' | ShotType>('')
+  const [category, setCategory] = useState<PoseCategory>('general')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -56,11 +64,13 @@ export default function PosesAdmin() {
         thumbnail_url,
         prompt,
         shot_type: shotType || null,
+        category,
       })
       if (insErr) throw insErr
       setName('')
       setPrompt('')
       setShotType('')
+      setCategory('general')
       setFile(null)
       setFileKey((k) => k + 1)
       await load()
@@ -81,6 +91,15 @@ export default function PosesAdmin() {
     setItems((prev) => prev.map((p) => (p.id === id ? { ...p, shot_type: next } : p)))
   }
 
+  async function handleCategoryChange(id: string, value: PoseCategory) {
+    const { error: updErr } = await supabase.from('poses').update({ category: value }).eq('id', id)
+    if (updErr) {
+      setError('Hata: ' + updErr.message)
+      return
+    }
+    setItems((prev) => prev.map((p) => (p.id === id ? { ...p, category: value } : p)))
+  }
+
   async function handleDelete(id: string) {
     await supabase.from('poses').delete().eq('id', id)
     await load()
@@ -95,19 +114,35 @@ export default function PosesAdmin() {
             <input key={fileKey} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className={inputCls} title="Thumbnail görseli" />
             <input type="text" placeholder="Poz adı" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </div>
-          <div>
-            <p className="mb-1.5 text-xs text-neutral-500">Çekim tipi</p>
-            <select
-              value={shotType}
-              onChange={(e) => setShotType(e.target.value as '' | ShotType)}
-              className={inputCls}
-            >
-              {SHOT_TYPE_OPTIONS.map((o) => (
-                <option key={o.value || 'none'} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <p className="mb-1.5 text-xs text-neutral-500">Çekim tipi</p>
+              <select
+                value={shotType}
+                onChange={(e) => setShotType(e.target.value as '' | ShotType)}
+                className={inputCls}
+              >
+                {SHOT_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value || 'none'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <p className="mb-1.5 text-xs text-neutral-500">Kategori</p>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as PoseCategory)}
+                className={inputCls}
+              >
+                {CATEGORY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <textarea placeholder="Prompt (Gemini'a gönderilecek)" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className={inputCls} />
         </div>
@@ -137,6 +172,18 @@ export default function PosesAdmin() {
               >
                 {SHOT_TYPE_OPTIONS.map((o) => (
                   <option key={o.value || 'none'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={p.category ?? 'general'}
+                onChange={(e) => handleCategoryChange(p.id, e.target.value as PoseCategory)}
+                className="mt-1 w-full rounded border border-neutral-800 bg-neutral-950 px-1.5 py-1 text-[10px] text-neutral-300 outline-none focus:border-neutral-600"
+                aria-label={`Kategori: ${p.name}`}
+              >
+                {CATEGORY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
                     {o.label}
                   </option>
                 ))}

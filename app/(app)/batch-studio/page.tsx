@@ -19,7 +19,7 @@ import type { NewUserModel } from '@/lib/models/user-models'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
-type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null }
+type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null; category?: string | null }
 
 type GarmentSource =
   | { kind: 'file'; file: File; previewUrl: string }
@@ -229,7 +229,7 @@ export default function BatchStudioPage() {
       const [m, b, p] = await Promise.all([
         supabase.from('models').select('id,name,gender,image_url,scope').order('created_at', { ascending: false }),
         supabase.from('backgrounds').select('id,name,thumbnail_url,prompt').order('created_at', { ascending: false }),
-        supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type').order('created_at', { ascending: false }),
+        supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type,category').order('created_at', { ascending: false }),
       ])
       setModels((m.data as Model[]) ?? [])
       setBackgrounds((b.data as Background[]) ?? [])
@@ -244,6 +244,7 @@ export default function BatchStudioPage() {
   }, [])
 
   const filteredModels = filterModels(models, modelFilter, modelFavIds)
+  const generalPoses = poses.filter((p) => p.category !== 'shoe')
 
   async function handleToggleFavorite(poseId: string) {
     const wasFav = favIds.has(poseId)
@@ -335,7 +336,7 @@ export default function BatchStudioPage() {
     const list: Job[] = []
     products.forEach((product, productIndex) => {
       product.poseIds.forEach((poseId) => {
-        const pose = poses.find((p) => p.id === poseId)
+        const pose = generalPoses.find((p) => p.id === poseId)
         list.push({
           id: crypto.randomUUID(),
           productId: product.id,
@@ -363,7 +364,7 @@ export default function BatchStudioPage() {
         try {
           const product = products.find((p) => p.id === job.productId)!
           const prep = await getPrepared(product)
-          const pose = poses.find((p) => p.id === job.poseId)!
+          const pose = generalPoses.find((p) => p.id === job.poseId)!
           const { data, error } = await supabase.functions.invoke('generate-ecom', {
             body: {
               model: prep.model,
@@ -660,7 +661,7 @@ export default function BatchStudioPage() {
               const product = pageProducts[slotIndex]
               if (product) {
                 const cardFilter = (productPoseFilter[product.id] ?? 'all') as PoseFilter
-                const cardPoses = filterPoses(poses, cardFilter, favIds)
+                const cardPoses = filterPoses(generalPoses, cardFilter, favIds)
                 return (
               <div
                 key={product.id}

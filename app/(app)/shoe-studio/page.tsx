@@ -83,7 +83,7 @@ function ItemCard({ selected, onClick, name, imageUrl, badge, multi, isFavorite,
   )
 }
 
-export default function EcomStudioPage() {
+export default function ShoeStudioPage() {
   const router = useRouter()
   const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -114,9 +114,9 @@ export default function EcomStudioPage() {
   const [genError, setGenError] = useState<string | null>(null)
   const [genProgress, setGenProgress] = useState({ done: 0, total: 0 })
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
-  const [tuck, setTuck] = useState<'in' | 'out' | null>(null)
 
   const step = STEPS[stepIndex]
+  const shoePoses = poses.filter((p) => p.category === 'shoe')
 
   useEffect(() => {
     ;(async () => {
@@ -138,8 +138,7 @@ export default function EcomStudioPage() {
     listFavoriteModelIds().then(setModelFavIds)
   }, [])
 
-  const generalPoses = poses.filter((p) => p.category !== 'shoe')
-  const filteredPoses = filterPoses(generalPoses, poseFilter, favIds)
+  const filteredPoses = filterPoses(shoePoses, poseFilter, favIds)
   const filteredModels = filterModels(models, modelFilter, modelFavIds)
 
   async function handleToggleFavorite(poseId: string) {
@@ -239,7 +238,7 @@ export default function EcomStudioPage() {
     setCustomPoses((prev) => prev.filter((_, idx) => idx !== i))
   }
 
-  const selectedPoses = generalPoses.filter((p) => poseIds.includes(p.id))
+  const selectedPoses = shoePoses.filter((p) => poseIds.includes(p.id))
   const posesToRun = [
     ...selectedPoses.map((p) => ({ id: p.id, prompt: p.prompt })),
     ...customPoses.map((txt, i) => ({ id: `custom-${i}`, prompt: txt })),
@@ -296,7 +295,6 @@ export default function EcomStudioPage() {
             poses: [pose],
             ratio,
             quality,
-            tuck: tuck ?? undefined,
           },
         })
 
@@ -388,7 +386,7 @@ export default function EcomStudioPage() {
                 <ChevronRight className="h-8 w-8" />
               </button>
             </div>
-            <button type="button" onClick={() => downloadAsJpg(results[lightbox], `liora-ecom-${lightbox + 1}`)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
+            <button type="button" onClick={() => downloadAsJpg(results[lightbox], `liora-shoe-${lightbox + 1}`)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
               <Download className="h-4 w-4" />
               {t('ecom.result.download')}
             </button>
@@ -400,7 +398,7 @@ export default function EcomStudioPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-8">
-      <p className="mb-4 text-xs text-neutral-500">{t('tool.ecom.title')}</p>
+      <p className="mb-4 text-xs text-neutral-500">{t('tool.shoe.title')}</p>
 
       <div className="mb-1.5 flex items-center gap-1.5">
         {STEPS.map((s, i) => (
@@ -410,15 +408,15 @@ export default function EcomStudioPage() {
       <div className="mb-8 flex justify-between text-[11px]">
         {STEPS.map((s, i) => (
           <span key={s} className={i === stepIndex ? 'font-medium text-neutral-100' : 'text-neutral-600'}>
-            {t(`ecom.step.${s}` as TranslationKey)}
+            {t((i === 0 ? 'shoe.step.shoe' : `ecom.step.${s}`) as TranslationKey)}
           </span>
         ))}
       </div>
 
       {step === 'clothes' && (
         <div>
-          <p className="text-base font-medium text-neutral-100">{t('ecom.clothes.title')}</p>
-          <p className="mb-4 text-sm text-neutral-500">{t('ecom.clothes.subtitle')}</p>
+          <p className="text-base font-medium text-neutral-100">{t('shoe.clothes.title')}</p>
+          <p className="mb-4 text-sm text-neutral-500">{t('shoe.clothes.subtitle')}</p>
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {clothes.map((c) => (
@@ -489,26 +487,6 @@ export default function EcomStudioPage() {
             )}
           </div>
           <p className="mt-3 text-[11px] text-neutral-600">{t('ecom.clothes.max')}</p>
-
-          <div className="mt-6">
-            <p className="text-xs text-neutral-500">{t('ecom.tuck.title')}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setTuck(tuck === 'out' ? null : 'out')}
-                className={`rounded-lg border px-4 py-2 text-sm transition ${tuck === 'out' ? 'border-white text-neutral-100' : 'border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}
-              >
-                {t('ecom.tuck.out')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setTuck(tuck === 'in' ? null : 'in')}
-                className={`rounded-lg border px-4 py-2 text-sm transition ${tuck === 'in' ? 'border-white text-neutral-100' : 'border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}
-              >
-                {t('ecom.tuck.in')}
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
@@ -578,7 +556,7 @@ export default function EcomStudioPage() {
 
           <p className="mb-2 text-sm font-medium text-neutral-200">{t('poses.presetTitle')}</p>
           <PoseFilterTabs value={poseFilter} onChange={setPoseFilter} className="mb-3" />
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : generalPoses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : filteredPoses.length === 0 ? (
+          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : shoePoses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : filteredPoses.length === 0 ? (
             <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
