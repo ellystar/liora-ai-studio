@@ -48,7 +48,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <div className="grid flex-[1.6] grid-cols-2 gap-[14px]">
+          <div className="grid flex-[1.6] grid-cols-2 gap-4 lg:grid-cols-3">
             {tools.map(({ href, Icon, title, desc }) => {
               const bgImage =
                 href === '/ecom-studio' ? '/ecom-studio.jpg'
