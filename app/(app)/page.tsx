@@ -23,10 +23,10 @@ export default function Home() {
         <h1 className="text-lg font-medium text-neutral-100">{t('home.welcome.title')}</h1>
         <p className="mt-1.5 text-sm text-neutral-500">{t('home.welcome.subtitle')}</p>
 
-        <div className="mt-6 flex flex-col gap-4 lg:flex-row">
+        <div className="mt-6 flex flex-col gap-4 lg:max-h-[calc(100vh-10rem)] lg:flex-row lg:items-stretch">
           <Link
             href="/batch-studio"
-            className="relative flex min-h-[300px] flex-[1.25] flex-col justify-between overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] p-6 transition hover:border-[#2e2e2e]"
+            className="relative flex flex-[1.25] flex-col justify-between overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] p-6 transition hover:border-[#2e2e2e] lg:h-full lg:min-h-0"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -48,7 +48,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <div className="grid flex-[1.6] grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid flex-[1.6] grid-cols-2 gap-4">
             {tools.map(({ href, Icon, title, desc }) => {
               const bgImage =
                 href === '/ecom-studio' ? '/ecom-studio.jpg'
@@ -60,7 +60,7 @@ export default function Home() {
               <Link
                 key={href}
                 href={href}
-                className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
+                className="relative h-[200px] overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
               >
                 {bgImage && (
                   <>
@@ -73,12 +73,12 @@ export default function Home() {
                   </>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-                <span className="absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-xl bg-black/30">
-                  <Icon className="h-5 w-5 text-white" />
+                <span className="absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-xl bg-black/30">
+                  <Icon className="h-4 w-4 text-white" />
                 </span>
-                <div className="absolute inset-x-0 bottom-0 z-20 p-5">
+                <div className="absolute inset-x-0 bottom-0 z-20 p-4">
                   <p className="line-clamp-1 text-base font-medium text-white">{title}</p>
-                  <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-white/80">{desc}</p>
+                  <p className="mt-1 line-clamp-2 text-sm leading-snug text-white/80">{desc}</p>
                 </div>
               </Link>
               )
