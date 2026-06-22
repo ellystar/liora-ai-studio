@@ -13,6 +13,13 @@ export type AdminModel = {
   created_at?: string
 }
 
+export class UserNotFoundError extends Error {
+  constructor() {
+    super('user_not_found')
+    this.name = 'UserNotFoundError'
+  }
+}
+
 const USER_MODELS_BUCKET = 'user-models'
 
 export async function getModelDisplayUrl(
@@ -35,6 +42,22 @@ export async function lookupUserIdByEmail(email: string): Promise<string | null>
   return (data as string | null) ?? null
 }
 
+export async function lookupEmailByUserId(userId: string): Promise<string | null> {
+  const supabase = createClient()
+  const { data, error } = await supabase.rpc('admin_email_by_user_id', { p_user_id: userId })
+  if (error) throw error
+  return (data as string | null) ?? null
+}
+
+async function resolveAssignment(assignEmail: string | null): Promise<{ owner_id: string | null; scope: 'general' | 'own' }> {
+  if (!assignEmail?.trim()) {
+    return { owner_id: null, scope: 'general' }
+  }
+  const ownerId = await lookupUserIdByEmail(assignEmail)
+  if (!ownerId) throw new UserNotFoundError()
+  return { owner_id: ownerId, scope: 'own' }
+}
+
 export async function uploadPrivateModelFile(ownerId: string, file: File): Promise<string> {
   const supabase = createClient()
   const ext = (file.name.split('.').pop() || 'png').toLowerCase()
@@ -46,12 +69,30 @@ export async function uploadPrivateModelFile(ownerId: string, file: File): Promi
   return path
 }
 
-export async function createGeneralModel(
+export async function createModel(
   name: string,
   gender: string | null,
-  file: File
+  file: File,
+  assignEmail: string | null
 ): Promise<void> {
+  const { owner_id, scope } = await resolveAssignment(assignEmail)
   const supabase = createClient()
+
+  if (owner_id) {
+    const image_path = await uploadPrivateModelFile(owner_id, file)
+    const { error } = await supabase.from('models').insert({
+      name,
+      gender,
+      owner_id,
+      scope,
+      source: 'admin',
+      image_path,
+      image_url: null,
+    })
+    if (error) throw error
+    return
+  }
+
   const image_url = await uploadAsset('models', file)
   const { error } = await supabase.from('models').insert({
     name,
@@ -65,29 +106,16 @@ export async function createGeneralModel(
   if (error) throw error
 }
 
-export async function createPrivateModel(
-  name: string,
-  gender: string | null,
-  ownerId: string,
-  file: File
+export async function updateModel(
+  modelId: string,
+  opts: { assignEmail: string | null; gender: string | null }
 ): Promise<void> {
+  const { owner_id, scope } = await resolveAssignment(opts.assignEmail)
   const supabase = createClient()
-  const image_path = await uploadPrivateModelFile(ownerId, file)
-  const { error } = await supabase.from('models').insert({
-    name,
-    gender,
-    owner_id: ownerId,
-    scope: 'own',
-    source: 'admin',
-    image_path,
-    image_url: null,
-  })
-  if (error) throw error
-}
-
-export async function updateModelGender(id: string, gender: string | null): Promise<void> {
-  const supabase = createClient()
-  const { error } = await supabase.from('models').update({ gender }).eq('id', id)
+  const { error } = await supabase
+    .from('models')
+    .update({ gender: opts.gender, owner_id, scope })
+    .eq('id', modelId)
   if (error) throw error
 }
 
@@ -122,4 +150,17 @@ export async function resolveModelDisplayUrls(
     })
   )
   return urls
+}
+
+export async function resolveOwnerEmails(models: AdminModel[]): Promise<Record<string, string>> {
+  const emails: Record<string, string> = {}
+  await Promise.all(
+    models
+      .filter((m) => m.owner_id)
+      .map(async (m) => {
+        const email = await lookupEmailByUserId(m.owner_id!)
+        if (email) emails[m.id] = email
+      })
+  )
+  return emails
 }
