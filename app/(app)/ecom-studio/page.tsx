@@ -13,7 +13,9 @@ import { AssetPicker } from '@/components/asset-picker'
 import { saveAsset, type Asset } from '@/lib/assets/assets'
 import { ratios, qualities, type Category, type Ratio, type Quality } from '@/lib/ecom/mock-data'
 import { PoseFilterTabs } from '@/components/pose-filter-tabs'
+import { ModelFilterTabs } from '@/components/model-filter-tabs'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
+import { filterModels, listFavoriteModelIds, toggleFavoriteModel, type ModelFilter } from '@/lib/models/favorites'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
@@ -98,6 +100,8 @@ export default function EcomStudioPage() {
   const [customPoses, setCustomPoses] = useState<string[]>([])
   const [favIds, setFavIds] = useState<Set<string>>(new Set())
   const [poseFilter, setPoseFilter] = useState<PoseFilter>('all')
+  const [modelFavIds, setModelFavIds] = useState<Set<string>>(new Set())
+  const [modelFilter, setModelFilter] = useState<ModelFilter>('all')
   const [ratio, setRatio] = useState<Ratio>('2:3')
   const [quality, setQuality] = useState<Quality>('1k')
   const [showConfirm, setShowConfirm] = useState(false)
@@ -128,9 +132,11 @@ export default function EcomStudioPage() {
 
   useEffect(() => {
     listFavoritePoseIds().then(setFavIds)
+    listFavoriteModelIds().then(setModelFavIds)
   }, [])
 
   const filteredPoses = filterPoses(poses, poseFilter, favIds)
+  const filteredModels = filterModels(models, modelFilter, modelFavIds)
 
   async function handleToggleFavorite(poseId: string) {
     const wasFav = favIds.has(poseId)
@@ -147,6 +153,26 @@ export default function EcomStudioPage() {
         const next = new Set(prev)
         if (wasFav) next.add(poseId)
         else next.delete(poseId)
+        return next
+      })
+    }
+  }
+
+  async function handleToggleModelFavorite(modelId: string) {
+    const wasFav = modelFavIds.has(modelId)
+    setModelFavIds((prev) => {
+      const next = new Set(prev)
+      if (wasFav) next.delete(modelId)
+      else next.add(modelId)
+      return next
+    })
+    try {
+      await toggleFavoriteModel(modelId, !wasFav)
+    } catch {
+      setModelFavIds((prev) => {
+        const next = new Set(prev)
+        if (wasFav) next.add(modelId)
+        else next.delete(modelId)
         return next
       })
     }
@@ -487,11 +513,27 @@ export default function EcomStudioPage() {
           <p className="text-base font-medium text-neutral-100">{t('ecom.model.title')}</p>
           <p className="mb-4 text-sm text-neutral-500">{t('ecom.model.subtitle')}</p>
           {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : models.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {models.map((m) => (
-                <ItemCard key={m.id} selected={modelId === m.id} onClick={() => setModelId(m.id)} name={m.name} imageUrl={m.image_url} badge={{ text: m.scope, own: m.scope === 'own' }} />
-              ))}
-            </div>
+            <>
+              <ModelFilterTabs value={modelFilter} onChange={setModelFilter} className="mb-3" />
+              {filteredModels.length === 0 ? (
+                <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {filteredModels.map((m) => (
+                    <ItemCard
+                      key={m.id}
+                      selected={modelId === m.id}
+                      onClick={() => setModelId(m.id)}
+                      name={m.name}
+                      imageUrl={m.image_url}
+                      badge={{ text: m.scope, own: m.scope === 'own' }}
+                      isFavorite={modelFavIds.has(m.id)}
+                      onFavoriteToggle={() => handleToggleModelFavorite(m.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

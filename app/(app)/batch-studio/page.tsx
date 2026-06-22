@@ -13,6 +13,7 @@ import type { Asset } from '@/lib/assets/assets'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { downloadAsJpg, imageToJpegBlob } from '@/lib/image/download'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
+import { filterModels, listFavoriteModelIds, toggleFavoriteModel, type ModelFilter } from '@/lib/models/favorites'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
@@ -63,6 +64,15 @@ const POSE_FILTER_KEYS: Record<PoseFilter, TranslationKey> = {
   medium_shot: 'poses.filter.medium_shot',
   close_up: 'poses.filter.close_up',
   favorites: 'poses.filter.favorites',
+}
+const MODEL_FILTERS: ModelFilter[] = ['all', 'general', 'own', 'female', 'male', 'favorites']
+const MODEL_FILTER_KEYS: Record<ModelFilter, TranslationKey> = {
+  all: 'models.filter.all',
+  general: 'models.filter.general',
+  own: 'models.filter.own',
+  female: 'models.filter.female',
+  male: 'models.filter.male',
+  favorites: 'models.filter.favorites',
 }
 
 type Ratio = (typeof RATIOS)[number]
@@ -207,6 +217,8 @@ export default function BatchStudioPage() {
   const [loadingData, setLoadingData] = useState(true)
   const [favIds, setFavIds] = useState<Set<string>>(new Set())
   const [productPoseFilter, setProductPoseFilter] = useState<Record<string, string>>({})
+  const [modelFavIds, setModelFavIds] = useState<Set<string>>(new Set())
+  const [modelFilter, setModelFilter] = useState<ModelFilter>('all')
 
   useEffect(() => {
     ;(async () => {
@@ -225,7 +237,10 @@ export default function BatchStudioPage() {
 
   useEffect(() => {
     listFavoritePoseIds().then(setFavIds)
+    listFavoriteModelIds().then(setModelFavIds)
   }, [])
+
+  const filteredModels = filterModels(models, modelFilter, modelFavIds)
 
   async function handleToggleFavorite(poseId: string) {
     const wasFav = favIds.has(poseId)
@@ -242,6 +257,26 @@ export default function BatchStudioPage() {
         const next = new Set(prev)
         if (wasFav) next.add(poseId)
         else next.delete(poseId)
+        return next
+      })
+    }
+  }
+
+  async function handleToggleModelFavorite(modelId: string) {
+    const wasFav = modelFavIds.has(modelId)
+    setModelFavIds((prev) => {
+      const next = new Set(prev)
+      if (wasFav) next.delete(modelId)
+      else next.add(modelId)
+      return next
+    })
+    try {
+      await toggleFavoriteModel(modelId, !wasFav)
+    } catch {
+      setModelFavIds((prev) => {
+        const next = new Set(prev)
+        if (wasFav) next.add(modelId)
+        else next.delete(modelId)
         return next
       })
     }
@@ -932,18 +967,49 @@ export default function BatchStudioPage() {
                 {modelPickerOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setModelPickerOpen(false)} />
-                    <div className="absolute right-0 top-full z-20 mt-1 grid max-h-48 w-48 grid-cols-3 gap-1 overflow-y-auto rounded-lg border border-[#242424] bg-[#1c1c1c] p-2 shadow-lg">
-                      {models.map((m) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => { setPickModelId(m.id); setModelPickerOpen(false) }}
-                          className={`overflow-hidden rounded-lg ring-1 ${pickModelId === m.id ? 'ring-white' : 'ring-[#333]'}`}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={m.image_url} alt={m.name} className="aspect-[3/4] w-full object-cover" />
-                        </button>
-                      ))}
+                    <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-lg border border-[#242424] bg-[#1c1c1c] p-2 shadow-lg">
+                      <select
+                        value={modelFilter}
+                        onChange={(e) => setModelFilter(e.target.value as ModelFilter)}
+                        className="mb-2 w-full rounded border border-[#333] bg-[#0f0f0f] px-1.5 py-0.5 text-[10px] text-neutral-300 outline-none focus:border-[#444]"
+                      >
+                        {MODEL_FILTERS.map((f) => (
+                          <option key={f} value={f}>{t(MODEL_FILTER_KEYS[f])}</option>
+                        ))}
+                      </select>
+                      {filteredModels.length === 0 ? (
+                        <p className="py-2 text-center text-[10px] text-neutral-600">{t('ecom.empty')}</p>
+                      ) : (
+                        <div className="grid max-h-48 grid-cols-3 gap-1 overflow-y-auto">
+                          {filteredModels.map((m) => (
+                            <div
+                              key={m.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => { setPickModelId(m.id); setModelPickerOpen(false) }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  setPickModelId(m.id)
+                                  setModelPickerOpen(false)
+                                }
+                              }}
+                              className={`relative cursor-pointer overflow-hidden rounded-lg ring-1 ${pickModelId === m.id ? 'ring-white' : 'ring-[#333]'}`}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={m.image_url} alt={m.name} className="aspect-[3/4] w-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleToggleModelFavorite(m.id) }}
+                                className="absolute left-0.5 top-0.5 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-black/50"
+                                aria-label="Favori"
+                              >
+                                <Star className={`h-2.5 w-2.5 ${modelFavIds.has(m.id) ? 'fill-amber-400 text-amber-400' : 'text-white/80'}`} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
