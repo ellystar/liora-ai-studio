@@ -14,8 +14,10 @@ import { saveAsset, type Asset } from '@/lib/assets/assets'
 import { ratios, qualities, type Category, type Ratio, type Quality } from '@/lib/ecom/mock-data'
 import { PoseFilterTabs } from '@/components/pose-filter-tabs'
 import { ModelFilterTabs } from '@/components/model-filter-tabs'
+import { UserModelUpload } from '@/components/user-model-upload'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 import { filterModels, listFavoriteModelIds, toggleFavoriteModel, type ModelFilter } from '@/lib/models/favorites'
+import type { NewUserModel } from '@/lib/models/user-models'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
@@ -102,6 +104,7 @@ export default function EcomStudioPage() {
   const [poseFilter, setPoseFilter] = useState<PoseFilter>('all')
   const [modelFavIds, setModelFavIds] = useState<Set<string>>(new Set())
   const [modelFilter, setModelFilter] = useState<ModelFilter>('all')
+  const [modelUploadOpen, setModelUploadOpen] = useState(false)
   const [ratio, setRatio] = useState<Ratio>('2:3')
   const [quality, setQuality] = useState<Quality>('1k')
   const [showConfirm, setShowConfirm] = useState(false)
@@ -512,13 +515,28 @@ export default function EcomStudioPage() {
         <div>
           <p className="text-base font-medium text-neutral-100">{t('ecom.model.title')}</p>
           <p className="mb-4 text-sm text-neutral-500">{t('ecom.model.subtitle')}</p>
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : models.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
+          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : (
             <>
               <ModelFilterTabs value={modelFilter} onChange={setModelFilter} className="mb-3" />
-              {filteredModels.length === 0 ? (
+              {modelFilter === 'own' && (
+                <p className="mb-3 text-xs text-neutral-500">{t('models.own.info')}</p>
+              )}
+              {modelFilter !== 'own' && models.length === 0 ? (
+                <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
+              ) : modelFilter !== 'own' && filteredModels.length === 0 ? (
                 <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {modelFilter === 'own' && (
+                    <button
+                      type="button"
+                      onClick={() => setModelUploadOpen(true)}
+                      className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#333] bg-[#141414] text-neutral-500 transition hover:border-[#444] hover:text-neutral-400"
+                    >
+                      <Plus className="h-5 w-5" />
+                      <span className="mt-1 px-2 text-center text-[10px]">{t('models.upload.tile')}</span>
+                    </button>
+                  )}
                   {filteredModels.map((m) => (
                     <ItemCard
                       key={m.id}
@@ -671,6 +689,15 @@ export default function EcomStudioPage() {
         open={assetPickerOpen}
         onClose={() => setAssetPickerOpen(false)}
         onSelect={addAssetCloth}
+      />
+
+      <UserModelUpload
+        open={modelUploadOpen}
+        onClose={() => setModelUploadOpen(false)}
+        onAdded={(m: NewUserModel) => {
+          setModels((prev) => [m, ...prev])
+          setModelId(m.id)
+        }}
       />
     </main>
   )

@@ -14,6 +14,8 @@ import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { downloadAsJpg, imageToJpegBlob } from '@/lib/image/download'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 import { filterModels, listFavoriteModelIds, toggleFavoriteModel, type ModelFilter } from '@/lib/models/favorites'
+import { UserModelUpload } from '@/components/user-model-upload'
+import type { NewUserModel } from '@/lib/models/user-models'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
@@ -219,6 +221,7 @@ export default function BatchStudioPage() {
   const [productPoseFilter, setProductPoseFilter] = useState<Record<string, string>>({})
   const [modelFavIds, setModelFavIds] = useState<Set<string>>(new Set())
   const [modelFilter, setModelFilter] = useState<ModelFilter>('all')
+  const [modelUploadOpen, setModelUploadOpen] = useState(false)
 
   useEffect(() => {
     ;(async () => {
@@ -950,7 +953,20 @@ export default function BatchStudioPage() {
               {t('batch.selectAll')}
             </label>
             <span className="text-xs text-neutral-500">{selectedCountText}</span>
+            {modelFilter === 'own' && (
+              <p className="w-full text-[10px] text-neutral-500">{t('models.own.info')}</p>
+            )}
             <div className="ml-auto flex flex-wrap items-center gap-2">
+              {modelFilter === 'own' && (
+                <button
+                  type="button"
+                  onClick={() => setModelUploadOpen(true)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-dashed border-[#333] px-3 py-1.5 text-xs text-neutral-400 hover:border-[#444] hover:text-neutral-300"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t('models.upload.tile')}
+                </button>
+              )}
               <div className="relative">
                 <button
                   type="button"
@@ -977,10 +993,23 @@ export default function BatchStudioPage() {
                           <option key={f} value={f}>{t(MODEL_FILTER_KEYS[f])}</option>
                         ))}
                       </select>
-                      {filteredModels.length === 0 ? (
+                      {modelFilter === 'own' && (
+                        <p className="mb-2 text-[9px] leading-snug text-neutral-500">{t('models.own.info')}</p>
+                      )}
+                      {modelFilter !== 'own' && filteredModels.length === 0 ? (
                         <p className="py-2 text-center text-[10px] text-neutral-600">{t('ecom.empty')}</p>
                       ) : (
                         <div className="grid max-h-48 grid-cols-3 gap-1 overflow-y-auto">
+                          {modelFilter === 'own' && (
+                            <button
+                              type="button"
+                              onClick={() => { setModelUploadOpen(true); setModelPickerOpen(false) }}
+                              className="flex aspect-[3/4] flex-col items-center justify-center rounded-lg border border-dashed border-[#333] text-neutral-500 hover:border-[#444] hover:text-neutral-400"
+                            >
+                              <Plus className="h-4 w-4" />
+                              <span className="mt-0.5 px-0.5 text-center text-[8px] leading-tight">{t('models.upload.tile')}</span>
+                            </button>
+                          )}
                           {filteredModels.map((m) => (
                             <div
                               key={m.id}
@@ -1323,6 +1352,14 @@ export default function BatchStudioPage() {
         open={assetTarget !== null}
         onClose={() => setAssetTarget(null)}
         onSelect={handleAssetSelect}
+      />
+
+      <UserModelUpload
+        open={modelUploadOpen}
+        onClose={() => setModelUploadOpen(false)}
+        onAdded={(m: NewUserModel) => {
+          setModels((prev) => [m, ...prev])
+        }}
       />
     </main>
   )
