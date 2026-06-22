@@ -20,16 +20,18 @@ export default function Home() {
   return (
     <>
       <PixelCursor />
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <h1 className="text-lg font-medium text-neutral-100">{t('home.welcome.title')}</h1>
-        <p className="mt-1.5 text-sm text-neutral-500">{t('home.welcome.subtitle')}</p>
+      <main className="mx-auto flex h-[calc(100vh-64px)] w-full max-w-5xl flex-col overflow-hidden px-6 py-6">
+        <div className="mb-4 shrink-0">
+          <h1 className="text-lg font-medium text-neutral-100">{t('home.welcome.title')}</h1>
+          <p className="mt-1.5 text-sm text-neutral-500">{t('home.welcome.subtitle')}</p>
+        </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-2 gap-4">
           {tools.map(({ href, Icon, title, desc, bgImage }) => (
             <Link
               key={href}
               href={href}
-              className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
+              className="relative h-full w-full min-h-0 overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
             >
               {bgImage && (
                 <>
@@ -42,12 +44,12 @@ export default function Home() {
                 </>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-              <span className="absolute left-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-xl bg-black/30">
+              <span className="absolute left-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-xl bg-black/30">
                 <Icon className="h-4 w-4 text-white" />
               </span>
-              <div className="absolute inset-x-0 bottom-0 z-20 p-4">
-                <p className="text-lg font-medium text-white">{title}</p>
-                <p className="mt-1 line-clamp-2 text-sm text-neutral-300">{desc}</p>
+              <div className="absolute inset-x-0 bottom-0 z-20 p-3">
+                <p className="line-clamp-1 text-base font-medium text-white">{title}</p>
+                <p className="mt-0.5 line-clamp-2 text-xs text-neutral-300">{desc}</p>
               </div>
             </Link>
           ))}
