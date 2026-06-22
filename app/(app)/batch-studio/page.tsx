@@ -12,7 +12,6 @@ import { AssetPicker } from '@/components/asset-picker'
 import type { Asset } from '@/lib/assets/assets'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { downloadAsJpg, imageToJpegBlob } from '@/lib/image/download'
-import { PoseFilterTabs } from '@/components/pose-filter-tabs'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
@@ -57,6 +56,14 @@ const RATIOS = ['1:1', '2:3', '3:4', '4:3', '9:16'] as const
 const QUALITIES = ['1k', '2k'] as const
 const CATEGORIES: GarmentCategory[] = ['top', 'bottom', 'shoes', 'dress', 'accessory']
 const PER_PAGE = 4
+const POSE_FILTERS: PoseFilter[] = ['all', 'full_body', 'medium_shot', 'close_up', 'favorites']
+const POSE_FILTER_KEYS: Record<PoseFilter, TranslationKey> = {
+  all: 'poses.filter.all',
+  full_body: 'poses.filter.full_body',
+  medium_shot: 'poses.filter.medium_shot',
+  close_up: 'poses.filter.close_up',
+  favorites: 'poses.filter.favorites',
+}
 
 type Ratio = (typeof RATIOS)[number]
 type Quality = (typeof QUALITIES)[number]
@@ -199,7 +206,7 @@ export default function BatchStudioPage() {
   const [poses, setPoses] = useState<Pose[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [favIds, setFavIds] = useState<Set<string>>(new Set())
-  const [poseFilter, setPoseFilter] = useState<PoseFilter>('all')
+  const [productPoseFilter, setProductPoseFilter] = useState<Record<string, string>>({})
 
   useEffect(() => {
     ;(async () => {
@@ -219,8 +226,6 @@ export default function BatchStudioPage() {
   useEffect(() => {
     listFavoritePoseIds().then(setFavIds)
   }, [])
-
-  const filteredPoses = filterPoses(poses, poseFilter, favIds)
 
   async function handleToggleFavorite(poseId: string) {
     const wasFav = favIds.has(poseId)
@@ -604,7 +609,6 @@ export default function BatchStudioPage() {
       {/* STAGE 1 */}
       {view === 'input' && stage === 1 && (
         <>
-          <PoseFilterTabs value={poseFilter} onChange={setPoseFilter} className="mb-4" />
           <div className="min-h-[560px]">
             <div
               key={page}
@@ -617,6 +621,8 @@ export default function BatchStudioPage() {
             {Array.from({ length: PER_PAGE }, (_, slotIndex) => {
               const product = pageProducts[slotIndex]
               if (product) {
+                const cardFilter = (productPoseFilter[product.id] ?? 'all') as PoseFilter
+                const cardPoses = filterPoses(poses, cardFilter, favIds)
                 return (
               <div
                 key={product.id}
@@ -722,15 +728,26 @@ export default function BatchStudioPage() {
                 </div>
 
                 {/* Poses */}
-                <p className="mb-1.5 text-[10px] text-neutral-500">{t('batch.poses')}</p>
+                <p className="mb-1 text-[10px] text-neutral-500">{t('batch.poses')}</p>
                 {loadingData ? (
                   <p className="text-[10px] text-neutral-600">{t('ecom.loading')}</p>
-                ) : filteredPoses.length === 0 ? (
-                  <p className="text-[10px] text-neutral-600">{t('ecom.empty')}</p>
                 ) : (
-                  <div className="max-h-[230px] overflow-y-auto">
-                    <div className="flex flex-wrap gap-1.5">
-                      {filteredPoses.map((pose) => {
+                  <>
+                    <select
+                      value={cardFilter}
+                      onChange={(e) => setProductPoseFilter((prev) => ({ ...prev, [product.id]: e.target.value }))}
+                      className="mb-1.5 w-full rounded border border-[#242424] bg-[#0f0f0f] px-1 py-0.5 text-[9px] text-neutral-300 outline-none focus:border-[#333]"
+                    >
+                      {POSE_FILTERS.map((f) => (
+                        <option key={f} value={f}>{t(POSE_FILTER_KEYS[f])}</option>
+                      ))}
+                    </select>
+                    {cardPoses.length === 0 ? (
+                      <p className="text-[10px] text-neutral-600">{t('ecom.empty')}</p>
+                    ) : (
+                      <div className="max-h-[230px] overflow-y-auto">
+                        <div className="flex flex-wrap gap-1.5">
+                          {cardPoses.map((pose) => {
                         const selected = product.poseIds.includes(pose.id)
                         return (
                           <div
@@ -759,9 +776,11 @@ export default function BatchStudioPage() {
                             <p className="truncate px-0.5 py-0.5 text-[10px] text-neutral-400">{pose.name}</p>
                           </div>
                         )
-                      })}
-                    </div>
-                  </div>
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <button
                   type="button"
