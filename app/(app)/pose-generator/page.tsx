@@ -2,15 +2,17 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, X, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
+import { Check, X, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRight, Upload, Star } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
 import { fileToScaledBase64 } from '@/lib/image/scale'
 import { downloadAsJpg } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
+import { PoseFilterTabs } from '@/components/pose-filter-tabs'
+import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 
-type Pose = { id: string; name: string; thumbnail_url: string; prompt: string }
+type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null }
 const STEPS = ['photo', 'pose'] as const
 
 export default function PoseGeneratorPage() {
@@ -26,6 +28,8 @@ export default function PoseGeneratorPage() {
   const [poseIds, setPoseIds] = useState<string[]>([])
   const [customInput, setCustomInput] = useState('')
   const [customPoses, setCustomPoses] = useState<string[]>([])
+  const [favIds, setFavIds] = useState<Set<string>>(new Set())
+  const [poseFilter, setPoseFilter] = useState<PoseFilter>('all')
   const [showConfirm, setShowConfirm] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [results, setResults] = useState<string[] | null>(null)
@@ -38,11 +42,37 @@ export default function PoseGeneratorPage() {
   useEffect(() => {
     ;(async () => {
       const supabase = createClient()
-      const { data } = await supabase.from('poses').select('id,name,thumbnail_url,prompt').order('created_at', { ascending: false })
+      const { data } = await supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type').order('created_at', { ascending: false })
       setPoses((data as Pose[]) ?? [])
       setLoadingData(false)
     })()
   }, [])
+
+  useEffect(() => {
+    listFavoritePoseIds().then(setFavIds)
+  }, [])
+
+  const filteredPoses = filterPoses(poses, poseFilter, favIds)
+
+  async function handleToggleFavorite(poseId: string) {
+    const wasFav = favIds.has(poseId)
+    setFavIds((prev) => {
+      const next = new Set(prev)
+      if (wasFav) next.delete(poseId)
+      else next.add(poseId)
+      return next
+    })
+    try {
+      await toggleFavoritePose(poseId, !wasFav)
+    } catch {
+      setFavIds((prev) => {
+        const next = new Set(prev)
+        if (wasFav) next.add(poseId)
+        else next.delete(poseId)
+        return next
+      })
+    }
+  }
 
   function selectPhoto(files: FileList | null) {
     const file = files?.[0]
@@ -247,15 +277,33 @@ export default function PoseGeneratorPage() {
           <p className="mb-4 text-sm text-neutral-500">{t('ecom.pose.subtitle')}</p>
 
           <p className="mb-2 text-sm font-medium text-neutral-200">{t('poses.presetTitle')}</p>
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : poses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
+          <PoseFilterTabs value={poseFilter} onChange={setPoseFilter} className="mb-3" />
+          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : poses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : filteredPoses.length === 0 ? (
+            <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
+          ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {poses.map((p) => {
+              {filteredPoses.map((p) => {
                 const selected = poseIds.includes(p.id)
                 return (
-                  <button key={p.id} onClick={() => togglePose(p.id)} className={`relative overflow-hidden rounded-xl bg-[#141414] text-left transition ${selected ? 'border-[1.5px] border-white' : 'border border-[#242424] hover:border-[#2e2e2e]'}`}>
+                  <div
+                    key={p.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => togglePose(p.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePose(p.id) } }}
+                    className={`relative cursor-pointer overflow-hidden rounded-xl bg-[#141414] text-left transition ${selected ? 'border-[1.5px] border-white' : 'border border-[#242424] hover:border-[#2e2e2e]'}`}
+                  >
                     <div className="relative aspect-[3/4] bg-[#1c1c1c]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={p.thumbnail_url} alt={p.name} className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleToggleFavorite(p.id) }}
+                        className="absolute left-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 transition hover:bg-black/70"
+                        aria-label="Favori"
+                      >
+                        <Star className={`h-3.5 w-3.5 ${favIds.has(p.id) ? 'fill-amber-400 text-amber-400' : 'text-white/80'}`} />
+                      </button>
                       {selected && (
                         <span className="absolute right-1.5 top-1.5 flex h-[18px] w-[18px] items-center justify-center rounded bg-white">
                           <Check className="h-3 w-3 text-[#0a0a0a]" />
@@ -263,7 +311,7 @@ export default function PoseGeneratorPage() {
                       )}
                     </div>
                     <div className="p-2"><p className="text-xs text-neutral-200">{p.name}</p></div>
-                  </button>
+                  </div>
                 )
               })}
             </div>
