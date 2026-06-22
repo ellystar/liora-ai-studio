@@ -56,38 +56,43 @@ export default function Home() {
                 : href === '/flat-to-ghost' ? '/flat-to-ghost.jpg'
                 : href === '/edit-photo' ? '/edit-photo.jpg'
                 : null
-              const isPose = href === '/pose-generator'
               return (
               <Link
                 key={href}
                 href={href}
-                className="relative flex aspect-square flex-col items-start justify-between overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] p-4 transition hover:border-[#2e2e2e]"
+                className="relative flex min-h-[220px] flex-col overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
               >
-                {bgImage && (
+                {bgImage ? (
                   <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={bgImage}
-                      alt=""
-                      className="absolute inset-0 z-0 h-full w-full object-cover"
-                    />
-                    {isPose ? (
-                      <>
-                        <div className="absolute inset-0 z-10 bg-black/20" />
-                        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/85 via-black/50 to-black/15" />
-                      </>
-                    ) : (
-                      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
-                    )}
+                    <div className="relative h-[55%] min-h-[121px] w-full shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={bgImage}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/15" />
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent" />
+                      <span className="absolute left-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-xl bg-black/30">
+                        <Icon className="h-5 w-5 text-white" />
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col justify-end bg-[#141414] px-5 pb-5 pt-4">
+                      <p className="text-lg font-medium text-neutral-100">{title}</p>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-neutral-500">{desc}</p>
+                    </div>
                   </>
+                ) : (
+                  <div className="flex flex-1 flex-col justify-between p-5">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1f1f1f]">
+                      <Icon className="h-5 w-5 text-neutral-100" />
+                    </span>
+                    <div>
+                      <p className="text-lg font-medium text-neutral-100">{title}</p>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-neutral-500">{desc}</p>
+                    </div>
+                  </div>
                 )}
-                <span className={`relative z-20 flex h-10 w-10 items-center justify-center rounded-xl ${bgImage ? 'bg-black/30' : 'bg-[#1f1f1f]'}`}>
-                  <Icon className={`h-5 w-5 ${bgImage ? 'text-white' : 'text-neutral-100'}`} />
-                </span>
-                <div className="relative z-20">
-                  <p className={`text-sm font-medium ${bgImage ? 'text-white' : 'text-neutral-100'}`}>{title}</p>
-                  <p className={`mt-1 line-clamp-2 text-xs leading-relaxed ${bgImage ? 'text-white/80' : 'text-neutral-500'}`}>{desc}</p>
-                </div>
               </Link>
               )
             })}
