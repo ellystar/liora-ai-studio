@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import JSZip from 'jszip'
-import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, Loader2, Plus, Trash2, X } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Download, Loader2, Plus, Star, Trash2, X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
@@ -12,10 +12,12 @@ import { AssetPicker } from '@/components/asset-picker'
 import type { Asset } from '@/lib/assets/assets'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { downloadAsJpg, imageToJpegBlob } from '@/lib/image/download'
+import { PoseFilterTabs } from '@/components/pose-filter-tabs'
+import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
-type Pose = { id: string; name: string; thumbnail_url: string; prompt: string }
+type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null }
 
 type GarmentSource =
   | { kind: 'file'; file: File; previewUrl: string }
@@ -196,6 +198,8 @@ export default function BatchStudioPage() {
   const [backgrounds, setBackgrounds] = useState<Background[]>([])
   const [poses, setPoses] = useState<Pose[]>([])
   const [loadingData, setLoadingData] = useState(true)
+  const [favIds, setFavIds] = useState<Set<string>>(new Set())
+  const [poseFilter, setPoseFilter] = useState<PoseFilter>('all')
 
   useEffect(() => {
     ;(async () => {
@@ -203,7 +207,7 @@ export default function BatchStudioPage() {
       const [m, b, p] = await Promise.all([
         supabase.from('models').select('id,name,gender,image_url,scope').order('created_at', { ascending: false }),
         supabase.from('backgrounds').select('id,name,thumbnail_url,prompt').order('created_at', { ascending: false }),
-        supabase.from('poses').select('id,name,thumbnail_url,prompt').order('created_at', { ascending: false }),
+        supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type').order('created_at', { ascending: false }),
       ])
       setModels((m.data as Model[]) ?? [])
       setBackgrounds((b.data as Background[]) ?? [])
@@ -211,6 +215,32 @@ export default function BatchStudioPage() {
       setLoadingData(false)
     })()
   }, [])
+
+  useEffect(() => {
+    listFavoritePoseIds().then(setFavIds)
+  }, [])
+
+  const filteredPoses = filterPoses(poses, poseFilter, favIds)
+
+  async function handleToggleFavorite(poseId: string) {
+    const wasFav = favIds.has(poseId)
+    setFavIds((prev) => {
+      const next = new Set(prev)
+      if (wasFav) next.delete(poseId)
+      else next.add(poseId)
+      return next
+    })
+    try {
+      await toggleFavoritePose(poseId, !wasFav)
+    } catch {
+      setFavIds((prev) => {
+        const next = new Set(prev)
+        if (wasFav) next.add(poseId)
+        else next.delete(poseId)
+        return next
+      })
+    }
+  }
 
   useEffect(() => {
     if (!running) return
@@ -574,6 +604,7 @@ export default function BatchStudioPage() {
       {/* STAGE 1 */}
       {view === 'input' && stage === 1 && (
         <>
+          <PoseFilterTabs value={poseFilter} onChange={setPoseFilter} className="mb-4" />
           <div className="min-h-[560px]">
             <div
               key={page}
@@ -694,27 +725,39 @@ export default function BatchStudioPage() {
                 <p className="mb-1.5 text-[10px] text-neutral-500">{t('batch.poses')}</p>
                 {loadingData ? (
                   <p className="text-[10px] text-neutral-600">{t('ecom.loading')}</p>
+                ) : filteredPoses.length === 0 ? (
+                  <p className="text-[10px] text-neutral-600">{t('ecom.empty')}</p>
                 ) : (
                   <div className="max-h-[230px] overflow-y-auto">
                     <div className="flex flex-wrap gap-1.5">
-                      {poses.map((pose) => {
+                      {filteredPoses.map((pose) => {
                         const selected = product.poseIds.includes(pose.id)
                         return (
-                          <button
+                          <div
                             key={pose.id}
-                            type="button"
+                            role="button"
+                            tabIndex={0}
                             onClick={() => togglePose(product.id, pose.id)}
-                            className={`relative w-[56px] shrink-0 overflow-hidden rounded-md text-left transition ${selected ? 'ring-2 ring-sky-400' : 'ring-1 ring-[#242424]'}`}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePose(product.id, pose.id) } }}
+                            className={`relative w-[56px] shrink-0 cursor-pointer overflow-hidden rounded-md text-left transition ${selected ? 'ring-2 ring-sky-400' : 'ring-1 ring-[#242424]'}`}
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={pose.thumbnail_url} alt={pose.name} className="aspect-[3/4] w-[56px] object-cover" />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleToggleFavorite(pose.id) }}
+                              className="absolute left-0.5 top-0.5 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-black/50"
+                              aria-label="Favori"
+                            >
+                              <Star className={`h-2.5 w-2.5 ${favIds.has(pose.id) ? 'fill-amber-400 text-amber-400' : 'text-white/80'}`} />
+                            </button>
                             {selected && (
                               <span className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sky-400">
                                 <Check className="h-2 w-2 text-[#0a0a0a]" />
                               </span>
                             )}
                             <p className="truncate px-0.5 py-0.5 text-[10px] text-neutral-400">{pose.name}</p>
-                          </button>
+                          </div>
                         )
                       })}
                     </div>
