@@ -11,7 +11,7 @@ export default function Home() {
   const tools = [
     { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title'), desc: t('tool.ecom.desc'), bgImage: '/ecom-studio.jpg', colSpan: 'col-span-2' },
     { href: '/shoe-studio', Icon: Footprints, title: t('tool.shoe.title'), desc: t('shoe.cardDesc'), bgImage: '/shoe-studio.jpg', colSpan: 'col-span-1' },
-    { href: '/batch-studio', Icon: LayoutGrid, title: t('batch.title'), desc: t('batch.cardDesc'), bgImage: null, colSpan: 'col-span-1' },
+    { href: '/batch-studio', Icon: LayoutGrid, title: t('batch.title'), desc: t('batch.cardDesc'), bgImage: '/batch-studio.jpg', colSpan: 'col-span-1' },
     { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title'), desc: t('tool.pose.desc'), bgImage: '/pose-generator.jpg', colSpan: 'col-span-1' },
     { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title'), desc: t('tool.flat.desc'), bgImage: '/flat-to-ghost.jpg', colSpan: 'col-span-1' },
     { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title'), desc: t('tool.edit.desc'), bgImage: '/edit-photo.jpg', colSpan: 'col-span-2' },
