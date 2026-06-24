@@ -287,34 +287,58 @@ export default function EcomStudioPage() {
       const background = backgrounds.find((b) => b.id === bgId)
       const model = await urlToScaledBase64(selectedModel!.image_url)
 
-      for (const pose of posesToRun) {
-        const { data, error } = await supabase.functions.invoke('generate-ecom', {
-          body: {
-            clothes: clothesPayload,
-            model,
-            backgroundPrompt: background?.prompt ?? '',
-            poses: [pose],
-            ratio,
-            quality,
-            tuck: tuck ?? undefined,
-          },
-        })
+      const heroPose = posesToRun[0]
+      const restPoses = posesToRun.slice(1)
 
-        if (error) {
-          let code = ''
-          try { const ctx = await (error as { context: Response }).context.json(); code = ctx.error } catch {}
-          if (code === 'insufficient_credits') {
-            stoppedInsufficient = true
-            break
-          }
-          if (code === 'model_busy') busy = true
+      const { data: heroData, error: heroError } = await supabase.functions.invoke('generate-ecom', {
+        body: {
+          clothes: clothesPayload,
+          model,
+          backgroundPrompt: background?.prompt ?? '',
+          poses: [heroPose],
+          ratio,
+          quality,
+          tuck: tuck ?? undefined,
+        },
+      })
+
+      if (heroError) {
+        let code = ''
+        try { const ctx = await (heroError as { context: Response }).context.json(); code = ctx.error } catch {}
+        if (code === 'insufficient_credits') stoppedInsufficient = true
+        else if (code === 'model_busy') busy = true
+      } else {
+        const heroImg = (heroData?.images as string[] | undefined)?.[0]
+        if (heroImg) {
+          collectedImages.push(heroImg)
           setGenProgress((p) => ({ ...p, done: p.done + 1 }))
-          continue
-        }
 
-        const img = (data?.images as string[] | undefined)?.[0]
-        if (img) collectedImages.push(img)
-        setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+          if (restPoses.length > 0) {
+            const heroInput = await urlToScaledBase64(heroImg)
+
+            for (const pose of restPoses) {
+              const { data, error } = await supabase.functions.invoke('generate-pose', {
+                body: { photo: heroInput, poses: [pose] },
+              })
+
+              if (error) {
+                let code = ''
+                try { const ctx = await (error as { context: Response }).context.json(); code = ctx.error } catch {}
+                if (code === 'insufficient_credits') {
+                  stoppedInsufficient = true
+                  break
+                }
+                if (code === 'model_busy') busy = true
+                setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+                continue
+              }
+
+              const img = (data?.images as string[] | undefined)?.[0]
+              if (img) collectedImages.push(img)
+              setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+            }
+          }
+        }
       }
 
       setGenerating(false)
