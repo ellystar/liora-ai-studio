@@ -88,6 +88,11 @@ type PreparedProduct = {
   quality: Quality
   tuck: 'in' | 'out' | undefined
 }
+type HeroResult = {
+  image?: string
+  input?: { base64: string; mimeType: string }
+  errorCode?: string
+}
 type GarmentFlow = {
   productId: string
   step: 'category' | 'source'
@@ -187,6 +192,7 @@ export default function BatchStudioPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const prepareCache = useRef(new Map<string, Promise<PreparedProduct>>())
+  const heroCache = useRef(new Map<string, Promise<HeroResult>>())
   const cancelRef = useRef(false)
   const stopRef = useRef(false)
 
@@ -332,6 +338,48 @@ export default function BatchStudioPage() {
     return promise
   }
 
+  function getHero(product: BatchProduct): Promise<HeroResult> {
+    const cached = heroCache.current.get(product.id)
+    if (cached) return cached
+
+    const promise = (async (): Promise<HeroResult> => {
+      const supabase = createClient()
+      const prep = await getPrepared(product)
+      const heroPose = generalPoses.find((p) => p.id === product.poseIds[0])
+      if (!heroPose) return { errorCode: 'generation_failed' }
+
+      const { data, error } = await supabase.functions.invoke('generate-ecom', {
+        body: {
+          model: prep.model,
+          clothes: prep.clothes,
+          backgroundPrompt: prep.backgroundPrompt,
+          poses: [{ id: heroPose.id, prompt: heroPose.prompt }],
+          ratio: prep.ratio,
+          quality: prep.quality,
+          tuck: prep.tuck,
+        },
+      })
+
+      if (error) {
+        let code = 'generation_failed'
+        try {
+          const ctx = await (error as { context?: Response }).context?.json?.()
+          code = ctx?.error ?? 'generation_failed'
+        } catch { /* ignore */ }
+        return { errorCode: code }
+      }
+
+      const img = (data?.images as string[] | undefined)?.[0]
+      if (!img) return { errorCode: 'generation_failed' }
+
+      const input = await urlToScaledBase64(img)
+      return { image: img, input }
+    })()
+
+    heroCache.current.set(product.id, promise)
+    return promise
+  }
+
   function buildJobList(): Job[] {
     const list: Job[] = []
     products.forEach((product, productIndex) => {
@@ -363,41 +411,57 @@ export default function BatchStudioPage() {
         setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, status: 'running' } : j)))
         try {
           const product = products.find((p) => p.id === job.productId)!
-          const prep = await getPrepared(product)
-          const pose = generalPoses.find((p) => p.id === job.poseId)!
-          const { data, error } = await supabase.functions.invoke('generate-ecom', {
-            body: {
-              model: prep.model,
-              clothes: prep.clothes,
-              backgroundPrompt: prep.backgroundPrompt,
-              poses: [{ id: pose.id, prompt: pose.prompt }],
-              ratio: prep.ratio,
-              quality: prep.quality,
-              tuck: prep.tuck,
-            },
-          })
-          if (error) {
-            let code = 'generation_failed'
-            try {
-              const ctx = await (error as { context?: Response }).context?.json?.()
-              code = ctx?.error ?? 'generation_failed'
-            } catch { /* ignore */ }
-            if (code === 'insufficient_credits') {
+          const hero = await getHero(product)
+
+          if (!hero.image) {
+            if (hero.errorCode === 'insufficient_credits') {
               stopRef.current = true
               setStoppedForCredits(true)
             }
             setJobs((prev) =>
-              prev.map((j) => (j.id === job.id ? { ...j, status: 'failed', errorCode: code } : j))
-            )
-          } else {
-            const img = (data?.images as string[] | undefined)?.[0]
-            setJobs((prev) =>
               prev.map((j) =>
-                j.id === job.id
-                  ? { ...j, status: img ? 'done' : 'failed', image: img, errorCode: img ? undefined : 'generation_failed' }
-                  : j
+                j.id === job.id ? { ...j, status: 'failed', errorCode: hero.errorCode ?? 'generation_failed' } : j
               )
             )
+            continue
+          }
+
+          const isHeroPose = job.poseId === product.poseIds[0]
+          if (isHeroPose) {
+            setJobs((prev) =>
+              prev.map((j) => (j.id === job.id ? { ...j, status: 'done', image: hero.image } : j))
+            )
+          } else {
+            const pose = generalPoses.find((p) => p.id === job.poseId)!
+            const { data, error } = await supabase.functions.invoke('generate-pose', {
+              body: {
+                photo: hero.input!,
+                poses: [{ id: pose.id, prompt: pose.prompt }],
+              },
+            })
+            if (error) {
+              let code = 'generation_failed'
+              try {
+                const ctx = await (error as { context?: Response }).context?.json?.()
+                code = ctx?.error ?? 'generation_failed'
+              } catch { /* ignore */ }
+              if (code === 'insufficient_credits') {
+                stopRef.current = true
+                setStoppedForCredits(true)
+              }
+              setJobs((prev) =>
+                prev.map((j) => (j.id === job.id ? { ...j, status: 'failed', errorCode: code } : j))
+              )
+            } else {
+              const img = (data?.images as string[] | undefined)?.[0]
+              setJobs((prev) =>
+                prev.map((j) =>
+                  j.id === job.id
+                    ? { ...j, status: img ? 'done' : 'failed', image: img, errorCode: img ? undefined : 'generation_failed' }
+                    : j
+                )
+              )
+            }
           }
         } catch {
           setJobs((prev) =>
@@ -413,6 +477,7 @@ export default function BatchStudioPage() {
   async function startBatch() {
     setConfirmOpen(false)
     prepareCache.current.clear()
+    heroCache.current.clear()
     const jobList = buildJobList()
     setJobs(jobList)
     cancelRef.current = false
@@ -428,6 +493,14 @@ export default function BatchStudioPage() {
   async function retryFailed() {
     const failed = jobs.filter((j) => j.status === 'failed')
     if (failed.length === 0) return
+
+    for (const product of products) {
+      const heroPoseId = product.poseIds[0]
+      if (failed.some((j) => j.productId === product.id && j.poseId === heroPoseId)) {
+        heroCache.current.delete(product.id)
+      }
+    }
+
     setJobs((prev) =>
       prev.map((j) =>
         j.status === 'failed' ? { ...j, status: 'pending', image: undefined, errorCode: undefined } : j
