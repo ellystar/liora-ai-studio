@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Liora — Design System v1.0</title>
+
+<!-- Google Fonts: Newsreader (display) + Spline Sans Mono (mono) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400;1,6..72,500&family=Spline+Sans+Mono:wght@400;500;600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<!-- Fontshare: Switzer — closest free analogue to Neue Montreal (UI) -->
+<link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap" rel="stylesheet" />
+
+<style>
+  :root{
+    /* ---- core neutrals ---- */
+    --bone:#F2EDE3;
+    --bone-2:#E9E2D5;
+    --stone:#C8BCA8;
+    --ink:#100E0B;
+    --ink-2:#1C1813;
+
+    /* ---- text ---- */
+    --text:#1A1611;
+    --text-mut:#6E665A;
+    --on-dark:#EFE8DA;
+    --on-dark-mut:#A99C86;
+
+    /* ---- accents (two jobs) ---- */
+    --gold:#B07A2E;     /* link underline · text selection · active nav · fine detail */
+    --oxblood:#5C1F29;  /* pull-quote · CTA hover · special moments · launch */
+
+    /* ---- type ---- */
+    --display:"Newsreader",Georgia,"Times New Roman",serif;
+    --ui:"Switzer","Hanken Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:"Spline Sans Mono",ui-monospace,Menlo,monospace;
+
+    /* ---- form ---- */
+    --r:2px;            /* near-square, editorial */
+    --hair:1px solid var(--stone);
+
+    /* ---- motion ---- */
+    --ease:cubic-bezier(.22,1,.36,1);
+    --dur:.8s;
+
+    /* ---- layout ---- */
+    --maxw:1180px;
+    --pad:clamp(22px,6vw,72px);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::selection{background:var(--gold);color:var(--bone)}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bone);
+    color:var(--text);
+    font-family:var(--ui);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* ====== layout primitives ====== */
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad)}
+  .block{padding:clamp(80px,11vw,150px) 0}
+  .block--tight{padding:clamp(56px,7vw,90px) 0}
+  hr.rule{border:0;border-top:var(--hair)}
+  .stack-sm > * + *{margin-top:14px}
+  .stack-md > * + *{margin-top:26px}
+
+  /* ====== type roles ====== */
+  .eyebrow{
+    font-family:var(--ui);font-size:11.5px;font-weight:500;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--text-mut);
+  }
+  .mono{
+    font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--text-mut);
+  }
+  .d1{font-family:var(--display);font-weight:300;font-size:clamp(40px,6.4vw,76px);line-height:1.03;letter-spacing:-.022em}
+  .d2{font-family:var(--display);font-weight:300;font-size:clamp(29px,4.2vw,46px);line-height:1.07;letter-spacing:-.016em}
+  .d3{font-family:var(--display);font-weight:400;font-size:clamp(22px,2.6vw,27px);line-height:1.16;letter-spacing:-.01em}
+  .d4{font-family:var(--display);font-weight:400;font-size:21px;line-height:1.2;letter-spacing:-.006em}
+  .soul{font-style:italic;font-weight:400}
+  .quote{font-family:var(--display);font-style:italic;font-weight:300;font-size:clamp(22px,2.8vw,31px);line-height:1.3;color:var(--oxblood);letter-spacing:-.01em}
+  .body-l{font-size:18px;line-height:1.65;max-width:54ch}
+  .body{font-size:16px;line-height:1.6;max-width:60ch}
+  .body-s{font-size:14px;line-height:1.55;color:var(--text-mut);max-width:62ch}
+  .lead-mut{color:var(--text-mut)}
+  a.inline{color:var(--text);text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:1px;transition:color .25s var(--ease)}
+  a.inline:hover{color:var(--gold)}
+
+  /* ====== section header pattern ====== */
+  .sec-head{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-bottom:clamp(36px,5vw,60px)}
+  .sec-head .idx{font-family:var(--mono);font-size:12px;color:var(--text-mut);letter-spacing:.08em}
+  .sec-head h2{font-family:var(--display);font-weight:300;font-size:clamp(28px,4vw,42px);line-height:1.06;letter-spacing:-.016em}
+  .sec-head .note{color:var(--text-mut);font-size:15.5px;max-width:64ch;line-height:1.6}
+  .lab{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mut);margin-bottom:18px;display:block}
+
+  /* ====== masthead ====== */
+  .mast{background:var(--ink);color:var(--on-dark);position:relative;overflow:hidden}
+  .mast .dots{position:absolute;inset:0;opacity:.10;
+    background-image:radial-gradient(var(--on-dark) 1px,transparent 1.4px);background-size:22px 22px;
+    -webkit-mask-image:radial-gradient(120% 90% at 85% 10%,#000 0%,transparent 62%);
+            mask-image:radial-gradient(120% 90% at 85% 10%,#000 0%,transparent 62%);}
+  .mast .bar{display:flex;align-items:baseline;justify-content:space-between;padding:26px 0;position:relative;z-index:2}
+  .mast .word{font-family:var(--display);font-size:23px;letter-spacing:.22em;font-weight:400}
+  .mast .ver{font-family:var(--mono);font-size:12px;color:var(--on-dark-mut);letter-spacing:.08em}
+  .mast .hero{position:relative;z-index:2;padding:clamp(40px,7vw,86px) 0 clamp(60px,9vw,110px)}
+  .mast .hero .kick{font-family:var(--mono);font-size:12px;color:var(--on-dark-mut);letter-spacing:.1em;margin-bottom:24px}
+  .mast .hero h1{font-family:var(--display);font-weight:300;font-size:clamp(34px,5.6vw,68px);line-height:1.05;letter-spacing:-.022em;max-width:18ch}
+  .mast .hero h1 .soul{color:var(--on-dark)}
+  .mast .hero p{color:var(--on-dark-mut);margin-top:26px;max-width:46ch;font-size:16px;line-height:1.6}
+  .mast .idxnav{display:flex;flex-wrap:wrap;gap:5px 26px;margin-top:42px;position:relative;z-index:2}
+  .mast .idxnav a{font-family:var(--mono);font-size:12px;color:var(--on-dark-mut);text-decoration:none;letter-spacing:.04em;transition:color .25s var(--ease)}
+  .mast .idxnav a:hover{color:var(--gold)}
+
+  /* ====== color ====== */
+  .sw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:16px}
+  .sw{border:var(--hair);border-radius:var(--r);overflow:hidden;background:#fff}
+  .sw .chip{height:88px;border-bottom:var(--hair)}
+  .sw .meta{padding:12px 13px 14px}
+  .sw .nm{font-size:13.5px;font-weight:500;letter-spacing:.01em}
+  .sw .hex{font-family:var(--mono);font-size:11.5px;color:var(--text-mut);margin-top:3px}
+  .sw .role{font-size:12px;color:var(--text-mut);margin-top:8px;line-height:1.45}
+
+  .acc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .acc{border:var(--hair);border-radius:var(--r);background:#fff;overflow:hidden}
+  .acc .head{display:flex;align-items:center;gap:13px;padding:16px 18px;border-bottom:var(--hair)}
+  .acc .dot{width:34px;height:34px;border-radius:50%;flex:none}
+  .acc .nm{font-size:14px;font-weight:600}
+  .acc .hex{font-family:var(--mono);font-size:11.5px;color:var(--text-mut);margin-top:2px}
+  .acc .body{padding:16px 18px;max-width:none}
+  .acc .lab2{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mut)}
+  .acc ul{list-style:none;margin:8px 0 0;display:grid;gap:7px}
+  .acc ul li{font-size:13.5px;padding-left:16px;position:relative;line-height:1.4}
+  .acc ul li::before{content:"";position:absolute;left:0;top:.6em;width:6px;height:6px;border-radius:50%}
+  .acc.gold ul li::before{background:var(--gold)}
+  .acc.oxblood ul li::before{background:var(--oxblood)}
+  .acc .never{margin-top:14px;font-size:12.5px;color:var(--text-mut);border-top:var(--hair);padding-top:12px}
+  .acc .never b{color:var(--text);font-weight:600}
+
+  /* ====== typography specimens ====== */
+  .spec{border-top:var(--hair);padding:24px 0;display:grid;grid-template-columns:160px 1fr;gap:28px;align-items:baseline}
+  .spec:last-child{border-bottom:var(--hair)}
+  .spec .tag{font-family:var(--mono);font-size:10.5px;color:var(--text-mut);letter-spacing:.04em;line-height:1.85}
+  .spec .tag b{color:var(--text);font-weight:600;font-family:var(--mono)}
+  .fontsub{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:40px}
+  .fontsub .card{border:var(--hair);border-radius:var(--r);background:#fff;padding:18px 20px}
+  .fontsub .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .fontsub .want{font-family:var(--ui);font-size:13px;color:var(--text-mut)}
+  .fontsub .arrow{color:var(--gold)}
+  .fontsub .use{font-size:16px;font-weight:600}
+  .fontsub .why{font-size:12.5px;color:var(--text-mut);margin-top:10px;line-height:1.5}
+  .fontsub .src{font-family:var(--mono);font-size:10.5px;color:var(--text-mut);margin-top:9px;letter-spacing:.04em}
+  .fontsub .sample{font-size:24px;margin-top:14px;letter-spacing:-.01em}
+
+  /* ====== spacing ====== */
+  .space-row{display:flex;align-items:flex-end;gap:11px;flex-wrap:wrap}
+  .space-row .u{text-align:center}
+  .space-row .bar{background:var(--stone);width:30px;border-radius:1px;display:block}
+  .space-row .n{font-family:var(--mono);font-size:10px;color:var(--text-mut);margin-top:7px}
+
+  /* ====== grid demo ====== */
+  .gridvis{position:relative;border:var(--hair);border-radius:var(--r);background:var(--bone-2);padding:18px;overflow:hidden}
+  .gridvis .cols{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .gridvis .col{height:120px;background:rgba(176,122,46,.10);border:1px solid rgba(176,122,46,.28);border-radius:1px}
+  .gridvis .cap{font-family:var(--mono);font-size:11px;color:var(--text-mut);margin-top:12px}
+
+  /* ====== surface / texture ====== */
+  .surf-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+  .surf{border:var(--hair);border-radius:var(--r);overflow:hidden;background:#fff}
+  .surf .demo{height:140px;position:relative}
+  .surf .cap{padding:12px 14px;font-size:12.5px;color:var(--text-mut);line-height:1.45}
+  .surf .cap b{color:var(--text);font-weight:600;display:block;margin-bottom:3px;font-size:13px}
+  .demo.dots-demo{background:var(--bone);
+    background-image:radial-gradient(var(--stone) 1px,transparent 1.4px);background-size:18px 18px;
+    -webkit-mask-image:radial-gradient(120% 120% at 100% 0,#000 0,transparent 60%);
+            mask-image:radial-gradient(120% 120% at 100% 0,#000 0,transparent 60%);}
+  .demo.flat-demo{background:var(--bone-2);display:flex;align-items:center;justify-content:center}
+  .demo.flat-demo .card-x{width:62%;height:62%;background:#fff;border:var(--hair);border-radius:var(--r)}
+
+  /* ---- torn seam (signature) ---- */
+  .seam{position:relative;height:200px;border-radius:var(--r);overflow:hidden;border:var(--hair);background:var(--ink)}
+  .seam .panel{position:absolute;inset:0}
+  .seam .old{background:
+      radial-gradient(140% 120% at 22% 30%,#d9c4a4 0%,#b89568 45%,#7c5a37 100%);}
+  .seam .ai{
+    clip-path:polygon(48% 0, 53% 7%, 49% 14%, 55% 22%, 50% 31%, 57% 39%, 51% 48%, 58% 57%, 52% 66%, 59% 74%, 53% 83%, 60% 91%, 55% 100%, 100% 100%, 100% 0);
+    background:
+      radial-gradient(120% 120% at 82% 70%,#2a2620 0%,#15120e 60%,#0c0a07 100%);}
+  .seam .ai::after{content:"";position:absolute;inset:0;opacity:.5;
+    background-image:radial-gradient(rgba(176,122,46,.5) 1px,transparent 1.4px);background-size:13px 13px;}
+  .seam .tear{position:absolute;top:-4%;left:0;height:108%;width:100%;pointer-events:none}
+  .seam .tear path{stroke:var(--bone);stroke-width:2.4;fill:none;opacity:.92;
+    filter:drop-shadow(0 0 .5px rgba(0,0,0,.4))}
+  .seam .lbl{position:absolute;bottom:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase}
+  .seam .lbl.l{left:14px;color:#3a2c1a}
+  .seam .lbl.r{right:14px;color:var(--on-dark-mut)}
+
+  .seam-uses{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .seam-uses span{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--text-mut);
+    border:var(--hair);border-radius:99px;padding:7px 14px;background:#fff}
+
+  /* ====== buttons ====== */
+  .btn{font-family:var(--ui);font-size:14px;font-weight:500;padding:13px 22px;border-radius:var(--r);
+    border:1px solid var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:10px;
+    text-decoration:none;transition:background .28s var(--ease),color .28s var(--ease),border-color .28s var(--ease)}
+  .btn .ar{transition:transform .28s var(--ease);display:inline-block}
+  .btn:hover .ar{transform:translateX(4px)}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .btn-primary{background:var(--ink);color:var(--bone)}
+  .btn-primary:hover{background:var(--oxblood);border-color:var(--oxblood)} /* CTA hover = oxblood */
+  .btn-ghost{background:transparent;color:var(--ink)}
+  .btn-ghost:hover{background:var(--ink);color:var(--bone)}
+  .btn-text{border:0;padding:0;background:none;color:var(--ink);font-weight:500}
+  .btn-text:hover{color:var(--gold)}
+  .btn[disabled]{opacity:.38;cursor:not-allowed;pointer-events:none}
+  .btn-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .state-note{font-family:var(--mono);font-size:10.5px;color:var(--text-mut);letter-spacing:.04em;margin-top:8px}
+
+  /* ====== nav demo ====== */
+  .navd{border:var(--hair);border-radius:var(--r);background:var(--bone);
+    display:flex;align-items:center;justify-content:space-between;padding:18px 24px;gap:18px;flex-wrap:wrap}
+  .navd .w{font-family:var(--display);font-size:20px;letter-spacing:.18em}
+  .navd .lnk{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+  .navd .lnk a{font-size:14px;color:var(--text);opacity:.72;text-decoration:none;position:relative;padding-bottom:4px;transition:opacity .25s var(--ease)}
+  .navd .lnk a:hover{opacity:1}
+  .navd .lnk a.active{opacity:1}
+  .navd .lnk a.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:var(--gold)} /* active nav = gold */
+  .navd .btn{padding:9px 17px;font-size:13px}
+
+  /* ====== offer cards ====== */
+  .offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));border-top:var(--hair)}
+  .offer{padding:28px 26px 30px 0;border-right:var(--hair);transition:border-color .3s var(--ease)}
+  .offer:last-child{border-right:0;padding-right:0}
+  .offer .num{font-family:var(--mono);font-size:12px;color:var(--text-mut);letter-spacing:.06em}
+  .offer .ti{font-family:var(--display);font-size:21px;font-weight:400;line-height:1.18;margin:16px 0 12px;letter-spacing:-.006em}
+  .offer .ds{font-size:13.5px;color:var(--text-mut);line-height:1.55}
+  .offer .ex{font-size:13px;font-weight:500;margin-top:20px;display:inline-flex;gap:8px;align-items:center;color:var(--ink)}
+  .offer .ex .ar{transition:transform .28s var(--ease)}
+  .offer-hov{border:var(--hair);border-radius:var(--r);padding:24px;background:#fff;transition:border-color .3s var(--ease)}
+  .offer-hov:hover{border-color:var(--ink)} /* card hover: Stone → Ink */
+  .offer-hov:hover .ex .ar{transform:translateX(4px)}
+
+  /* ====== featured work card (torn-seam hover) ====== */
+  .fw{width:300px;max-width:100%;border-radius:var(--r);overflow:hidden;position:relative;color:var(--on-dark);cursor:pointer}
+  .fw .img{aspect-ratio:4/5;position:relative;overflow:hidden;
+    background:radial-gradient(130% 120% at 30% 25%,#cdb189 0%,#8d6c44 48%,#3a2c1b 100%)}
+  .fw .img .ai{position:absolute;inset:0;
+    clip-path:polygon(60% 0,64% 9%,59% 18%,66% 28%,60% 38%,67% 48%,61% 58%,68% 68%,62% 78%,69% 88%,63% 100%,100% 100%,100% 0);
+    background:radial-gradient(120% 120% at 80% 70%,#241f19,#0d0b08);
+    opacity:0;transition:opacity .55s var(--ease)}
+  .fw .img .ai::after{content:"";position:absolute;inset:0;opacity:.45;
+    background-image:radial-gradient(rgba(176,122,46,.6) 1px,transparent 1.3px);background-size:12px 12px}
+  .fw .img .tear{position:absolute;inset:-2% 0;width:100%;height:104%;opacity:0;transition:opacity .55s var(--ease)}
+  .fw .img .tear path{stroke:var(--bone);stroke-width:2.2;fill:none;opacity:.9}
+  .fw:hover .img .ai,.fw:hover .img .tear{opacity:1}
+  .fw .ov{position:absolute;left:0;right:0;bottom:0;padding:18px;z-index:3;
+    background:linear-gradient(0deg,rgba(8,7,5,.82),transparent)}
+  .fw .n{font-family:var(--mono);font-size:11px;color:var(--on-dark-mut)}
+  .fw .t{font-family:var(--display);font-size:18px;font-weight:400;line-height:1.18;margin:5px 0 9px}
+  .fw .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-dark-mut)}
+
+  /* ====== lexicon list ====== */
+  .lex{max-width:360px}
+  .lex .it{display:flex;justify-content:space-between;align-items:baseline;padding:15px 0;border-bottom:var(--hair);
+    font-family:var(--display);font-size:19px;font-weight:400}
+  .lex .it span{font-family:var(--mono);font-size:11px;color:var(--text-mut);letter-spacing:.04em}
+
+  /* ====== pull quote ====== */
+  .pull{border-left:2px solid var(--oxblood);padding:6px 0 6px 26px;max-width:46ch}
+
+  /* ====== trusted-by + product list ====== */
+  .trust{display:flex;align-items:baseline;gap:34px;flex-wrap:wrap}
+  .trust span{font-family:var(--display);font-size:20px;color:var(--text-mut);letter-spacing:.02em;opacity:.78}
+  .prodlist{display:grid;gap:0;border-top:var(--hair);max-width:430px}
+  .prodlist a{display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:var(--hair);
+    text-decoration:none;color:var(--text);font-size:15px;transition:padding .3s var(--ease)}
+  .prodlist a:hover{padding-left:8px}
+  .prodlist a .ar{color:var(--text-mut)}
+
+  /* ====== form-lite ====== */
+  .formd{display:grid;gap:18px;max-width:440px}
+  .field{display:grid;gap:7px}
+  .field label{font-family:var(--ui);font-size:12.5px;font-weight:500;letter-spacing:.02em;color:var(--text)}
+  .field input,.field textarea{font-family:var(--ui);font-size:15px;color:var(--text);background:#fff;
+    border:var(--hair);border-radius:var(--r);padding:12px 14px;width:100%;transition:border-color .25s var(--ease)}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)} /* focus = gold */
+  .field textarea{min-height:96px;resize:vertical}
+
+  /* ====== section logic ====== */
+  .seclogic{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .seclogic .cell{border-radius:var(--r);padding:26px;min-height:140px;display:flex;flex-direction:column;justify-content:space-between}
+  .seclogic .c-light{background:var(--bone-2);color:var(--text);border:var(--hair)}
+  .seclogic .c-dark{background:var(--ink);color:var(--on-dark)}
+  .seclogic .lb{font-family:var(--mono);font-size:11px;letter-spacing:.08em;opacity:.7;text-transform:uppercase}
+  .seclogic h4{font-family:var(--display);font-weight:300;font-size:22px;margin-top:auto;line-height:1.2}
+  .seclogic .sub{font-size:12.5px;opacity:.7;margin-top:8px}
+
+  /* page composition map */
+  .compose{display:grid;gap:8px;max-width:560px}
+  .compose .crow{display:flex;align-items:center;gap:14px;border:var(--hair);border-radius:var(--r);padding:13px 16px;background:#fff}
+  .compose .crow.dark{background:var(--ink);color:var(--on-dark);border-color:var(--ink)}
+  .compose .crow .tone{font-family:var(--mono);font-size:10px;letter-spacing:.08em;width:46px;flex:none;opacity:.7}
+  .compose .crow .nm{font-size:14px}
+  .compose .crow .ds{font-size:12px;color:var(--text-mut);margin-left:auto;text-align:right}
+  .compose .crow.dark .ds{color:var(--on-dark-mut)}
+
+  /* voice table */
+  .voice{display:grid;grid-template-columns:1fr 1fr;gap:0;border:var(--hair);border-radius:var(--r);overflow:hidden;background:#fff}
+  .voice .vh{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mut);padding:13px 16px;border-bottom:var(--hair)}
+  .voice .vh.say{border-right:var(--hair)}
+  .voice .vrow{display:contents}
+  .voice .say,.voice .avoid{padding:13px 16px;font-size:14px;border-bottom:var(--hair)}
+  .voice .say{border-right:var(--hair)}
+  .voice .say{color:var(--text)}
+  .voice .avoid{color:var(--text-mut);text-decoration:line-through;text-decoration-color:var(--stone)}
+  .voice .vrow:last-child .say,.voice .vrow:last-child .avoid{border-bottom:0}
+
+  /* ====== motion ====== */
+  .motion-demo{border:var(--hair);border-radius:var(--r);background:var(--ink);color:var(--on-dark);padding:34px 30px;overflow:hidden}
+  .motion-demo .m-line{opacity:0;transform:translateY(20px)}
+  .motion-demo.run .m-line{animation:reveal .7s var(--ease) forwards}
+  .motion-demo.run .m1{animation-delay:0s}
+  .motion-demo.run .m2{animation-delay:.15s}
+  .motion-demo.run .m3{animation-delay:.3s}
+  .motion-demo.run .m4{animation-delay:.55s}
+  @keyframes reveal{to{opacity:1;transform:none}}
+  .motion-demo .m1{font-family:var(--display);font-weight:300;font-size:clamp(24px,3.4vw,38px);line-height:1.1;letter-spacing:-.018em}
+  .motion-demo .m2{color:var(--on-dark-mut);margin-top:16px;font-size:15px}
+  .motion-demo .m3{margin-top:22px}
+  .motion-demo .m4{margin-top:22px;height:54px;border-radius:var(--r);
+    background:linear-gradient(100deg,#2a2620,#15120e);border:1px solid #2c261d;display:flex;align-items:center;padding:0 16px;
+    font-family:var(--mono);font-size:11px;color:var(--on-dark-mut);letter-spacing:.08em}
+  .replay{margin-top:20px}
+  .timeline{display:grid;gap:9px;margin-top:24px}
+  .timeline .tl{display:grid;grid-template-columns:120px 1fr 64px;align-items:center;gap:14px}
+  .timeline .tnm{font-size:13px}
+  .timeline .track{height:6px;background:var(--bone-2);border-radius:99px;position:relative;overflow:hidden}
+  .timeline .fill{position:absolute;left:0;top:0;bottom:0;background:var(--gold);border-radius:99px}
+  .timeline .tt{font-family:var(--mono);font-size:11px;color:var(--text-mut);text-align:right}
+  .mlist{list-style:none;display:grid;gap:11px;max-width:64ch}
+  .mlist li{font-size:14.5px;color:var(--text);padding-left:18px;position:relative;line-height:1.55}
+  .mlist li::before{content:"—";position:absolute;left:0;color:var(--text-mut)}
+  .forbidden{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .forbidden span{font-family:var(--mono);font-size:11px;color:var(--text-mut);border:var(--hair);border-radius:99px;padding:7px 14px;text-decoration:line-through;text-decoration-color:var(--stone)}
+
+  /* ====== logo ====== */
+  .logo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .logo-box{border:var(--hair);border-radius:var(--r);height:150px;display:flex;align-items:center;justify-content:center;position:relative}
+  .logo-box.light{background:var(--bone)}
+  .logo-box.dark{background:var(--ink)}
+  .logo-box .word{font-family:var(--display);letter-spacing:.22em;font-weight:400;font-size:26px}
+  .logo-box.light .word{color:var(--ink)}
+  .logo-box.dark .word{color:var(--bone)}
+  .logo-box .tag{position:absolute;bottom:12px;left:14px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--text-mut)}
+  .logo-box.dark .tag{color:var(--on-dark-mut)}
+  .logo-clear{border:var(--hair);border-radius:var(--r);background:var(--bone);height:150px;display:flex;align-items:center;justify-content:center;position:relative}
+  .logo-clear .word{font-family:var(--display);letter-spacing:.22em;font-weight:400;font-size:30px;color:var(--ink);position:relative;padding:26px 30px}
+  .logo-clear .word::before{content:"";position:absolute;inset:0;border:1px dashed var(--stone)}
+  .dont{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:18px}
+  .dont .d{border:var(--hair);border-radius:var(--r);padding:14px 16px;font-size:13px;color:var(--text-mut);background:#fff}
+  .dont .d b{display:block;color:var(--oxblood);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;font-family:var(--mono)}
+
+  /* ====== token appendix ====== */
+  .tok{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+  .tok th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--text-mut);font-weight:500;padding:12px 14px;border-bottom:var(--hair)}
+  .tok td{padding:11px 14px;border-bottom:1px solid var(--bone-2);vertical-align:middle}
+  .tok td.k{color:var(--text)}
+  .tok td.v{color:var(--text-mut)}
+  .tok .sw-mini{display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid rgba(0,0,0,.12);vertical-align:-3px;margin-right:9px}
+  .tok-group td{background:var(--bone-2);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mut)}
+
+  /* ====== footer demo ====== */
+  .ftr{background:var(--ink);color:var(--on-dark);border-radius:var(--r);padding:38px 32px;
+    display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:26px}
+  .ftr .w{font-family:var(--display);font-size:21px;letter-spacing:.18em}
+  .ftr .tl{color:var(--on-dark-mut);font-size:13px;margin-top:12px;max-width:30ch;line-height:1.5}
+  .ftr .colh{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-dark-mut);margin-bottom:14px}
+  .ftr a{display:block;color:var(--on-dark);text-decoration:none;font-size:13.5px;opacity:.82;margin-bottom:9px;transition:color .25s var(--ease)}
+  .ftr a:hover{color:var(--gold);opacity:1}
+
+  /* ====== reveal-on-scroll ====== */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ====== misc ====== */
+  .colophon{color:var(--text-mut);font-size:13px}
+  .colophon a{color:var(--text)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,56px);align-items:start}
+  .two-13{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(28px,5vw,56px);align-items:start}
+
+  /* ====== responsive ====== */
+  @media (max-width:860px){
+    .spec{grid-template-columns:1fr;gap:12px}
+    .spec .tag{order:2;color:var(--text-mut)}
+    .two,.two-13,.seclogic,.voice{grid-template-columns:1fr}
+    .ftr{grid-template-columns:1fr 1fr}
+    .offer{border-right:0;border-bottom:var(--hair);padding:22px 0}
+    .offer:last-child{border-bottom:0}
+    .gridvis .cols{grid-template-columns:repeat(6,1fr)}
+  }
+  @media (max-width:520px){
+    .ftr{grid-template-columns:1fr}
+    .gridvis .cols{grid-template-columns:repeat(4,1fr)}
+    .voice .say{border-right:0}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+    .reveal{opacity:1;transform:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 00 · MASTHEAD ============ -->
+<header class="mast">
+  <div class="dots"></div>
+  <div class="wrap">
+    <div class="bar">
+      <span class="word">LIORA</span>
+      <span class="ver">Design System · v1.0</span>
+    </div>
+    <div class="hero">
+      <div class="kick">00 — THE SYSTEM</div>
+      <h1>An operating manual for an <span class="soul">intelligent</span> cultural institution.</h1>
+      <p>Not a fashion house. Not a tech company. The space between a research lab, a publishing house and an archive — held consistent at scale. This document is the proof that aesthetic intelligence can be systematised.</p>
+      <nav class="idxnav" aria-label="Section index">
+        <a href="#essence">01 Essence</a>
+        <a href="#color">02 Color</a>
+        <a href="#type">03 Typography</a>
+        <a href="#space">04 Space &amp; Grid</a>
+        <a href="#surface">05 Surface &amp; Signature</a>
+        <a href="#components">06 Components</a>
+        <a href="#patterns">07 Patterns</a>
+        <a href="#motion">08 Motion</a>
+        <a href="#logo">09 Wordmark</a>
+        <a href="#tokens">10 Tokens</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ 01 · ESSENCE ============ -->
+  <section class="block" id="essence">
+    <div class="sec-head reveal">
+      <span class="idx">01 — FOUNDATION</span>
+      <h2>The brand, before the pixels.</h2>
+      <p class="note">Every token below descends from one idea. The system exists to keep that idea intact while production scales — to <em class="soul" style="font-family:var(--display)">preserve</em> and <em class="soul" style="font-family:var(--display)">author</em> at the same time.</p>
+    </div>
+
+    <div class="two reveal">
+      <div class="stack-md">
+        <div>
+          <span class="lab">Signature concept</span>
+          <p class="d3">AI can generate visuals.<br>Only aesthetic intelligence can <span class="soul">preserve</span> a brand.</p>
+          <p class="body-s" style="margin-top:14px">The category gets Liora into the room: <em>an AI-native creative systems lab</em>. Aesthetic intelligence — the system of judgment that decides how a brand looks, sounds and feels — is why it stays.</p>
+        </div>
+        <div>
+          <span class="lab">Hero verbs</span>
+          <p class="body">Two words carry the whole company. Every component, every microcopy decision serves them.</p>
+          <div class="btn-row" style="margin-top:10px">
+            <span class="btn btn-ghost" style="cursor:default">preserve</span>
+            <span class="btn btn-ghost" style="cursor:default">author</span>
+          </div>
+        </div>
+        <div>
+          <span class="lab">The enemy</span>
+          <p class="body">The system is built against one thing — <strong>sameness</strong>: the flattening of everything distinctive into the generic. Speed is not the enemy. Noise is.</p>
+        </div>
+      </div>
+
+      <div>
+        <span class="lab">The 30-second arc — what a visitor should feel</span>
+        <div class="prodlist" style="max-width:none">
+          <a style="cursor:default"><span>First 5s — “Is this a fashion brand?”</span><span class="mono">image</span></a>
+          <a style="cursor:default"><span>Next 10s — “No… a research institution.”</span><span class="mono">structure</span></a>
+          <a style="cursor:default"><span>Next 20s — “Wait — they work with AI.”</span><span class="mono">tension</span></a>
+          <a style="cursor:default"><span>Next 30s — “I want to work with them.”</span><span class="mono">desire</span></a>
+        </div>
+        <p class="body-s" style="margin-top:22px">This arc is the brief for every page. The design system is what makes the arc reproducible — so the tenth page feels as authored as the first.</p>
+        <div class="pull" style="margin-top:26px">
+          <p class="quote">Scale without losing soul.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 02 · COLOR ============ -->
+  <section class="block" id="color">
+    <div class="sec-head reveal">
+      <span class="idx">02 — FOUNDATION</span>
+      <h2>Color is a register, not a palette.</h2>
+      <p class="note">Warm-neutral dominant: cream grounds, a warm near-black for the dark turns. The page never shouts — the drama is contrast, not hue. Accent is a separate, deliberate decision, and each accent has exactly one job.</p>
+    </div>
+
+    <span class="lab reveal">Core neutrals</span>
+    <div class="sw-grid reveal">
+      <div class="sw"><div class="chip" style="background:#F2EDE3"></div><div class="meta"><div class="nm">Bone</div><div class="hex">#F2EDE3</div><div class="role">Page ground · light sections</div></div></div>
+      <div class="sw"><div class="chip" style="background:#E9E2D5"></div><div class="meta"><div class="nm">Bone 2</div><div class="hex">#E9E2D5</div><div class="role">Raised surfaces · subtle fills</div></div></div>
+      <div class="sw"><div class="chip" style="background:#C8BCA8"></div><div class="meta"><div class="nm">Stone</div><div class="hex">#C8BCA8</div><div class="role">Hairlines · muted edges</div></div></div>
+      <div class="sw"><div class="chip" style="background:#100E0B"></div><div class="meta"><div class="nm">Ink</div><div class="hex">#100E0B</div><div class="role">Dark sections · primary · text</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1C1813"></div><div class="meta"><div class="nm">Ink 2</div><div class="hex">#1C1813</div><div class="role">Panels on dark · derived</div></div></div>
+      <div class="sw"><div class="chip" style="background:#6E665A"></div><div class="meta"><div class="nm">Muted</div><div class="hex">#6E665A</div><div class="role">Secondary text on bone</div></div></div>
+    </div>
+
+    <span class="lab reveal" style="margin-top:46px">Accent — two colors, two jobs (never interchangeable)</span>
+    <div class="acc-row reveal">
+      <div class="acc gold">
+        <div class="head">
+          <span class="dot" style="background:#B07A2E"></span>
+          <div><div class="nm">Renaissance Gold</div><div class="hex">#B07A2E</div></div>
+        </div>
+        <div class="body">
+          <span class="lab2">Use for</span>
+          <ul>
+            <li>Link underline (inline text links)</li>
+            <li>Text selection highlight</li>
+            <li>Active navigation indicator</li>
+            <li>Fine detail — focus rings, tiny marks</li>
+          </ul>
+          <p class="never"><b>Never:</b> body text, large fills, button backgrounds. Gold integrates with the classical warmth — a signature that whispers.</p>
+        </div>
+      </div>
+      <div class="acc oxblood">
+        <div class="head">
+          <span class="dot" style="background:#5C1F29"></span>
+          <div><div class="nm">Oxblood</div><div class="hex">#5C1F29</div></div>
+        </div>
+        <div class="body">
+          <span class="lab2">Use for</span>
+          <ul>
+            <li>Editorial pull-quotes</li>
+            <li>Primary CTA hover state</li>
+            <li>Special moments / launch campaigns</li>
+            <li>The rare emotional emphasis</li>
+          </ul>
+          <p class="never"><b>Never:</b> routine UI, decoration, more than one moment per view. Oxblood is the soul color — spend it sparingly.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="two reveal" style="margin-top:38px">
+      <div>
+        <span class="lab">Live — text &amp; selection</span>
+        <p class="body">Liora is an <a href="#color" class="inline">AI-native creative systems lab</a> for design-led brands. Try selecting this paragraph — the highlight is gold. The system reserves color for meaning, so any color you see is doing a job.</p>
+      </div>
+      <div>
+        <span class="lab">Contrast &amp; accessibility notes</span>
+        <p class="body-s">Text <span class="mono">#1A1611</span> on Bone and <span class="mono">#EFE8DA</span> on Ink both clear AA for body. Muted <span class="mono">#6E665A</span> is for secondary text only. Gold is an <em>accent</em>, not a text color — never set body copy in it.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 03 · TYPOGRAPHY ============ -->
+  <section class="block" id="type">
+    <div class="sec-head reveal">
+      <span class="idx">03 — FOUNDATION</span>
+      <h2>The pairing <span class="soul">is</span> the brand.</h2>
+      <p class="note">An editorial book-serif for craft and authorship; a quiet contemporary grotesque for systems and clarity; a mono for data and index. Italic is rationed — it marks only the words that carry the soul.</p>
+    </div>
+
+    <span class="lab reveal">Font substitution — production target vs. this artifact</span>
+    <p class="body-s reveal" style="margin-bottom:18px">The licensed faces below can't load from a CDN inside this preview, so each is rendered in its <strong>closest free, commercially-licensed analogue</strong>. The character holds; swap to the licensed face at production.</p>
+    <div class="fontsub reveal">
+      <div class="card">
+        <div class="row"><span class="want">Neue Montreal</span><span class="arrow">→</span><span class="use" style="font-family:var(--ui)">Switzer</span></div>
+        <div class="sample" style="font-family:var(--ui)">Aa Gg — systems</div>
+        <p class="why">Closest free neo-grotesque match: same neutral-with-warmth register, similar x-height and aperture. More character than Inter, exactly as the brief asks.</p>
+        <div class="src">FONTSHARE · FREE COMMERCIAL · UI / BODY</div>
+      </div>
+      <div class="card">
+        <div class="row"><span class="want">Canela <em>(if budget)</em></span><span class="arrow">→</span><span class="use" style="font-family:var(--display)">Newsreader</span></div>
+        <div class="sample" style="font-family:var(--display);font-weight:300">Aa Gg — <span class="soul">preserve</span></div>
+        <p class="why">The brief's own launch pick. For more of Canela's flared, literary edge, <strong style="font-weight:600">Fraunces</strong> (Google) is the closest free alternative.</p>
+        <div class="src">GOOGLE FONTS · FREE · DISPLAY</div>
+      </div>
+      <div class="card">
+        <div class="row"><span class="want">Spline Mono</span><span class="arrow">→</span><span class="use" style="font-family:var(--mono)">Spline Sans Mono</span></div>
+        <div class="sample" style="font-family:var(--mono);font-size:20px">01 — READ→BUILD</div>
+        <p class="why">Exact match — the named face, free on Google Fonts. No substitution needed.</p>
+        <div class="src">GOOGLE FONTS · FREE · DATA / META</div>
+      </div>
+    </div>
+
+    <span class="lab reveal" style="margin-top:30px">Type scale</span>
+    <div class="reveal">
+      <div class="spec"><div class="tag"><b>D1 · Display</b><br>Newsreader 300<br>clamp 40–76px<br>lh 1.03 · −.022em<br>hero only</div><div class="d1">Technology is learning how to create. We are learning how to <span class="soul">preserve</span> what matters.</div></div>
+      <div class="spec"><div class="tag"><b>D2 · Section</b><br>Newsreader 300<br>clamp 29–46px<br>lh 1.07 · −.016em</div><div class="d2">Creative systems for the modern brand.</div></div>
+      <div class="spec"><div class="tag"><b>D3 · Subsection</b><br>Newsreader 400<br>22–27px · lh 1.16</div><div class="d3">Brand Aesthetic Systems</div></div>
+      <div class="spec"><div class="tag"><b>D4 · Card title</b><br>Newsreader 400<br>21px · lh 1.2</div><div class="d4">Campaign &amp; Commerce Systems</div></div>
+      <div class="spec"><div class="tag"><b>Quote · italic</b><br>Newsreader 300 it.<br>Oxblood</div><div class="quote">Images are not output. They are memory.</div></div>
+      <div class="spec"><div class="tag"><b>Body L</b><br>Switzer 400<br>18px · lh 1.65</div><div class="body-l">Brands don't need more tools to make content. They need creative systems that hold intent while enabling scale.</div></div>
+      <div class="spec"><div class="tag"><b>Body</b><br>Switzer 400<br>16px · lh 1.6</div><div class="body">Liora is an AI-native creative systems lab for fashion, beauty and design-led brands.</div></div>
+      <div class="spec"><div class="tag"><b>Body S</b><br>Switzer 400<br>14px · muted</div><div class="body-s">A capability, not a position: “a thousand images a day” is something the system can do, never something it says.</div></div>
+      <div class="spec"><div class="tag"><b>Eyebrow</b><br>Switzer 500<br>11.5px · .2em caps</div><div><span class="eyebrow">What we build</span></div></div>
+      <div class="spec"><div class="tag"><b>Data / meta</b><br>Spline Sans Mono<br>12px · .05em</div><div class="mono">01 · READ → TRANSLATE → BUILD → GOVERN</div></div>
+    </div>
+
+    <div class="reveal" style="margin-top:36px">
+      <span class="lab">Italic discipline</span>
+      <p class="body">Italic is never decorative. It is reserved for the words that carry the brand's meaning — <span class="soul" style="font-family:var(--display)">preserve</span>, <span class="soul" style="font-family:var(--display)">author</span>, <span class="soul" style="font-family:var(--display)">soul</span> — and for the slogan. Used everywhere, it would mean nothing; used rarely, it marks the soul of a sentence.</p>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 04 · SPACE & GRID ============ -->
+  <section class="block" id="space">
+    <div class="sec-head reveal">
+      <span class="idx">04 — FOUNDATION</span>
+      <h2>Whitespace is the institution.</h2>
+      <p class="note">The calm of a research institution comes from air. A single 4px-based scale governs every gap; sections breathe at 128–160; the page is generous before it is dense.</p>
+    </div>
+
+    <span class="lab reveal">Spacing scale — 4px base</span>
+    <div class="space-row reveal">
+      <div class="u"><span class="bar" style="height:4px"></span><div class="n">4</div></div>
+      <div class="u"><span class="bar" style="height:8px"></span><div class="n">8</div></div>
+      <div class="u"><span class="bar" style="height:12px"></span><div class="n">12</div></div>
+      <div class="u"><span class="bar" style="height:16px"></span><div class="n">16</div></div>
+      <div class="u"><span class="bar" style="height:24px"></span><div class="n">24</div></div>
+      <div class="u"><span class="bar" style="height:32px"></span><div class="n">32</div></div>
+      <div class="u"><span class="bar" style="height:48px"></span><div class="n">48</div></div>
+      <div class="u"><span class="bar" style="height:64px"></span><div class="n">64</div></div>
+      <div class="u"><span class="bar" style="height:96px"></span><div class="n">96</div></div>
+      <div class="u"><span class="bar" style="height:128px"></span><div class="n">128</div></div>
+      <div class="u"><span class="bar" style="height:160px"></span><div class="n">160</div></div>
+      <div class="u"><span class="bar" style="height:200px"></span><div class="n">200</div></div>
+    </div>
+    <div class="two reveal" style="margin-top:30px">
+      <p class="body-s">Key rhythms: <strong>section</strong> 128–160 · <strong>hero top</strong> 200 · <strong>card internal</strong> 32 · <strong>component gaps</strong> 12–24. When in doubt, add space rather than remove it.</p>
+      <p class="body-s">Radius stays near-square at <span class="mono">2px</span> — editorial, not soft. Elevation is flat: no drop shadows. An institution sits; it does not float.</p>
+    </div>
+
+    <span class="lab reveal" style="margin-top:46px">Grid — 12 columns, wide margins</span>
+    <div class="gridvis reveal">
+      <div class="cols">
+        <div class="col"></div><div class="col"></div><div class="col"></div><div class="col"></div>
+        <div class="col"></div><div class="col"></div><div class="col"></div><div class="col"></div>
+        <div class="col"></div><div class="col"></div><div class="col"></div><div class="col"></div>
+      </div>
+      <div class="cap">12 col · max-width 1180 · gutter 14–24 · collapses to 6 (tablet) and 4 (mobile)</div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 05 · SURFACE & SIGNATURE ============ -->
+  <section class="block" id="surface">
+    <div class="sec-head reveal">
+      <span class="idx">05 — FOUNDATION</span>
+      <h2>The torn seam is the one gesture.</h2>
+      <p class="note">Boldness is spent in a single place. The torn seam — the cut between an old master and its AI continuation — is Liora's signature: craft meeting machine, <em>preserve</em> meeting <em>author</em>. Everything around it stays quiet.</p>
+    </div>
+
+    <div class="two-13 reveal">
+      <div class="stack-md">
+        <div>
+          <span class="lab">Surfaces</span>
+          <div class="surf-grid">
+            <div class="surf"><div class="demo flat-demo"><div class="card-x"></div></div><div class="cap"><b>Flat elevation</b>Cards sit on hairlines, never shadows. Border Stone, radius 2px.</div></div>
+            <div class="surf"><div class="demo dots-demo"></div><div class="cap"><b>Halftone field</b>Breathes in margins only — corner-masked, low opacity. Never a full field.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <span class="lab">Signature — torn seam</span>
+        <div class="seam">
+          <div class="panel old"></div>
+          <div class="panel ai"></div>
+          <svg class="tear" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M48 0 L53 7 L49 14 L55 22 L50 31 L57 39 L51 48 L58 57 L52 66 L59 74 L53 83 L60 91 L55 100" />
+          </svg>
+          <span class="lbl l">Old master · craft</span>
+          <span class="lbl r">AI · continuation</span>
+        </div>
+        <p class="body-s" style="margin-top:16px">Construction: an irregular near-vertical tear, 1–4° off-axis, with a torn-paper edge. In production it's a real torn-paper alpha mask over two images — here it's rendered in CSS to communicate the motif.</p>
+        <div class="seam-uses">
+          <span>hero collage</span><span>image divider</span><span>loading</span>
+          <span>page transition</span><span>featured-work hover</span><span>social posts</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 06 · COMPONENTS ============ -->
+  <section class="block" id="components">
+    <div class="sec-head reveal">
+      <span class="idx">06 — LIBRARY</span>
+      <h2>Components for the brand site.</h2>
+      <p class="note">A focused marketing/editorial set — navigation, buttons, editorial blocks, work, lexicon, contact. Each component states its own behaviour; states are shown, not implied.</p>
+    </div>
+
+    <!-- buttons -->
+    <span class="lab reveal">Buttons — primary CTA hover resolves to Oxblood</span>
+    <div class="reveal stack-md">
+      <div>
+        <div class="btn-row">
+          <a class="btn btn-primary">Explore our systems <span class="ar">→</span></a>
+          <a class="btn btn-ghost">See featured work <span class="ar">→</span></a>
+          <button class="btn-text">Read the thesis <span class="ar">→</span></button>
+        </div>
+        <div class="state-note">PRIMARY (ink → oxblood on hover) · GHOST (outline → ink) · TEXT (→ gold on hover) · ARROW SLIDES 4PX</div>
+      </div>
+      <div>
+        <div class="btn-row">
+          <a class="btn btn-primary" disabled>Disabled</a>
+          <a class="btn btn-primary" style="background:var(--oxblood);border-color:var(--oxblood)">Hover preview <span class="ar">→</span></a>
+        </div>
+        <div class="state-note">FOCUS-VISIBLE → 2PX GOLD RING · DISABLED → 38% OPACITY</div>
+      </div>
+    </div>
+
+    <!-- nav -->
+    <span class="lab reveal" style="margin-top:46px">Navigation — active item carries a gold underline</span>
+    <div class="navd reveal">
+      <span class="w">LIORA</span>
+      <div class="lnk">
+        <a class="active">Systems</a><a>Work</a><a>Lab</a><a>Thinking</a><a>About</a>
+        <a class="btn btn-primary">Get in touch <span class="ar">→</span></a>
+      </div>
+    </div>
+
+    <!-- offers -->
+    <span class="lab reveal" style="margin-top:46px">“What we build” — numbered offer row</span>
+    <div class="offers reveal">
+      <div class="offer"><div class="num">01</div><div class="ti">Brand Aesthetic Systems</div><div class="ds">Define and preserve your visual language in the age of AI.</div><span class="ex">Explore <span class="ar">→</span></span></div>
+      <div class="offer"><div class="num">02</div><div class="ti">Campaign &amp; Commerce Systems</div><div class="ds">Scale campaigns and commerce without losing coherence.</div><span class="ex">Explore <span class="ar">→</span></span></div>
+      <div class="offer"><div class="num">03</div><div class="ti">Creative Residency</div><div class="ds">Embed Liora as your long-term creative systems partner.</div><span class="ex">Explore <span class="ar">→</span></span></div>
+    </div>
+
+    <!-- featured + lexicon -->
+    <span class="lab reveal" style="margin-top:46px">Featured work card (hover → torn seam) &nbsp;·&nbsp; Lexicon list</span>
+    <div class="reveal" style="display:grid;grid-template-columns:300px 1fr;gap:48px;align-items:start">
+      <div class="fw">
+        <div class="img">
+          <div class="ai"></div>
+          <svg class="tear" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M60 0 L64 9 L59 18 L66 28 L60 38 L67 48 L61 58 L68 68 L62 78 L69 88 L63 100" />
+          </svg>
+        </div>
+        <div class="ov"><div class="n">01</div><div class="t">Resonance Campaign System</div><div class="tag">Fashion</div></div>
+      </div>
+      <div class="lex">
+        <div class="it">Craft <span>noun</span></div>
+        <div class="it">Taste <span>noun</span></div>
+        <div class="it">Image <span>noun</span></div>
+        <div class="it">Memory <span>noun</span></div>
+        <div class="it">Systems <span>noun</span></div>
+      </div>
+    </div>
+    <p class="body-s reveal" style="margin-top:14px">Hover the card — the AI half and torn seam resolve in. The image itself never scales; the reveal <em>is</em> the seam, not a zoom.</p>
+
+    <!-- pull quote + offer-hov -->
+    <div class="two reveal" style="margin-top:46px">
+      <div>
+        <span class="lab">Editorial pull-quote (Oxblood)</span>
+        <div class="pull"><p class="quote">We believe fashion is not content. It is language.</p></div>
+      </div>
+      <div>
+        <span class="lab">Standalone card — border Stone → Ink on hover</span>
+        <div class="offer-hov">
+          <div class="num mono">P1 · PRODUCT HYPOTHESIS</div>
+          <div class="ti d4" style="margin:14px 0 12px">Brand Memory Engine</div>
+          <div class="ds body-s">A brand's references, rules and prompt memory in one place — so intent survives scale.</div>
+          <span class="ex" style="font-size:13px;font-weight:500;margin-top:18px;display:inline-flex;gap:8px;align-items:center">Explore <span class="ar">→</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- trusted + products -->
+    <div class="two reveal" style="margin-top:46px">
+      <div>
+        <span class="lab">Trusted-by row</span>
+        <div class="trust"><span>AJE.</span><span>ATÖLYE</span><span>MANUKA</span><span>béige</span><span>MAISTUDIOS</span></div>
+      </div>
+      <div>
+        <span class="lab">Product horizon list</span>
+        <div class="prodlist">
+          <a>Brand Memory Engine <span class="ar">→</span></a>
+          <a>Campaign Asset Engine <span class="ar">→</span></a>
+          <a>Visual Governance Layer <span class="ar">→</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- form -->
+    <span class="lab reveal" style="margin-top:46px">Contact (form-lite) — focus state is gold</span>
+    <div class="formd reveal">
+      <div class="field"><label>Name</label><input type="text" placeholder="Your name" /></div>
+      <div class="field"><label>Brand &amp; email</label><input type="text" placeholder="Brand · you@studio.com" /></div>
+      <div class="field"><label>What are you scaling?</label><textarea placeholder="A campaign, a launch, a whole visual system…"></textarea></div>
+      <div><a class="btn btn-primary">Start the conversation <span class="ar">→</span></a></div>
+    </div>
+
+    <!-- footer -->
+    <span class="lab reveal" style="margin-top:46px">Footer</span>
+    <div class="ftr reveal">
+      <div>
+        <div class="w">LIORA</div>
+        <div class="tl">An aesthetic intelligence company for creative commerce.</div>
+      </div>
+      <div><div class="colh">Company</div><a>About</a><a>Careers</a><a>Contact</a></div>
+      <div><div class="colh">Systems</div><a>Brand Systems</a><a>Campaign Systems</a><a>Residency</a></div>
+      <div><div class="colh">Lab</div><a>Thinking</a><a>Research</a><a>For Brands</a></div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 07 · PATTERNS ============ -->
+  <section class="block" id="patterns">
+    <div class="sec-head reveal">
+      <span class="idx">07 — SYSTEM LOGIC</span>
+      <h2>How the pieces compose.</h2>
+      <p class="note">Tokens and components are the vocabulary; these are the grammar. The page breathes by alternating light and dark, and the voice obeys the lexicon.</p>
+    </div>
+
+    <span class="lab reveal">Section rhythm — contrast is the drama</span>
+    <div class="seclogic reveal">
+      <div class="cell c-light"><div class="lb">Bone — light</div><h4>Hero · Insight · Offers · Philosophy · Close</h4><div class="sub">What we offer and believe.</div></div>
+      <div class="cell c-dark"><div class="lb">Ink — dark</div><h4>Tension (the enemy) · Featured work</h4><div class="sub">Where proof and tension live.</div></div>
+    </div>
+
+    <div class="two-13 reveal" style="margin-top:46px">
+      <div>
+        <span class="lab">Page composition — the homepage as a score</span>
+        <div class="compose">
+          <div class="crow"><span class="tone">BONE</span><span class="nm">Hero — thesis + torn-seam collage</span><span class="ds">200 top</span></div>
+          <div class="crow dark"><span class="tone">INK</span><span class="nm">Tension — “the more brands scale…”</span><span class="ds">the enemy</span></div>
+          <div class="crow"><span class="tone">BONE</span><span class="nm">What we build — 01/02/03</span><span class="ds">offers</span></div>
+          <div class="crow dark"><span class="tone">INK</span><span class="nm">Featured work — 3 cards</span><span class="ds">proof</span></div>
+          <div class="crow"><span class="tone">BONE</span><span class="nm">Trusted-by + product horizon</span><span class="ds">credibility</span></div>
+          <div class="crow"><span class="tone">BONE</span><span class="nm">Close — “preserve what matters”</span><span class="ds">desire</span></div>
+          <div class="crow dark"><span class="tone">INK</span><span class="nm">Footer</span><span class="ds">rest</span></div>
+        </div>
+      </div>
+      <div>
+        <span class="lab">Voice in the UI — words we use / avoid</span>
+        <div class="voice">
+          <div class="vh say">We say</div><div class="vh">We avoid</div>
+          <div class="vrow"><div class="say">Explore our systems</div><div class="avoid">Generate visuals</div></div>
+          <div class="vrow"><div class="say">Preserve visual identity</div><div class="avoid">Automate content</div></div>
+          <div class="vrow"><div class="say">Shape campaign languages</div><div class="avoid">One-click campaigns</div></div>
+          <div class="vrow"><div class="say">Creative atelier</div><div class="avoid">AI pipeline</div></div>
+          <div class="vrow"><div class="say">Selected brands</div><div class="avoid">Any brand, fast &amp; cheap</div></div>
+        </div>
+        <p class="body-s" style="margin-top:16px">Microcopy is design material. Buttons name what happens; the system never leads with <em>automation, generate, prompt</em> or <em>agency</em> — even though it does all of those internally.</p>
+      </div>
+    </div>
+
+    <span class="lab reveal" style="margin-top:46px">Imagery — art direction</span>
+    <p class="body-s reveal">Warm classical × contemporary: old-master painting torn into an AI/model continuation. Real artworks (Botticelli, Vermeer, etc.) are <strong>not reproduced here</strong> for licensing reasons — production uses commissioned or licensed composites. Treatment: warm grade, soft depth, generous negative space, the torn seam as the recurring device. Never cold, never stocky, never a full halftone field.</p>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 08 · MOTION ============ -->
+  <section class="block" id="motion">
+    <div class="sec-head reveal">
+      <span class="idx">08 — SYSTEM LOGIC</span>
+      <h2>Slow, deliberate, never playful.</h2>
+      <p class="note">Sophisticated is not the same as complex. Motion is editorial and human: a measured page-load, a quiet scroll reveal, micro-hovers. Nothing bounces; nothing announces itself.</p>
+    </div>
+
+    <div class="two-13 reveal">
+      <div>
+        <span class="lab">Hero reveal — staggered load</span>
+        <div class="motion-demo run" id="mdemo">
+          <div class="m-line m1">Technology is learning how to <span class="soul">create</span>.</div>
+          <div class="m-line m2">AI-native creative systems lab for fashion, beauty and design-led brands.</div>
+          <div class="m-line m3"><span class="btn btn-primary" style="background:var(--bone);color:var(--ink);border-color:var(--bone)">Scale without losing soul <span class="ar">→</span></span></div>
+          <div class="m-line m4">⟶ torn-seam collage rises last</div>
+        </div>
+        <div class="replay"><button class="btn btn-ghost" id="replayBtn" style="font-size:13px;padding:10px 18px">Replay sequence ↻</button></div>
+      </div>
+      <div>
+        <span class="lab">Reveal arrival times (spec)</span>
+        <div class="timeline">
+          <div class="tl"><span class="tnm">Headline</span><span class="track"><span class="fill" style="width:55%"></span></span><span class="tt">0.6s</span></div>
+          <div class="tl"><span class="tnm">Sub-line</span><span class="track"><span class="fill" style="width:64%"></span></span><span class="tt">0.7s</span></div>
+          <div class="tl"><span class="tnm">CTA</span><span class="track"><span class="fill" style="width:73%"></span></span><span class="tt">0.8s</span></div>
+          <div class="tl"><span class="tnm">Collage</span><span class="track"><span class="fill" style="width:100%"></span></span><span class="tt">1.1s</span></div>
+        </div>
+        <ul class="mlist" style="margin-top:26px">
+          <li>Scroll reveal: opacity 0→100, translate 20px, ~0.8s ease-out.</li>
+          <li>Hover: arrow slides 4px · card border Stone→Ink · primary CTA → Oxblood.</li>
+          <li>Images do not scale on hover — the torn seam is the reveal.</li>
+          <li>Easing: <span class="mono">cubic-bezier(.22,1,.36,1)</span> — a calm settle.</li>
+          <li>Reduced motion: everything resolves instantly to its final state.</li>
+        </ul>
+      </div>
+    </div>
+
+    <span class="lab reveal" style="margin-top:40px">Forbidden — what keeps it from feeling like “an AI company”</span>
+    <div class="forbidden reveal">
+      <span>marquee</span><span>infinite scroll</span><span>heavy WebGL</span><span>parallax everything</span><span>bouncing easings</span><span>autoplay carousels</span>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 09 · WORDMARK ============ -->
+  <section class="block" id="logo">
+    <div class="sec-head reveal">
+      <span class="idx">09 — IDENTITY</span>
+      <h2>A wordmark, quietly set.</h2>
+      <p class="note">For launch: no symbol. Like a research institution, a publisher, a house — the name, in the display face, with generous tracking. The restraint is the statement.</p>
+    </div>
+
+    <div class="logo-grid reveal">
+      <div class="logo-box light"><span class="word">LIORA</span><span class="tag">on bone · primary</span></div>
+      <div class="logo-box dark"><span class="word">LIORA</span><span class="tag">on ink · inverse</span></div>
+      <div class="logo-clear"><span class="word">LIORA</span></div>
+    </div>
+    <div class="two reveal" style="margin-top:26px">
+      <p class="body-s">Set in Newsreader (launch) / Canela (production), uppercase, ~.22em tracking. Clear-space ≥ cap-height on all sides. Minimum legible size 16px. The version/meta lockup sits in mono, muted.</p>
+      <div>
+        <span class="lab">Don't</span>
+        <div class="dont">
+          <div class="d"><b>No symbol</b>No icon or monogram for launch.</div>
+          <div class="d"><b>No effects</b>No gradient, shadow, outline or tilt.</div>
+          <div class="d"><b>No tightening</b>Never remove the tracking — it carries the calm.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule" />
+
+  <!-- ============ 10 · TOKENS ============ -->
+  <section class="block" id="tokens">
+    <div class="sec-head reveal">
+      <span class="idx">10 — APPENDIX</span>
+      <h2>Tokens — lift straight into the build.</h2>
+      <p class="note">Every decision above, as CSS custom properties. This is the contract between the design system and the code.</p>
+    </div>
+
+    <div class="reveal" style="border:var(--hair);border-radius:var(--r);overflow:hidden;background:#fff">
+      <table class="tok">
+        <thead><tr><th>Token</th><th>Value</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr class="tok-group"><td colspan="3">Color</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#F2EDE3"></span>--bone</td><td class="v">#F2EDE3</td><td class="v">Page ground</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#E9E2D5"></span>--bone-2</td><td class="v">#E9E2D5</td><td class="v">Raised surfaces</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#C8BCA8"></span>--stone</td><td class="v">#C8BCA8</td><td class="v">Hairlines</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#100E0B"></span>--ink</td><td class="v">#100E0B</td><td class="v">Dark / primary / text</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#1C1813"></span>--ink-2</td><td class="v">#1C1813</td><td class="v">Panels on dark</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#B07A2E"></span>--gold</td><td class="v">#B07A2E</td><td class="v">Link · selection · active · detail</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#5C1F29"></span>--oxblood</td><td class="v">#5C1F29</td><td class="v">Quote · CTA hover · special</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#1A1611"></span>--text</td><td class="v">#1A1611</td><td class="v">Body on bone</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#6E665A"></span>--text-mut</td><td class="v">#6E665A</td><td class="v">Secondary on bone</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#EFE8DA"></span>--on-dark</td><td class="v">#EFE8DA</td><td class="v">Body on ink</td></tr>
+          <tr><td class="k"><span class="sw-mini" style="background:#A99C86"></span>--on-dark-mut</td><td class="v">#A99C86</td><td class="v">Secondary on ink</td></tr>
+
+          <tr class="tok-group"><td colspan="3">Type</td></tr>
+          <tr><td class="k">--display</td><td class="v">Newsreader → Canela</td><td class="v">Hero, headings, quotes</td></tr>
+          <tr><td class="k">--ui</td><td class="v">Switzer → Neue Montreal</td><td class="v">Body, UI, nav, buttons</td></tr>
+          <tr><td class="k">--mono</td><td class="v">Spline Sans Mono</td><td class="v">Data, meta, index</td></tr>
+
+          <tr class="tok-group"><td colspan="3">Form &amp; motion</td></tr>
+          <tr><td class="k">--r</td><td class="v">2px</td><td class="v">Radius — near-square</td></tr>
+          <tr><td class="k">--hair</td><td class="v">1px solid #C8BCA8</td><td class="v">Hairline / divider</td></tr>
+          <tr><td class="k">--ease</td><td class="v">cubic-bezier(.22,1,.36,1)</td><td class="v">Default easing</td></tr>
+          <tr><td class="k">--dur</td><td class="v">0.8s</td><td class="v">Reveal duration</td></tr>
+
+          <tr class="tok-group"><td colspan="3">Space (4px base)</td></tr>
+          <tr><td class="k">scale</td><td class="v">4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 · 128 · 160 · 200</td><td class="v">All gaps &amp; padding</td></tr>
+          <tr><td class="k">rhythm</td><td class="v">section 128–160 · hero-top 200 · card 32</td><td class="v">Vertical cadence</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="colophon reveal" style="margin-top:40px">Liora — Design System v1.0 · An operating manual for an intelligent cultural institution. Type rendered in free analogues (Switzer · Newsreader · Spline Sans Mono); production targets Neue Montreal · Canela. Imagery is placeholder; real composites are commissioned or licensed.</p>
+  </section>
+
+</main>
+
+<script>
+  // reveal on scroll (respects reduced motion via CSS)
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
+    },{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(e){io.observe(e)});
+  })();
+
+  // hero motion replay
+  (function(){
+    var demo=document.getElementById('mdemo'), btn=document.getElementById('replayBtn');
+    if(!demo||!btn)return;
+    btn.addEventListener('click',function(){
+      demo.classList.remove('run'); void demo.offsetWidth; demo.classList.add('run');
+    });
+  })();
+</script>
+
+</body>
+</html>
