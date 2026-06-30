@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid, FolderOpen, Footprints } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid, FolderOpen, Footprints, Video } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
 
@@ -13,6 +13,7 @@ const tools = [
   { href: '/flat-to-ghost', Icon: Shirt, label: 'Ghost' },
   { href: '/edit-photo', Icon: Wand2, label: 'Edit' },
   { href: '/batch-studio', Icon: LayoutGrid, label: 'Batch' },
+  { href: '/video-studio', Icon: Video, label: 'Video' },
 ]
 
 export function Navbar({ credits, email, isAdmin }: { credits: number; email: string; isAdmin?: boolean }) {

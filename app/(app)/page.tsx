@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, PersonStanding, Shirt, Wand2, LayoutGrid, Footprints } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, LayoutGrid, Footprints, Video } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { PixelCursor } from '@/components/pixel-cursor'
 
@@ -14,7 +14,8 @@ export default function Home() {
     { href: '/batch-studio', Icon: LayoutGrid, title: t('batch.title'), desc: t('batch.cardDesc'), bgImage: '/batch-studio.jpg', colSpan: 'col-span-1' },
     { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title'), desc: t('tool.pose.desc'), bgImage: '/pose-generator.jpg', colSpan: 'col-span-1' },
     { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title'), desc: t('tool.flat.desc'), bgImage: '/flat-to-ghost.jpg', colSpan: 'col-span-1' },
-    { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title'), desc: t('tool.edit.desc'), bgImage: '/edit-photo.jpg', colSpan: 'col-span-2' },
+    { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title'), desc: t('tool.edit.desc'), bgImage: '/edit-photo.jpg', colSpan: 'col-span-1' },
+    { href: '/video-studio', Icon: Video, title: t('tool.video.title'), desc: t('video.cardDesc'), bgImage: null, colSpan: 'col-span-1' },
   ]
 
   return (
