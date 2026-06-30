@@ -33,8 +33,8 @@ function FrameUpload({
   const { isDragging, dropHandlers } = useDropzone(onSelect)
 
   return (
-    <div>
-      <p className="mb-2 text-xs text-neutral-400">{label}</p>
+    <div className="min-w-0">
+      <p className="mb-1 truncate text-[11px] text-neutral-400">{label}</p>
       <input
         id={inputId}
         type="file"
@@ -46,26 +46,26 @@ function FrameUpload({
         }}
       />
       {frame ? (
-        <div className="relative overflow-hidden rounded-xl border border-[#242424] bg-[#141414]">
+        <div className="relative h-24 overflow-hidden rounded-lg border border-[#242424] bg-[#141414]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={frame.previewUrl} alt="" className="aspect-[4/3] w-full object-cover" />
+          <img src={frame.previewUrl} alt="" className="h-full w-full object-cover" />
           <button
             type="button"
             onClick={onClear}
             aria-label="Remove"
-            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black/90"
+            className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black/90"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3 w-3" />
           </button>
         </div>
       ) : (
         <label
           htmlFor={inputId}
           {...dropHandlers}
-          className={`flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#333] bg-[#141414] p-4 text-neutral-500 transition hover:border-[#444] hover:text-neutral-400${isDragging ? ' border-white bg-[#161616]' : ''}`}
+          className={`flex h-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[#333] bg-[#141414] p-2 text-neutral-500 transition hover:border-[#444] hover:text-neutral-400 ${isDragging ? 'border-white bg-[#161616]' : ''}`}
         >
-          <Upload className="h-5 w-5" />
-          <span className="text-xs">PNG, JPG</span>
+          <Upload className="h-4 w-4" />
+          <span className="text-[10px]">PNG, JPG</span>
         </label>
       )}
     </div>
@@ -234,11 +234,11 @@ export default function VideoStudioPage() {
 
   return (
     <>
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <p className="mb-6 text-xs text-neutral-500">{t('tool.video.title')}</p>
+      <main className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
+        <aside className="flex w-[340px] shrink-0 flex-col gap-3 border-r border-[#242424] px-5 py-5">
+          <p className="text-xs text-neutral-500">{t('tool.video.title')}</p>
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          <aside className="w-full shrink-0 space-y-5 lg:sticky lg:top-6 lg:w-[380px]">
+          <div className="grid grid-cols-2 gap-2.5">
             <FrameUpload
               label={t('video.firstFrame')}
               frame={firstFrame}
@@ -253,65 +253,68 @@ export default function VideoStudioPage() {
               onClear={() => setLastFrame(null)}
               inputId="video-last-frame"
             />
+          </div>
 
-            <div>
-              <label htmlFor="video-prompt" className="mb-2 block text-xs text-neutral-400">
-                {t('video.prompt')}
-              </label>
-              <textarea
-                id="video-prompt"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                rows={4}
-                className="min-h-[96px] w-full rounded-xl border border-[#242424] bg-[#141414] p-3 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
-              />
-            </div>
+          <div>
+            <label htmlFor="video-prompt" className="mb-1 block text-[11px] text-neutral-400">
+              {t('video.prompt')}
+            </label>
+            <textarea
+              id="video-prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={2}
+              className="min-h-[56px] w-full resize-none rounded-lg border border-[#242424] bg-[#141414] px-3 py-2 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+            />
+          </div>
 
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="mb-2 text-xs text-neutral-400">{t('video.duration')}</p>
-              <div className="flex gap-2">
+              <p className="mb-1 text-[11px] text-neutral-400">{t('video.duration')}</p>
+              <div className="flex gap-1.5">
                 {([5, 10] as const).map((d) => (
                   <button
                     key={d}
                     type="button"
                     onClick={() => setDuration(d)}
-                    className={`rounded-lg px-4 py-2 text-sm transition ${duration === d ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
+                    className={`flex-1 rounded-lg py-1.5 text-xs transition ${duration === d ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
                   >
                     {d}s
                   </button>
                 ))}
               </div>
             </div>
-
             <div>
-              <p className="mb-2 text-xs text-neutral-400">{t('video.quality')}</p>
-              <div className="flex gap-2">
+              <p className="mb-1 text-[11px] text-neutral-400">{t('video.quality')}</p>
+              <div className="flex gap-1.5">
                 {(['720p', '1080p'] as const).map((r) => (
                   <button
                     key={r}
                     type="button"
                     onClick={() => setResolution(r)}
-                    className={`rounded-lg px-4 py-2 text-sm transition ${resolution === r ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
+                    className={`flex-1 rounded-lg py-1.5 text-xs transition ${resolution === r ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
                   >
                     {r}
                   </button>
                 ))}
               </div>
             </div>
+          </div>
 
-            {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-xs text-red-400">{error}</p>}
 
-            <button
-              type="button"
-              onClick={handleGenerate}
-              disabled={!firstFrame}
-              className="w-full rounded-lg bg-white py-2.5 text-sm font-medium text-[#0a0a0a] transition hover:bg-neutral-200 disabled:opacity-40"
-            >
-              {t('video.generateBase')} ({cost} {t('nav.credits')})
-            </button>
-          </aside>
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={!firstFrame}
+            className="mt-auto w-full rounded-lg bg-white py-2 text-sm font-medium text-[#0a0a0a] transition hover:bg-neutral-200 disabled:opacity-40"
+          >
+            {t('video.generateBase')} ({cost} {t('nav.credits')})
+          </button>
+        </aside>
 
-          <section className="flex min-h-[420px] flex-1 flex-col rounded-2xl border border-[#242424] bg-[#141414] p-4 lg:min-h-[560px]">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col p-5">
+          <div className="flex h-full min-h-0 flex-col rounded-2xl border border-[#242424] bg-[#141414] p-4">
             {status === 'idle' && (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 text-neutral-500">
                 <Video className="h-10 w-10 opacity-40" />
@@ -327,17 +330,17 @@ export default function VideoStudioPage() {
             )}
 
             {status === 'done' && videoUrl && (
-              <div className="flex flex-1 flex-col">
+              <div className="flex min-h-0 flex-1 flex-col">
                 <video
                   controls
                   src={videoUrl}
-                  className="max-h-[min(60vh,520px)] w-full rounded-xl bg-black object-contain"
+                  className="max-h-full min-h-0 w-full flex-1 rounded-xl bg-black object-contain"
                 />
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => setLightbox(true)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#2a2a2a] px-4 py-2 text-sm text-neutral-200 hover:bg-[#1c1c1c]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#2a2a2a] px-3 py-1.5 text-sm text-neutral-200 hover:bg-[#1c1c1c]"
                   >
                     <Maximize2 className="h-4 w-4" />
                     {t('video.expand')}
@@ -345,16 +348,16 @@ export default function VideoStudioPage() {
                   <button
                     type="button"
                     onClick={handleDownload}
-                    className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-[#0a0a0a]"
+                    className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-[#0a0a0a]"
                   >
                     {t('video.download')}
                   </button>
                 </div>
-                <p className="mt-4 text-xs text-neutral-500">{t('video.notSaved')}</p>
+                <p className="mt-3 text-xs text-neutral-500">{t('video.notSaved')}</p>
               </div>
             )}
-          </section>
-        </div>
+          </div>
+        </section>
       </main>
 
       {lightbox && videoUrl && (
