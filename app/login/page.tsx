@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -200,9 +201,9 @@ export default function LoginPage() {
         <footer className="footer rise d5" lang="en">
           <span>{en['login.scale']}</span>
           <span className="links">
-            <a href="#">{en['login.privacy']}</a>
+            <Link href="/privacy">{en['login.privacy']}</Link>
             <span className="sep">|</span>
-            <a href="#">{en['login.terms']}</a>
+            <Link href="/terms">{en['login.terms']}</Link>
           </span>
         </footer>
       </div>
