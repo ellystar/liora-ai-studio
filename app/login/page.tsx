@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useI18n } from '@/lib/i18n/language-provider'
+import { dictionaries } from '@/lib/i18n/dictionaries'
 
 function ArrowIcon() {
   return (
@@ -52,6 +53,7 @@ function EyeOffIcon() {
 export default function LoginPage() {
   const router = useRouter()
   const { locale, setLanguage, t } = useI18n()
+  const en = dictionaries.en
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -83,7 +85,7 @@ export default function LoginPage() {
 
       <div className="shell">
         <header className="topbar">
-          <div className="wordmark rise d1">LIORA</div>
+          <div className="wordmark rise d1" lang="en">LIORA</div>
           <nav className="lang rise d1" role="group" aria-label="Language">
             <button
               type="button"
@@ -107,11 +109,15 @@ export default function LoginPage() {
           <div className="left">
             <div className="hero rise d2">
               <h1 dangerouslySetInnerHTML={{ __html: t('login.headline') }} />
-              <p className="sublabel" dangerouslySetInnerHTML={{ __html: t('login.sublabel') }} />
+              <p
+                className="sublabel"
+                lang="en"
+                dangerouslySetInnerHTML={{ __html: en['login.sublabel'] }}
+              />
             </div>
 
             <div className="exclusive rise d3">
-              <div className="eyebrow">{t('login.exLabel')}</div>
+              <div className="eyebrow" lang="en">{en['login.exLabel']}</div>
               <p>{t('login.exBody')}</p>
               <a className="req" href="mailto:info@lioralabs.io">
                 <span>{t('login.reqLink')}</span>
@@ -191,12 +197,12 @@ export default function LoginPage() {
           </section>
         </div>
 
-        <footer className="footer rise d5">
-          <span>{t('login.scale')}</span>
+        <footer className="footer rise d5" lang="en">
+          <span>{en['login.scale']}</span>
           <span className="links">
-            <a href="#">{t('login.privacy')}</a>
+            <a href="#">{en['login.privacy']}</a>
             <span className="sep">|</span>
-            <a href="#">{t('login.terms')}</a>
+            <a href="#">{en['login.terms']}</a>
           </span>
         </footer>
       </div>
