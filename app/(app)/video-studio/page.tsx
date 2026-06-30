@@ -116,6 +116,17 @@ export default function VideoStudioPage() {
     setLastFrame({ file, previewUrl: URL.createObjectURL(file) })
   }
 
+  function handleResolutionChange(next: Resolution) {
+    setResolution(next)
+    if (next === '720p') setLastFrame(null)
+  }
+
+  function submitErrorMessage(code: string) {
+    if (code === 'insufficient_credits') return t('video.error.insufficient')
+    if (code === 'last_frame_requires_1080p') return t('video.error.lastFrame1080p')
+    return t('video.error.generic')
+  }
+
   async function pollJob(jobId: string) {
     const supabase = createClient()
     let attempts = 0
@@ -179,12 +190,15 @@ export default function VideoStudioPage() {
     try {
       const supabase = createClient()
       const first = await fileToScaledBase64(firstFrame.file)
-      const last = lastFrame ? await fileToScaledBase64(lastFrame.file) : undefined
+      const last =
+        resolution === '1080p' && lastFrame
+          ? await fileToScaledBase64(lastFrame.file)
+          : undefined
 
       const { data, error: submitError } = await supabase.functions.invoke('generate-video-submit', {
         body: {
           firstFrame: first,
-          lastFrame: last,
+          lastFrame: last ?? undefined,
           prompt,
           resolution,
           duration,
@@ -199,7 +213,7 @@ export default function VideoStudioPage() {
           const ctx = await (submitError as { context: Response }).context.json()
           code = ctx.error
         } catch { /* ignore */ }
-        setError(code === 'insufficient_credits' ? t('video.error.insufficient') : t('video.error.generic'))
+        setError(submitErrorMessage(code))
         setStatus('idle')
         return
       }
@@ -238,7 +252,7 @@ export default function VideoStudioPage() {
         <aside className="flex min-h-0 w-[340px] shrink-0 flex-col gap-3 border-r border-[#242424] px-5 py-5">
           <p className="text-xs text-neutral-500">{t('tool.video.title')}</p>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className={resolution === '1080p' ? 'grid grid-cols-2 gap-2.5' : ''}>
             <FrameUpload
               label={t('video.firstFrame')}
               frame={firstFrame}
@@ -246,13 +260,15 @@ export default function VideoStudioPage() {
               onClear={() => setFirstFrame(null)}
               inputId="video-first-frame"
             />
-            <FrameUpload
-              label={t('video.lastFrame')}
-              frame={lastFrame}
-              onSelect={selectLastFrame}
-              onClear={() => setLastFrame(null)}
-              inputId="video-last-frame"
-            />
+            {resolution === '1080p' && (
+              <FrameUpload
+                label={t('video.lastFrame')}
+                frame={lastFrame}
+                onSelect={selectLastFrame}
+                onClear={() => setLastFrame(null)}
+                inputId="video-last-frame"
+              />
+            )}
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col">
@@ -290,7 +306,7 @@ export default function VideoStudioPage() {
                   <button
                     key={r}
                     type="button"
-                    onClick={() => setResolution(r)}
+                    onClick={() => handleResolutionChange(r)}
                     className={`flex-1 rounded-lg py-1.5 text-xs transition ${resolution === r ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
                   >
                     {r}
