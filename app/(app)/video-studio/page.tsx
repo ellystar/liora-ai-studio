@@ -235,7 +235,7 @@ export default function VideoStudioPage() {
   return (
     <>
       <main className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
-        <aside className="flex w-[340px] shrink-0 flex-col gap-3 border-r border-[#242424] px-5 py-5">
+        <aside className="flex min-h-0 w-[340px] shrink-0 flex-col gap-3 border-r border-[#242424] px-5 py-5">
           <p className="text-xs text-neutral-500">{t('tool.video.title')}</p>
 
           <div className="grid grid-cols-2 gap-2.5">
@@ -255,7 +255,7 @@ export default function VideoStudioPage() {
             />
           </div>
 
-          <div>
+          <div className="flex min-h-0 flex-1 flex-col">
             <label htmlFor="video-prompt" className="mb-1 block text-[11px] text-neutral-400">
               {t('video.prompt')}
             </label>
@@ -263,8 +263,7 @@ export default function VideoStudioPage() {
               id="video-prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              rows={2}
-              className="min-h-[56px] w-full resize-none rounded-lg border border-[#242424] bg-[#141414] px-3 py-2 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+              className="min-h-[140px] w-full flex-1 resize-none rounded-lg border border-[#242424] bg-[#141414] px-3 py-2 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
             />
           </div>
 
