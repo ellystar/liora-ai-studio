@@ -437,6 +437,7 @@ export default function BatchStudioPage() {
               body: {
                 photo: hero.input!,
                 poses: [{ id: pose.id, prompt: pose.prompt, shot_type: pose.shot_type ?? null }],
+                tuck: product.tuck ?? undefined,
               },
             })
             if (error) {

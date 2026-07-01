@@ -318,7 +318,7 @@ export default function EcomStudioPage() {
 
             for (const pose of restPoses) {
               const { data, error } = await supabase.functions.invoke('generate-pose', {
-                body: { photo: heroInput, poses: [pose] },
+                body: { photo: heroInput, poses: [pose], tuck: tuck ?? undefined },
               })
 
               if (error) {
