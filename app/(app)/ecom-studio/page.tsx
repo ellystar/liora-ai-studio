@@ -31,6 +31,9 @@ type ClothItem = {
   url?: string
   assetId?: string
   savedAsAsset?: boolean
+  detailFile?: File
+  detailPreviewUrl?: string
+  detailUrl?: string
 }
 
 const STEPS = ['clothes', 'model', 'background', 'pose', 'size'] as const
@@ -87,6 +90,7 @@ export default function EcomStudioPage() {
   const router = useRouter()
   const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const detailFileInputRef = useRef<HTMLInputElement>(null)
 
   const [models, setModels] = useState<Model[]>([])
   const [backgrounds, setBackgrounds] = useState<Background[]>([])
@@ -114,6 +118,8 @@ export default function EcomStudioPage() {
   const [genError, setGenError] = useState<string | null>(null)
   const [genProgress, setGenProgress] = useState({ done: 0, total: 0 })
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
+  const [detailPickClothId, setDetailPickClothId] = useState<string | null>(null)
+  const [detailAssetPickerClothId, setDetailAssetPickerClothId] = useState<string | null>(null)
   const [tuck, setTuck] = useState<'in' | 'out' | null>(null)
 
   const step = STEPS[stepIndex]
@@ -226,6 +232,35 @@ export default function EcomStudioPage() {
   function setClothNotes(id: string, notes: string) {
     setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, notes } : c)))
   }
+  function setClothDetailFromFile(clothId: string, file: File) {
+    setClothes((prev) =>
+      prev.map((c) =>
+        c.id === clothId
+          ? { ...c, detailFile: file, detailPreviewUrl: URL.createObjectURL(file), detailUrl: undefined }
+          : c
+      )
+    )
+  }
+  function setClothDetailFromAsset(clothId: string, asset: Asset) {
+    const signedUrl = asset.signedUrl
+    if (!signedUrl) return
+    setClothes((prev) =>
+      prev.map((c) =>
+        c.id === clothId
+          ? { ...c, detailFile: undefined, detailPreviewUrl: signedUrl, detailUrl: signedUrl }
+          : c
+      )
+    )
+  }
+  function clearClothDetail(clothId: string) {
+    setClothes((prev) =>
+      prev.map((c) =>
+        c.id === clothId
+          ? { ...c, detailFile: undefined, detailPreviewUrl: undefined, detailUrl: undefined }
+          : c
+      )
+    )
+  }
   function togglePose(id: string) {
     setPoseIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
   }
@@ -280,7 +315,18 @@ export default function EcomStudioPage() {
           const { base64, mimeType } = item.file
             ? await fileToScaledBase64(item.file)
             : await urlToScaledBase64(item.url!)
-          return { base64, mimeType, category: item.category, notes: item.notes ?? '' }
+          let detailBase64: string | undefined
+          let detailMimeType: string | undefined
+          if (item.detailFile) {
+            const d = await fileToScaledBase64(item.detailFile)
+            detailBase64 = d.base64
+            detailMimeType = d.mimeType
+          } else if (item.detailUrl) {
+            const d = await urlToScaledBase64(item.detailUrl)
+            detailBase64 = d.base64
+            detailMimeType = d.mimeType
+          }
+          return { base64, mimeType, category: item.category, notes: item.notes ?? '', detailBase64, detailMimeType }
         })
       )
       const selectedModel = models.find((m) => m.id === modelId)
@@ -444,6 +490,18 @@ export default function EcomStudioPage() {
           <p className="text-base font-medium text-neutral-100">{t('ecom.clothes.title')}</p>
           <p className="mb-4 text-sm text-neutral-500">{t('ecom.clothes.subtitle')}</p>
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
+          <input
+            ref={detailFileInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file && detailPickClothId) setClothDetailFromFile(detailPickClothId, file)
+              e.target.value = ''
+              setDetailPickClothId(null)
+            }}
+          />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {clothes.map((c) => (
               <div key={c.id} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414]">
@@ -482,6 +540,48 @@ export default function EcomStudioPage() {
                       rows={2}
                       className="min-h-[60px] w-full rounded-lg border border-[#242424] bg-[#141414] p-2 text-xs text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
                     />
+                  </div>
+                  <div className="mt-2 border-t border-[#242424] pt-2">
+                    {c.detailPreviewUrl ? (
+                      <div className="flex items-start gap-2">
+                        <div className="relative shrink-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={c.detailPreviewUrl} alt="" className="h-12 w-12 rounded-md object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => clearClothDetail(c.id)}
+                            aria-label="Kaldir"
+                            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/80"
+                          >
+                            <X className="h-2.5 w-2.5 text-white" />
+                          </button>
+                        </div>
+                        <p className="text-[9px] leading-snug text-neutral-500">{t('ecom.detail.hint')}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex flex-wrap gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDetailPickClothId(c.id)
+                              detailFileInputRef.current?.click()
+                            }}
+                            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
+                          >
+                            {t('ecom.detail.add')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDetailAssetPickerClothId(c.id)}
+                            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
+                          >
+                            {t('assets.fromAssets')}
+                          </button>
+                        </div>
+                        <p className="mt-1 text-[9px] leading-snug text-neutral-600">{t('ecom.detail.hint')}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -714,6 +814,15 @@ export default function EcomStudioPage() {
         open={assetPickerOpen}
         onClose={() => setAssetPickerOpen(false)}
         onSelect={addAssetCloth}
+      />
+
+      <AssetPicker
+        open={detailAssetPickerClothId !== null}
+        onClose={() => setDetailAssetPickerClothId(null)}
+        onSelect={(asset) => {
+          if (detailAssetPickerClothId) setClothDetailFromAsset(detailAssetPickerClothId, asset)
+          setDetailAssetPickerClothId(null)
+        }}
       />
 
       <UserModelUpload
