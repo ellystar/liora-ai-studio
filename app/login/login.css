@@ -183,6 +183,7 @@
 }
 
 .login-page .exclusive p {
+  font-family: var(--ui);
   font-size: 13.5px;
   line-height: 1.65;
   color: var(--on-dark-mut);
