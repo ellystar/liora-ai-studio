@@ -40,6 +40,10 @@
   position: relative;
   z-index: 1;
   width: min(1100px, 92vw);
+  max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #141210;
   border: 1px solid #2a2622;
   border-radius: var(--r);
@@ -68,9 +72,27 @@
 
 .request-access-modal .ram-grid {
   display: grid;
-  grid-template-columns: 42% 58%;
-  gap: clamp(40px, 6vw, 90px);
+  grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+  gap: clamp(24px, 4vw, 64px);
   align-items: start;
+}
+
+.request-access-modal .ram-intro,
+.request-access-modal .ram-form-col {
+  min-width: 0;
+}
+
+.request-access-modal .ram-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.request-access-modal .ram-field {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .request-access-modal .ram-title {
@@ -109,27 +131,12 @@
   opacity: 0.85;
 }
 
-.request-access-modal .ram-form {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.request-access-modal .ram-field label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 12.5px;
-  color: var(--on-dark);
-}
-
-.request-access-modal .ram-field label .req {
-  color: var(--gold);
-  margin-left: 1px;
-}
-
 .request-access-modal .ram-field input,
 .request-access-modal .ram-field textarea {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: #1a1613;
   border: 1px solid #3a352f;
   border-radius: var(--r);
@@ -139,6 +146,18 @@
   color: var(--bone);
   outline: none;
   transition: border-color 0.2s var(--ease);
+}
+
+.request-access-modal .ram-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  color: var(--on-dark);
+}
+
+.request-access-modal .ram-field label .ram-req {
+  color: var(--gold);
+  margin-left: 1px;
 }
 
 .request-access-modal .ram-field textarea {

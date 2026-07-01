@@ -100,7 +100,7 @@ export function RequestAccessModal({ open, onClose }: { open: boolean; onClose: 
                 <div className="ram-field">
                   <label htmlFor="ram-name">
                     {t('access.labelName')}
-                    <span className="req"> *</span>
+                    <span className="ram-req"> *</span>
                   </label>
                   <input
                     id="ram-name"
@@ -116,7 +116,7 @@ export function RequestAccessModal({ open, onClose }: { open: boolean; onClose: 
                 <div className="ram-field">
                   <label htmlFor="ram-email">
                     {t('access.labelEmail')}
-                    <span className="req"> *</span>
+                    <span className="ram-req"> *</span>
                   </label>
                   <input
                     id="ram-email"
@@ -132,7 +132,7 @@ export function RequestAccessModal({ open, onClose }: { open: boolean; onClose: 
                 <div className="ram-field">
                   <label htmlFor="ram-message">
                     {t('access.labelMessage')}
-                    <span className="req"> *</span>
+                    <span className="ram-req"> *</span>
                   </label>
                   <textarea
                     id="ram-message"
