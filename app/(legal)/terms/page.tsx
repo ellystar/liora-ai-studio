@@ -1,17 +1,16 @@
+'use client'
+
 import { LegalEmail, LegalH2, LegalLayout, LegalLi, LegalP, LegalUl } from '@/components/legal-layout'
+import { useI18n } from '@/lib/i18n/language-provider'
 
 const EFFECTIVE = '[EFFECTIVE DATE]'
+const ENTITY = 'Liora Labs'
 
-export default function TermsPage() {
+function EnglishTerms() {
   return (
-    <LegalLayout
-      title="Terms of Use"
-      effectiveDate={EFFECTIVE}
-      lastUpdated={EFFECTIVE}
-      active="terms"
-    >
+    <>
       <LegalP>
-        These Terms of Use (&quot;Terms&quot;) govern your access to and use of Liora AI Studio (the &quot;Service&quot;), operated by <strong>[LEGAL ENTITY NAME]</strong> (&quot;Liora&quot;, &quot;we&quot;, &quot;us&quot;). By accessing or using the Service, you agree to these Terms. If you do not agree, do not use the Service.
+        These Terms of Use (&quot;Terms&quot;) govern your access to and use of Liora AI Studio (the &quot;Service&quot;), operated by <strong>{ENTITY}</strong> (&quot;Liora&quot;, &quot;we&quot;, &quot;us&quot;). By accessing or using the Service, you agree to these Terms. If you do not agree, do not use the Service.
       </LegalP>
 
       <LegalH2>1. Eligibility and access</LegalH2>
@@ -82,12 +81,113 @@ export default function TermsPage() {
 
       <LegalH2>12. Contact</LegalH2>
       <LegalP>
-        [LEGAL ENTITY NAME]
+        {ENTITY}
         <br />
         [REGISTERED ADDRESS]
         <br />
         Email: <LegalEmail />
       </LegalP>
+    </>
+  )
+}
+
+function TurkishTerms() {
+  return (
+    <>
+      <LegalP>
+        Bu Kullanım Şartları (&quot;Şartlar&quot;), <strong>{ENTITY}</strong> (&quot;Liora&quot;, &quot;biz&quot;) tarafından işletilen Liora AI Studio&apos;ya (&quot;Hizmet&quot;) erişiminizi ve kullanımınızı düzenler. Hizmet&apos;e erişerek veya onu kullanarak bu Şartlar&apos;ı kabul etmiş olursunuz. Kabul etmiyorsanız Hizmet&apos;i kullanmayın.
+      </LegalP>
+
+      <LegalH2>1. Uygunluk ve erişim</LegalH2>
+      <LegalP>
+        Hizmet yalnızca davetle erişilir ve 18 yaş ve üzeri işletmeler ile profesyonellere yöneliktir. Erişim kendi takdirimizle verilir; sınırlandırılabilir, askıya alınabilir veya iptal edilebilir. Giriş bilgilerinizi gizli tutmaktan ve hesabınız altındaki tüm etkinliklerden siz sorumlusunuz.
+      </LegalP>
+
+      <LegalH2>2. Krediler ve faturalama</LegalH2>
+      <LegalP>
+        Hizmet bir kredi sistemiyle çalışır. Her başarılı görsel üretimi, platformda açıklandığı şekilde kredi harcar. Krediler ödeme sağlayıcımız aracılığıyla önceden satın alınır. Yürürlükteki mevzuat gerektirmedikçe veya yazılı olarak aksi belirtilmedikçe, satın alınan krediler iade edilemez ve devredilemez. Fiyatlandırmayı ve kredi maliyetlerini, gerektiğinde bildirimde bulunarak ileriye dönük olarak değiştirebiliriz.
+      </LegalP>
+
+      <LegalH2>3. İçeriğiniz ve haklarınız</LegalH2>
+      <LegalP>
+        Yüklediğiniz görsellerin ve materyallerin (&quot;İçeriğiniz&quot;) mülkiyeti sizde kalır. İçeriğinizi yüklemek ve Hizmet tarafından işlenmesini sağlamak için gerekli tüm haklara, lisanslara ve izinlere sahip olduğunuzu ve İçeriğinizin herhangi bir üçüncü tarafın haklarını ihlal etmediğini beyan ve taahhüt edersiniz.
+      </LegalP>
+      <LegalP>
+        Liora&apos;ya, yalnızca Hizmet&apos;i işletmek ve size sonuç sağlamak amacıyla İçeriğinizi barındırmak, işlemek ve (yapay zekâ sağlayıcımıza da dâhil olmak üzere) iletmek için sınırlı, münhasır olmayan bir lisans verirsiniz. İçeriğinizi kendi modellerimizi eğitmek için kullanmıyoruz.
+      </LegalP>
+
+      <LegalH2>4. Kabul edilebilir kullanım</LegalH2>
+      <LegalP>Hizmet&apos;i aşağıdaki amaçlarla kullanmamayı kabul edersiniz:</LegalP>
+      <LegalUl>
+        <LegalLi>kişilerin rızası olmadan görsellerini veya kullanma hakkına sahip olmadığınız görselleri yüklemek;</LegalLi>
+        <LegalLi>hukuka aykırı, ihlal edici, karalayıcı veya aldatıcı içerik oluşturmak, düzenlemek veya dağıtmak;</LegalLi>
+        <LegalLi>cinsel, istismar edici veya başka şekilde zararlı içerik ya da reşit olmayanları içeren herhangi bir içerik üretmek;</LegalLi>
+        <LegalLi>herhangi bir kişinin kimliğine bürünmek veya üretilen görselleri yanıltıcı şekilde sunmak;</LegalLi>
+        <LegalLi>Hizmet&apos;i bozmaya, tersine mühendislik yapmaya, aşırı yüklemeye veya yetkisiz erişim sağlamaya çalışmak.</LegalLi>
+      </LegalUl>
+      <LegalP>
+        Bu Şartlar&apos;ı ihlal eden içeriği kaldırabilir ve hesapları askıya alabiliriz.
+      </LegalP>
+
+      <LegalH2>5. Yapay zekâ çıktısı</LegalH2>
+      <LegalP>
+        Hizmet, görsel üretmek için üçüncü taraf yapay zekâ modelleri kullanır. Sonuçlar &quot;olduğu gibi&quot; sunulur; çıktının doğru olacağını, belirli bir amaca uygun olacağını veya başka eserlere benzemeyeceğini garanti etmeyiz. Ticari kullanımdan önce çıktıyı gözden geçirmekten siz sorumlusunuz. Bu Şartlar&apos;a uymanız koşuluyla, ürettiğiniz görselleri kendi ticari amaçlarınız için kullanabilirsiniz.
+      </LegalP>
+
+      <LegalH2>6. Fikrî mülkiyet</LegalH2>
+      <LegalP>
+        Hizmet; yazılımı, tasarımı, markası ve içeriği dâhil (İçeriğiniz hariç) Liora&apos;ya aittir ve fikrî mülkiyet yasalarıyla korunur. Bu Şartlar, Hizmet&apos;i kullanmaya ilişkin sınırlı hak dışında markalarımız veya teknolojimiz üzerinde size herhangi bir hak vermez.
+      </LegalP>
+
+      <LegalH2>7. Hizmetin sürekliliği</LegalH2>
+      <LegalP>
+        Hizmet&apos;i erişilebilir tutmayı amaçlarız ancak kesintisiz veya hatasız çalışacağını garanti etmeyiz. Üretim, üçüncü taraf yapay zekâ sağlayıcılarına bağlıdır ve zaman zaman gecikebilir veya kullanılamayabilir. Özellikleri istediğimiz zaman değiştirebilir, askıya alabilir veya sonlandırabiliriz.
+      </LegalP>
+
+      <LegalH2>8. Sorumluluk reddi ve sınırlaması</LegalH2>
+      <LegalP>
+        Yasaların izin verdiği azami ölçüde, Hizmet herhangi bir garanti olmaksızın &quot;olduğu gibi&quot; ve &quot;mevcut haliyle&quot; sunulur. Yasaların izin verdiği azami ölçüde, Liora dolaylı, arızi veya sonuçsal zararlardan sorumlu olmayacaktır ve Hizmet&apos;e ilişkin herhangi bir talebe yönelik toplam sorumluluğumuz, talebi önceki üç (3) ayda bize ödediğiniz tutarı aşmayacaktır.
+      </LegalP>
+
+      <LegalH2>9. Fesih</LegalH2>
+      <LegalP>
+        Hizmet&apos;i kullanmayı istediğiniz zaman bırakabilirsiniz. Bu Şartlar&apos;ı ihlal etmeniz hâlinde ya da güvenlik veya yasal nedenlerle gerektiğinde erişiminizi askıya alabilir veya sonlandırabiliriz. Niteliği gereği fesihten sonra da geçerli olması gereken hükümler yürürlükte kalır.
+      </LegalP>
+
+      <LegalH2>10. Bu Şartlar&apos;daki değişiklikler</LegalH2>
+      <LegalP>
+        Bu Şartlar&apos;ı zaman zaman güncelleyebiliriz. Güncellenmiş sürümü yeni bir yürürlük tarihiyle yayımlarız ve değişiklikler yürürlüğe girdikten sonra Hizmet&apos;i kullanmaya devam etmeniz kabul anlamına gelir.
+      </LegalP>
+
+      <LegalH2>11. Geçerli hukuk</LegalH2>
+      <LegalP>
+        Bu Şartlar [GOVERNING COUNTRY] yasalarına tabidir ve herhangi bir uyuşmazlıkta, size tanınan zorunlu tüketici korumaları saklı kalmak kaydıyla, [GOVERNING CITY/COUNTRY] mahkemeleri yetkili olacaktır.
+      </LegalP>
+
+      <LegalH2>12. İletişim</LegalH2>
+      <LegalP>
+        {ENTITY}
+        <br />
+        [REGISTERED ADDRESS]
+        <br />
+        E-posta: <LegalEmail />
+      </LegalP>
+    </>
+  )
+}
+
+export default function TermsPage() {
+  const { locale } = useI18n()
+  const isTr = locale === 'tr'
+
+  return (
+    <LegalLayout
+      title={isTr ? 'Kullanım Şartları' : 'Terms of Use'}
+      effectiveDate={EFFECTIVE}
+      lastUpdated={EFFECTIVE}
+      active="terms"
+    >
+      {isTr ? <TurkishTerms /> : <EnglishTerms />}
     </LegalLayout>
   )
 }

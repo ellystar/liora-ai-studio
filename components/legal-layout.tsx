@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useI18n } from '@/lib/i18n/language-provider'
-import { dictionaries } from '@/lib/i18n/dictionaries'
 
 type LegalLayoutProps = {
   title: string
@@ -13,8 +12,9 @@ type LegalLayoutProps = {
 }
 
 export function LegalLayout({ title, effectiveDate, lastUpdated, active, children }: LegalLayoutProps) {
-  const { t } = useI18n()
-  const en = dictionaries.en
+  const { t, locale } = useI18n()
+  const effectiveLabel = locale === 'tr' ? 'Yürürlük tarihi' : 'Effective date'
+  const updatedLabel = locale === 'tr' ? 'Son güncelleme' : 'Last updated'
 
   return (
     <div className="legal-page">
@@ -30,23 +30,22 @@ export function LegalLayout({ title, effectiveDate, lastUpdated, active, childre
 
         <main className="legal-main">
           <h1 className="legal-h1">{title}</h1>
-          <p className="legal-meta" lang="en">
-            Effective date: {effectiveDate}
+          <p className="legal-meta">
+            {effectiveLabel}: {effectiveDate}
             <br />
-            Last updated: {lastUpdated}
+            {updatedLabel}: {lastUpdated}
           </p>
           <article className="legal-body">{children}</article>
         </main>
 
-        <footer className="legal-footer" lang="en">
-          <span>{en['login.scale']}</span>
+        <footer className="legal-footer">
           <nav className="legal-footer-links" aria-label="Legal">
             <Link href="/privacy" className={active === 'privacy' ? 'is-active' : undefined}>
-              {en['login.privacy']}
+              {t('login.privacy')}
             </Link>
             <span className="sep">|</span>
             <Link href="/terms" className={active === 'terms' ? 'is-active' : undefined}>
-              {en['login.terms']}
+              {t('login.terms')}
             </Link>
           </nav>
         </footer>

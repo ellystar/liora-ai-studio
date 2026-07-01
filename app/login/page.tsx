@@ -200,12 +200,11 @@ export default function LoginPage() {
           </section>
         </div>
 
-        <footer className="footer rise d5" lang="en">
-          <span>{en['login.scale']}</span>
+        <footer className="footer rise d5">
           <span className="links">
-            <Link href="/privacy">{en['login.privacy']}</Link>
+            <Link href="/privacy">{t('login.privacy')}</Link>
             <span className="sep">|</span>
-            <Link href="/terms">{en['login.terms']}</Link>
+            <Link href="/terms">{t('login.terms')}</Link>
           </span>
         </footer>
       </div>

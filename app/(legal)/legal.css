@@ -170,7 +170,7 @@
 .legal-page .legal-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
   padding-top: clamp(24px, 4vh, 40px);
   border-top: 1px solid rgba(239, 232, 218, 0.1);
