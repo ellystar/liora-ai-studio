@@ -353,7 +353,7 @@ export default function BatchStudioPage() {
           model: prep.model,
           clothes: prep.clothes,
           backgroundPrompt: prep.backgroundPrompt,
-          poses: [{ id: heroPose.id, prompt: heroPose.prompt }],
+          poses: [{ id: heroPose.id, prompt: heroPose.prompt, shot_type: heroPose.shot_type ?? null }],
           ratio: prep.ratio,
           quality: prep.quality,
           tuck: prep.tuck,
@@ -436,7 +436,7 @@ export default function BatchStudioPage() {
             const { data, error } = await supabase.functions.invoke('generate-pose', {
               body: {
                 photo: hero.input!,
-                poses: [{ id: pose.id, prompt: pose.prompt }],
+                poses: [{ id: pose.id, prompt: pose.prompt, shot_type: pose.shot_type ?? null }],
               },
             })
             if (error) {

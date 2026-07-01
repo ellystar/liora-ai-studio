@@ -241,8 +241,8 @@ export default function EcomStudioPage() {
 
   const selectedPoses = generalPoses.filter((p) => poseIds.includes(p.id))
   const posesToRun = [
-    ...selectedPoses.map((p) => ({ id: p.id, prompt: p.prompt })),
-    ...customPoses.map((txt, i) => ({ id: `custom-${i}`, prompt: txt })),
+    ...selectedPoses.map((p) => ({ id: p.id, prompt: p.prompt, shot_type: p.shot_type ?? null })),
+    ...customPoses.map((txt, i) => ({ id: `custom-${i}`, prompt: txt, shot_type: null })),
   ]
 
   const { isDragging, dropHandlers } = useDropzone((files) => addFiles(files))
