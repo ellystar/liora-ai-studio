@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { dictionaries } from '@/lib/i18n/dictionaries'
+import { RequestAccessModal } from '@/components/request-access-modal'
 
 function ArrowIcon() {
   return (
@@ -60,6 +61,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [requestOpen, setRequestOpen] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -120,10 +122,10 @@ export default function LoginPage() {
             <div className="exclusive rise d3">
               <div className="eyebrow" lang="en">{en['login.exLabel']}</div>
               <p>{t('login.exBody')}</p>
-              <a className="req" href="mailto:info@lioralabs.io">
+              <button type="button" className="req" onClick={() => setRequestOpen(true)}>
                 <span>{t('login.reqLink')}</span>
                 <ArrowIcon />
-              </a>
+              </button>
             </div>
           </div>
 
@@ -207,6 +209,8 @@ export default function LoginPage() {
           </span>
         </footer>
       </div>
+
+      <RequestAccessModal open={requestOpen} onClose={() => setRequestOpen(false)} />
     </div>
   )
 }
