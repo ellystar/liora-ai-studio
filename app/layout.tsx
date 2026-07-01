@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { LanguageProvider } from '@/lib/i18n/language-provider'
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -26,6 +27,7 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies()
   const locale = (cookieStore.get('locale')?.value === 'tr' ? 'tr' : 'en') as 'tr' | 'en'
+  const gaId = process.env.NEXT_PUBLIC_GA_ID
 
   return (
     <html
@@ -35,6 +37,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <LanguageProvider initialLocale={locale}>{children}</LanguageProvider>
       </body>
+      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }
