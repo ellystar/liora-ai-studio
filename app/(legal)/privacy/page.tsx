@@ -3,8 +3,8 @@
 import { LegalEmail, LegalH2, LegalLayout, LegalP } from '@/components/legal-layout'
 import { useI18n } from '@/lib/i18n/language-provider'
 
-const EFFECTIVE = '[EFFECTIVE DATE]'
 const ENTITY = 'Liora Labs'
+const ADDRESS = 'Kestel/Bursa/Türkiye'
 
 function EnglishPrivacy() {
   return (
@@ -15,7 +15,7 @@ function EnglishPrivacy() {
 
       <LegalH2>1. Who we are</LegalH2>
       <LegalP>
-        Liora AI Studio is an invite-only platform that helps fashion and beauty brands create professional product imagery using artificial intelligence. The data controller is {ENTITY}, located at [REGISTERED ADDRESS]. For any privacy question, contact us at <LegalEmail />.
+        Liora AI Studio is an invite-only platform that helps fashion and beauty brands create professional product imagery using artificial intelligence. The data controller is {ENTITY}, located at {ADDRESS}. For any privacy question, contact us at <LegalEmail />.
       </LegalP>
 
       <LegalH2>2. Information we collect</LegalH2>
@@ -29,7 +29,7 @@ function EnglishPrivacy() {
         <strong>Generated content.</strong> The images the Service produces for you, and a log of each generation (tool used, time, credits consumed).
       </LegalP>
       <LegalP>
-        <strong>Billing and credits.</strong> Your credit balance and transaction history. Card or payment details are handled by our payment processor [PAYMENT PROCESSOR] and are not stored by us.
+        <strong>Billing and credits.</strong> Your credit balance and transaction history. Credit purchases are arranged directly with {ENTITY}; we do not process or store card details on the platform.
       </LegalP>
       <LegalP>
         <strong>Technical data.</strong> Standard log and device data (IP address, browser, timestamps) and essential cookies needed to keep you signed in.
@@ -42,7 +42,7 @@ function EnglishPrivacy() {
 
       <LegalH2>4. AI processing and third parties</LegalH2>
       <LegalP>
-        To generate and edit images, the content you upload is transmitted to our AI model provider, <strong>Google (Gemini API)</strong>, for processing. We also rely on the following service providers to operate the platform: <strong>Supabase</strong> (authentication, database, and file storage, hosted in the European Union), <strong>Vercel</strong> (application hosting), and <strong>[PAYMENT PROCESSOR]</strong> (payments). These providers process data on our behalf under their respective terms and security commitments.
+        To generate and edit images, the content you upload is transmitted to our AI model provider, <strong>Google (Gemini API)</strong>, for processing. We also rely on the following service providers to operate the platform: <strong>Supabase</strong> (authentication, database, and file storage, hosted in the European Union) and <strong>Vercel</strong> (application hosting). These providers process data on our behalf under their respective terms and security commitments.
       </LegalP>
       <LegalP>
         We do not sell your personal data, and we do not use your uploaded content to train our own models.
@@ -87,7 +87,7 @@ function EnglishPrivacy() {
       <LegalP>
         {ENTITY}
         <br />
-        [REGISTERED ADDRESS]
+        {ADDRESS}
         <br />
         Email: <LegalEmail />
       </LegalP>
@@ -104,7 +104,7 @@ function TurkishPrivacy() {
 
       <LegalH2>1. Biz kimiz</LegalH2>
       <LegalP>
-        Liora AI Studio, moda ve güzellik markalarının yapay zekâ kullanarak profesyonel ürün görselleri oluşturmasına yardımcı olan, yalnızca davetle erişilen bir platformdur. Veri sorumlusu, [REGISTERED ADDRESS] adresinde bulunan {ENTITY}&apos;dir. Gizlilikle ilgili her türlü soru için <LegalEmail /> adresinden bize ulaşabilirsiniz.
+        Liora AI Studio, moda ve güzellik markalarının yapay zekâ kullanarak profesyonel ürün görselleri oluşturmasına yardımcı olan, yalnızca davetle erişilen bir platformdur. Veri sorumlusu, {ADDRESS} adresinde bulunan {ENTITY}&apos;dir. Gizlilikle ilgili her türlü soru için <LegalEmail /> adresinden bize ulaşabilirsiniz.
       </LegalP>
 
       <LegalH2>2. Topladığımız bilgiler</LegalH2>
@@ -118,7 +118,7 @@ function TurkishPrivacy() {
         <strong>Üretilen içerik.</strong> Hizmet&apos;in sizin için ürettiği görseller ve her üretimin kaydı (kullanılan araç, zaman, harcanan kredi).
       </LegalP>
       <LegalP>
-        <strong>Faturalama ve krediler.</strong> Kredi bakiyeniz ve işlem geçmişiniz. Kart veya ödeme bilgileri ödeme sağlayıcımız [PAYMENT PROCESSOR] tarafından işlenir ve bizim tarafımızdan saklanmaz.
+        <strong>Faturalama ve krediler.</strong> Kredi bakiyeniz ve işlem geçmişiniz. Kredi satın alımları doğrudan {ENTITY} ile yapılır; kart bilgilerini platformda işlemez veya saklamayız.
       </LegalP>
       <LegalP>
         <strong>Teknik veriler.</strong> Standart günlük ve cihaz verileri (IP adresi, tarayıcı, zaman damgaları) ve oturumunuzu açık tutmak için gereken zorunlu çerezler.
@@ -131,7 +131,7 @@ function TurkishPrivacy() {
 
       <LegalH2>4. Yapay zekâ işleme ve üçüncü taraflar</LegalH2>
       <LegalP>
-        Görselleri üretmek ve düzenlemek için yüklediğiniz içerik, işlenmek üzere yapay zekâ model sağlayıcımız <strong>Google&apos;a (Gemini API)</strong> iletilir. Platformu işletmek için ayrıca şu hizmet sağlayıcılara başvururuz: <strong>Supabase</strong> (kimlik doğrulama, veritabanı ve dosya depolama; Avrupa Birliği&apos;nde barındırılır), <strong>Vercel</strong> (uygulama barındırma) ve <strong>[PAYMENT PROCESSOR]</strong> (ödemeler). Bu sağlayıcılar, kendi koşulları ve güvenlik taahhütleri kapsamında verileri bizim adımıza işler.
+        Görselleri üretmek ve düzenlemek için yüklediğiniz içerik, işlenmek üzere yapay zekâ model sağlayıcımız <strong>Google&apos;a (Gemini API)</strong> iletilir. Platformu işletmek için ayrıca şu hizmet sağlayıcılara başvururuz: <strong>Supabase</strong> (kimlik doğrulama, veritabanı ve dosya depolama; Avrupa Birliği&apos;nde barındırılır) ve <strong>Vercel</strong> (uygulama barındırma). Bu sağlayıcılar, kendi koşulları ve güvenlik taahhütleri kapsamında verileri bizim adımıza işler.
       </LegalP>
       <LegalP>
         Kişisel verilerinizi satmıyoruz ve yüklediğiniz içeriği kendi modellerimizi eğitmek için kullanmıyoruz.
@@ -176,7 +176,7 @@ function TurkishPrivacy() {
       <LegalP>
         {ENTITY}
         <br />
-        [REGISTERED ADDRESS]
+        {ADDRESS}
         <br />
         E-posta: <LegalEmail />
       </LegalP>
@@ -187,12 +187,13 @@ function TurkishPrivacy() {
 export default function PrivacyPage() {
   const { locale } = useI18n()
   const isTr = locale === 'tr'
+  const effective = isTr ? '1 Temmuz 2026' : '1 July 2026'
 
   return (
     <LegalLayout
       title={isTr ? 'Gizlilik Politikası' : 'Privacy Policy'}
-      effectiveDate={EFFECTIVE}
-      lastUpdated={EFFECTIVE}
+      effectiveDate={effective}
+      lastUpdated={effective}
       active="privacy"
     >
       {isTr ? <TurkishPrivacy /> : <EnglishPrivacy />}

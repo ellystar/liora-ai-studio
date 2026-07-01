@@ -3,8 +3,8 @@
 import { LegalEmail, LegalH2, LegalLayout, LegalLi, LegalP, LegalUl } from '@/components/legal-layout'
 import { useI18n } from '@/lib/i18n/language-provider'
 
-const EFFECTIVE = '[EFFECTIVE DATE]'
 const ENTITY = 'Liora Labs'
+const ADDRESS = 'Kestel/Bursa/Türkiye'
 
 function EnglishTerms() {
   return (
@@ -20,7 +20,7 @@ function EnglishTerms() {
 
       <LegalH2>2. Credits and billing</LegalH2>
       <LegalP>
-        The Service operates on a credit system. Each successful image generation consumes credits as described in the platform. Credits are purchased in advance through our payment processor. Unless required by applicable law or stated otherwise in writing, purchased credits are non-refundable and non-transferable. We may change pricing and credit costs prospectively, with notice where required.
+        The Service operates on a credit system. Each successful image generation consumes credits as described in the platform. Credits are purchased in advance directly from {ENTITY}. Unless required by applicable law or stated otherwise in writing, purchased credits are non-refundable and non-transferable. We may change pricing and credit costs prospectively, with notice where required.
       </LegalP>
 
       <LegalH2>3. Your content and rights</LegalH2>
@@ -76,14 +76,14 @@ function EnglishTerms() {
 
       <LegalH2>11. Governing law</LegalH2>
       <LegalP>
-        These Terms are governed by the laws of [GOVERNING COUNTRY], and the courts of [GOVERNING CITY/COUNTRY] will have jurisdiction over any disputes, without prejudice to any mandatory consumer protections available to you.
+        These Terms are governed by the laws of Türkiye, and the courts of Bursa, Türkiye will have jurisdiction over any disputes, without prejudice to any mandatory consumer protections available to you.
       </LegalP>
 
       <LegalH2>12. Contact</LegalH2>
       <LegalP>
         {ENTITY}
         <br />
-        [REGISTERED ADDRESS]
+        {ADDRESS}
         <br />
         Email: <LegalEmail />
       </LegalP>
@@ -105,7 +105,7 @@ function TurkishTerms() {
 
       <LegalH2>2. Krediler ve faturalama</LegalH2>
       <LegalP>
-        Hizmet bir kredi sistemiyle çalışır. Her başarılı görsel üretimi, platformda açıklandığı şekilde kredi harcar. Krediler ödeme sağlayıcımız aracılığıyla önceden satın alınır. Yürürlükteki mevzuat gerektirmedikçe veya yazılı olarak aksi belirtilmedikçe, satın alınan krediler iade edilemez ve devredilemez. Fiyatlandırmayı ve kredi maliyetlerini, gerektiğinde bildirimde bulunarak ileriye dönük olarak değiştirebiliriz.
+        Hizmet bir kredi sistemiyle çalışır. Her başarılı görsel üretimi, platformda açıklandığı şekilde kredi harcar. Krediler doğrudan {ENTITY}&apos;den önceden satın alınır. Yürürlükteki mevzuat gerektirmedikçe veya yazılı olarak aksi belirtilmedikçe, satın alınan krediler iade edilemez ve devredilemez. Fiyatlandırmayı ve kredi maliyetlerini, gerektiğinde bildirimde bulunarak ileriye dönük olarak değiştirebiliriz.
       </LegalP>
 
       <LegalH2>3. İçeriğiniz ve haklarınız</LegalH2>
@@ -161,14 +161,14 @@ function TurkishTerms() {
 
       <LegalH2>11. Geçerli hukuk</LegalH2>
       <LegalP>
-        Bu Şartlar [GOVERNING COUNTRY] yasalarına tabidir ve herhangi bir uyuşmazlıkta, size tanınan zorunlu tüketici korumaları saklı kalmak kaydıyla, [GOVERNING CITY/COUNTRY] mahkemeleri yetkili olacaktır.
+        Bu Şartlar Türkiye yasalarına tabidir ve herhangi bir uyuşmazlıkta, size tanınan zorunlu tüketici korumaları saklı kalmak kaydıyla, Bursa, Türkiye mahkemeleri yetkili olacaktır.
       </LegalP>
 
       <LegalH2>12. İletişim</LegalH2>
       <LegalP>
         {ENTITY}
         <br />
-        [REGISTERED ADDRESS]
+        {ADDRESS}
         <br />
         E-posta: <LegalEmail />
       </LegalP>
@@ -179,12 +179,13 @@ function TurkishTerms() {
 export default function TermsPage() {
   const { locale } = useI18n()
   const isTr = locale === 'tr'
+  const effective = isTr ? '1 Temmuz 2026' : '1 July 2026'
 
   return (
     <LegalLayout
       title={isTr ? 'Kullanım Şartları' : 'Terms of Use'}
-      effectiveDate={EFFECTIVE}
-      lastUpdated={EFFECTIVE}
+      effectiveDate={effective}
+      lastUpdated={effective}
       active="terms"
     >
       {isTr ? <TurkishTerms /> : <EnglishTerms />}
