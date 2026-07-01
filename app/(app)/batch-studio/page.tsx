@@ -31,6 +31,9 @@ type Garment = {
   id: string
   category: GarmentCategory
   source: GarmentSource
+  detailFile?: File
+  detailPreviewUrl?: string
+  detailUrl?: string
 }
 
 type BatchProduct = {
@@ -82,7 +85,14 @@ type Quality = (typeof QUALITIES)[number]
 
 type PreparedProduct = {
   model: { base64: string; mimeType: string }
-  clothes: { base64: string; mimeType: string; category: GarmentCategory; notes?: string }[]
+  clothes: {
+    base64: string
+    mimeType: string
+    category: GarmentCategory
+    notes?: string
+    detailBase64?: string
+    detailMimeType?: string
+  }[]
   backgroundPrompt: string
   ratio: Ratio
   quality: Quality
@@ -100,6 +110,7 @@ type GarmentFlow = {
   pendingFile?: File
 }
 type AssetTarget = { productId: string; category: GarmentCategory }
+type DetailTarget = { productId: string; garmentId: string }
 
 function emptyProduct(): BatchProduct {
   return {
@@ -191,6 +202,7 @@ export default function BatchStudioPage() {
   const { t, locale } = useI18n()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const detailFileInputRef = useRef<HTMLInputElement>(null)
   const prepareCache = useRef(new Map<string, Promise<PreparedProduct>>())
   const heroCache = useRef(new Map<string, Promise<HeroResult>>())
   const cancelRef = useRef(false)
@@ -217,6 +229,8 @@ export default function BatchStudioPage() {
   const [garmentFlow, setGarmentFlow] = useState<GarmentFlow | null>(null)
   const [fileTarget, setFileTarget] = useState<AssetTarget | null>(null)
   const [assetTarget, setAssetTarget] = useState<AssetTarget | null>(null)
+  const [detailFileTarget, setDetailFileTarget] = useState<DetailTarget | null>(null)
+  const [detailAssetTarget, setDetailAssetTarget] = useState<DetailTarget | null>(null)
   const [modelPickerOpen, setModelPickerOpen] = useState(false)
 
   const [models, setModels] = useState<Model[]>([])
@@ -315,11 +329,23 @@ export default function BatchStudioPage() {
             g.source.kind === 'file'
               ? await fileToScaledBase64(g.source.file)
               : await urlToScaledBase64(g.source.url)
+          let detailBase64: string | undefined
+          let detailMimeType: string | undefined
+          if (g.detailFile) {
+            const d = await fileToScaledBase64(g.detailFile, 2048)
+            detailBase64 = d.base64
+            detailMimeType = d.mimeType
+          } else if (g.detailUrl) {
+            const d = await urlToScaledBase64(g.detailUrl, 2048)
+            detailBase64 = d.base64
+            detailMimeType = d.mimeType
+          }
           return {
             base64,
             mimeType,
             category: g.category,
             ...(idx === 0 && product.notes.trim() ? { notes: product.notes.trim() } : {}),
+            ...(detailBase64 ? { detailBase64, detailMimeType } : {}),
           }
         })
       )
@@ -552,7 +578,79 @@ export default function BatchStudioPage() {
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
   }
 
+  function invalidateProductCache(productId: string) {
+    prepareCache.current.delete(productId)
+    heroCache.current.delete(productId)
+  }
+
+  function setGarmentDetailFromFile(productId: string, garmentId: string, file: File) {
+    invalidateProductCache(productId)
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              garments: p.garments.map((g) =>
+                g.id === garmentId
+                  ? {
+                      ...g,
+                      detailFile: file,
+                      detailPreviewUrl: URL.createObjectURL(file),
+                      detailUrl: undefined,
+                    }
+                  : g
+              ),
+            }
+          : p
+      )
+    )
+  }
+
+  function setGarmentDetailFromAsset(productId: string, garmentId: string, asset: Asset) {
+    const signedUrl = asset.signedUrl
+    if (!signedUrl) return
+    invalidateProductCache(productId)
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              garments: p.garments.map((g) =>
+                g.id === garmentId
+                  ? {
+                      ...g,
+                      detailFile: undefined,
+                      detailPreviewUrl: signedUrl,
+                      detailUrl: signedUrl,
+                    }
+                  : g
+              ),
+            }
+          : p
+      )
+    )
+  }
+
+  function clearGarmentDetail(productId: string, garmentId: string) {
+    invalidateProductCache(productId)
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              garments: p.garments.map((g) =>
+                g.id === garmentId
+                  ? { ...g, detailFile: undefined, detailPreviewUrl: undefined, detailUrl: undefined }
+                  : g
+              ),
+            }
+          : p
+      )
+    )
+  }
+
   function addGarment(productId: string, category: GarmentCategory, source: GarmentSource) {
+    invalidateProductCache(productId)
     setProducts((prev) =>
       prev.map((p) =>
         p.id === productId
@@ -563,6 +661,7 @@ export default function BatchStudioPage() {
   }
 
   function removeGarment(productId: string, garmentId: string) {
+    invalidateProductCache(productId)
     setProducts((prev) =>
       prev.map((p) =>
         p.id === productId ? { ...p, garments: p.garments.filter((g) => g.id !== garmentId) } : p
@@ -718,6 +817,20 @@ export default function BatchStudioPage() {
         hidden
         onChange={(e) => { handleFileInput(e.target.files); e.target.value = '' }}
       />
+      <input
+        ref={detailFileInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file && detailFileTarget) {
+            setGarmentDetailFromFile(detailFileTarget.productId, detailFileTarget.garmentId, file)
+          }
+          e.target.value = ''
+          setDetailFileTarget(null)
+        }}
+      />
 
       {/* STAGE 1 */}
       {view === 'input' && stage === 1 && (
@@ -761,7 +874,7 @@ export default function BatchStudioPage() {
                 </p>
                 <div className="mb-3 flex flex-wrap gap-1.5">
                   {product.garments.map((g) => (
-                    <div key={g.id} className="relative w-16">
+                    <div key={g.id} className="relative w-[72px]">
                       <div className="h-16 w-16 overflow-hidden rounded-lg border border-[#242424]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={garmentPreview(g.source)} alt="" className="h-full w-full object-cover" />
@@ -775,10 +888,47 @@ export default function BatchStudioPage() {
                           <option key={cat} value={cat}>{t(`batch.cat.${cat}` as TranslationKey)}</option>
                         ))}
                       </select>
+                      <div className="mt-0.5">
+                        {g.detailPreviewUrl ? (
+                          <div className="relative inline-block">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={g.detailPreviewUrl} alt="" className="h-7 w-7 rounded border border-[#333] object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => clearGarmentDetail(product.id, g.id)}
+                              aria-label="Kaldir"
+                              className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-black/80"
+                            >
+                              <X className="h-2 w-2 text-white" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDetailFileTarget({ productId: product.id, garmentId: g.id })
+                                detailFileInputRef.current?.click()
+                              }}
+                              className="block w-full text-left text-[7px] leading-tight text-neutral-500 hover:text-neutral-300"
+                            >
+                              {t('ecom.detail.add')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDetailAssetTarget({ productId: product.id, garmentId: g.id })}
+                              className="block w-full text-left text-[7px] leading-tight text-neutral-600 hover:text-neutral-400"
+                            >
+                              {t('assets.fromAssets')}
+                            </button>
+                            <p className="mt-0.5 text-[6px] leading-snug text-neutral-600">{t('ecom.detail.photoTip')}</p>
+                          </div>
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={() => removeGarment(product.id, g.id)}
-                        className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/80"
+                        className="absolute -right-1 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-black/80"
                       >
                         <X className="h-2.5 w-2.5 text-white" />
                       </button>
@@ -1427,6 +1577,17 @@ export default function BatchStudioPage() {
         open={assetTarget !== null}
         onClose={() => setAssetTarget(null)}
         onSelect={handleAssetSelect}
+      />
+
+      <AssetPicker
+        open={detailAssetTarget !== null}
+        onClose={() => setDetailAssetTarget(null)}
+        onSelect={(asset) => {
+          if (detailAssetTarget) {
+            setGarmentDetailFromAsset(detailAssetTarget.productId, detailAssetTarget.garmentId, asset)
+          }
+          setDetailAssetTarget(null)
+        }}
       />
 
       <UserModelUpload
