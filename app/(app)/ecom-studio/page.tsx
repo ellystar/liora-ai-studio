@@ -318,11 +318,11 @@ export default function EcomStudioPage() {
           let detailBase64: string | undefined
           let detailMimeType: string | undefined
           if (item.detailFile) {
-            const d = await fileToScaledBase64(item.detailFile)
+            const d = await fileToScaledBase64(item.detailFile, 2048)
             detailBase64 = d.base64
             detailMimeType = d.mimeType
           } else if (item.detailUrl) {
-            const d = await urlToScaledBase64(item.detailUrl)
+            const d = await urlToScaledBase64(item.detailUrl, 2048)
             detailBase64 = d.base64
             detailMimeType = d.mimeType
           }
@@ -580,6 +580,7 @@ export default function EcomStudioPage() {
                           </button>
                         </div>
                         <p className="mt-1 text-[9px] leading-snug text-neutral-600">{t('ecom.detail.hint')}</p>
+                        <p className="mt-0.5 text-[9px] leading-snug text-neutral-600">{t('ecom.detail.photoTip')}</p>
                       </div>
                     )}
                   </div>
