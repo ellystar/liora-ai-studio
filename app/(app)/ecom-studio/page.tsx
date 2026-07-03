@@ -403,59 +403,20 @@ export default function EcomStudioPage() {
         }
       }
 
-      // ---- ARKA HERO ----
+      // ---- ARKA POZLAR (her biri dogrudan generate-ecom, side:'back', taze detay referansi) ----
       if (backPoses.length > 0 && !stoppedInsufficient) {
-        const backHeroPose = backPoses[0]
-        let backHeroInput: { base64: string; mimeType: string } | null = null
-
-        if (frontHeroInput) {
-          // on hero'dan turet (manken/isik/ortam tutarli) + arka referanslari
-          const { data, error } = await supabase.functions.invoke('generate-pose', {
-            body: {
-              photo: frontHeroInput, poses: [backHeroPose], tuck: tuck ?? undefined,
-              side: 'back', clothes: clothesPayload,
-            },
-          })
-          if (error) { await readErr(error) }
-          else {
-            const img = (data?.images as string[] | undefined)?.[0]
-            if (img) {
-              collectedImages.push(img)
-              setGenProgress((p) => ({ ...p, done: p.done + 1 }))
-              backHeroInput = await urlToScaledBase64(img)
-            }
-          }
-        } else {
-          // sadece arka poz secilmis -> arka hero'yu dogrudan generate-ecom ile arka referanstan uret
+        for (const pose of backPoses) {
+          if (stoppedInsufficient) break
           const { data, error } = await supabase.functions.invoke('generate-ecom', {
             body: {
               clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
-              poses: [backHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'back',
+              poses: [pose], ratio, quality, tuck: tuck ?? undefined, side: 'back',
             },
           })
-          if (error) { await readErr(error) }
-          else {
-            const img = (data?.images as string[] | undefined)?.[0]
-            if (img) {
-              collectedImages.push(img)
-              setGenProgress((p) => ({ ...p, done: p.done + 1 }))
-              backHeroInput = await urlToScaledBase64(img)
-            }
-          }
-        }
-
-        // kalan arka pozlar -> arka hero'dan aktar
-        if (backHeroInput) {
-          for (const pose of backPoses.slice(1)) {
-            if (stoppedInsufficient) break
-            const { data: d, error: e } = await supabase.functions.invoke('generate-pose', {
-              body: { photo: backHeroInput, poses: [pose], tuck: tuck ?? undefined, side: 'back' },
-            })
-            if (e) { await readErr(e); setGenProgress((p) => ({ ...p, done: p.done + 1 })); continue }
-            const img = (d?.images as string[] | undefined)?.[0]
-            if (img) collectedImages.push(img)
-            setGenProgress((p) => ({ ...p, done: p.done + 1 }))
-          }
+          if (error) { await readErr(error); setGenProgress((p) => ({ ...p, done: p.done + 1 })); continue }
+          const img = (data?.images as string[] | undefined)?.[0]
+          if (img) collectedImages.push(img)
+          setGenProgress((p) => ({ ...p, done: p.done + 1 }))
         }
       }
 
