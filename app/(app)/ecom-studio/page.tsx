@@ -403,20 +403,46 @@ export default function EcomStudioPage() {
         }
       }
 
-      // ---- ARKA POZLAR (her biri dogrudan generate-ecom, side:'back', taze detay referansi) ----
+      // ---- ARKA: hero-aktarim; logolu yakin cekim ONCE (arka hero) ----
       if (backPoses.length > 0 && !stoppedInsufficient) {
-        for (const pose of backPoses) {
-          if (stoppedInsufficient) break
-          const { data, error } = await supabase.functions.invoke('generate-ecom', {
-            body: {
-              clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
-              poses: [pose], ratio, quality, tuck: tuck ?? undefined, side: 'back',
-            },
+        // logo net olsun diye close_up olan arka pozu HERO yap (detay referansini o alir)
+        const orderedBack = [...backPoses].sort((a, b) =>
+          (a.shot_type === 'close_up' ? -1 : 0) - (b.shot_type === 'close_up' ? -1 : 0)
+        )
+        const backHeroPose = orderedBack[0]
+        let backHeroInput: { base64: string; mimeType: string } | null = null
+
+        if (frontHeroInput) {
+          const { data, error } = await supabase.functions.invoke('generate-pose', {
+            body: { photo: frontHeroInput, poses: [backHeroPose], tuck: tuck ?? undefined, side: 'back', clothes: clothesPayload },
           })
-          if (error) { await readErr(error); setGenProgress((p) => ({ ...p, done: p.done + 1 })); continue }
-          const img = (data?.images as string[] | undefined)?.[0]
-          if (img) collectedImages.push(img)
-          setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+          if (error) { await readErr(error) }
+          else {
+            const img = (data?.images as string[] | undefined)?.[0]
+            if (img) { collectedImages.push(img); setGenProgress((p) => ({ ...p, done: p.done + 1 })); backHeroInput = await urlToScaledBase64(img) }
+          }
+        } else {
+          const { data, error } = await supabase.functions.invoke('generate-ecom', {
+            body: { clothes: clothesPayload, model, backgroundPrompt: bgPrompt, poses: [backHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'back' },
+          })
+          if (error) { await readErr(error) }
+          else {
+            const img = (data?.images as string[] | undefined)?.[0]
+            if (img) { collectedImages.push(img); setGenProgress((p) => ({ ...p, done: p.done + 1 })); backHeroInput = await urlToScaledBase64(img) }
+          }
+        }
+
+        if (backHeroInput) {
+          for (const pose of orderedBack.slice(1)) {
+            if (stoppedInsufficient) break
+            const { data: d, error: e } = await supabase.functions.invoke('generate-pose', {
+              body: { photo: backHeroInput, poses: [pose], tuck: tuck ?? undefined, side: 'back' },
+            })
+            if (e) { await readErr(e); setGenProgress((p) => ({ ...p, done: p.done + 1 })); continue }
+            const img = (d?.images as string[] | undefined)?.[0]
+            if (img) collectedImages.push(img)
+            setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+          }
         }
       }
 
