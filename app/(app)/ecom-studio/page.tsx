@@ -444,12 +444,12 @@ export default function EcomStudioPage() {
           }
         }
 
-        // kalan arka pozlar -> arka hero'dan aktar
+        // kalan arka pozlar -> arka hero'dan aktar (detay referanslarini da tasi)
         if (backHeroInput) {
           for (const pose of backPoses.slice(1)) {
             if (stoppedInsufficient) break
             const { data: d, error: e } = await supabase.functions.invoke('generate-pose', {
-              body: { photo: backHeroInput, poses: [pose], tuck: tuck ?? undefined, side: 'back' },
+              body: { photo: backHeroInput, poses: [pose], tuck: tuck ?? undefined, side: 'back', clothes: clothesPayload, refDetailOnly: true },
             })
             if (e) { await readErr(e); setGenProgress((p) => ({ ...p, done: p.done + 1 })); continue }
             const img = (d?.images as string[] | undefined)?.[0]
