@@ -325,8 +325,8 @@ export default function EcomStudioPage() {
     try {
       const supabase = createClient()
 
-      // her urun icin ON/ARKA gorsellerini base64'e cozumle
-      const resolved = await Promise.all(
+      // clothes payload: her urun icin front/back + detaylari
+      const clothesPayload = await Promise.all(
         clothes.map(async (item) => {
           const front = item.frontFile
             ? await fileToScaledBase64(item.frontFile)
@@ -340,35 +340,17 @@ export default function EcomStudioPage() {
           const backDetail = item.backDetailFile
             ? await fileToScaledBase64(item.backDetailFile, 2048)
             : item.backDetailUrl ? await urlToScaledBase64(item.backDetailUrl, 2048) : null
-          return { category: item.category, notes: item.notes ?? '', front, frontDetail, back, backDetail }
+
+          return {
+            category: item.category,
+            notes: item.notes ?? '',
+            front: front ? { base64: front.base64, mimeType: front.mimeType } : undefined,
+            frontDetail: frontDetail ? { base64: frontDetail.base64, mimeType: frontDetail.mimeType } : undefined,
+            back: back ? { base64: back.base64, mimeType: back.mimeType } : undefined,
+            backDetail: backDetail ? { base64: backDetail.base64, mimeType: backDetail.mimeType } : undefined,
+          }
         })
       )
-
-      // ON varyanti: ana gorsel = front, detay = frontDetail
-      const frontClothes = resolved.map((r) => ({
-        category: r.category,
-        notes: r.notes,
-        base64: r.front?.base64,
-        mimeType: r.front?.mimeType,
-        detailBase64: r.frontDetail?.base64,
-        detailMimeType: r.frontDetail?.mimeType,
-      }))
-
-      // ARKA varyanti: back varsa ana=back/detay=backDetail; yoksa front + "arkadan uret" isareti
-      const backClothes = resolved.map((r) => {
-        const hasBack = !!r.back
-        const main = hasBack ? r.back : r.front
-        const detail = hasBack ? r.backDetail : r.frontDetail
-        return {
-          category: r.category,
-          notes: r.notes,
-          base64: main?.base64,
-          mimeType: main?.mimeType,
-          detailBase64: detail?.base64,
-          detailMimeType: detail?.mimeType,
-          inferBack: !hasBack,
-        }
-      })
 
       const selectedModel = models.find((m) => m.id === modelId)
       const background = backgrounds.find((b) => b.id === bgId)
@@ -391,11 +373,11 @@ export default function EcomStudioPage() {
       let frontHeroInput: { base64: string; mimeType: string } | null = null
 
       if (frontPoses.length > 0) {
-        const frontHeroPose = frontPoses[0]
+        const heroPose = frontPoses[0]
         const { data, error } = await supabase.functions.invoke('generate-ecom', {
           body: {
-            model, clothes: frontClothes, backgroundPrompt: bgPrompt,
-            poses: [frontHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'front',
+            clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
+            poses: [heroPose], ratio, quality, tuck: tuck ?? undefined, side: 'front',
           },
         })
         if (error) { await readErr(error) }
@@ -427,9 +409,12 @@ export default function EcomStudioPage() {
         let backHeroInput: { base64: string; mimeType: string } | null = null
 
         if (frontHeroInput) {
-          // tutarlilik icin ON hero'yu kaynak al, arka gorsel referanslarini tasi
+          // on hero'dan turet (manken/isik/ortam tutarli) + arka referanslari
           const { data, error } = await supabase.functions.invoke('generate-pose', {
-            body: { photo: frontHeroInput, poses: [backHeroPose], tuck: tuck ?? undefined, side: 'back', backClothes },
+            body: {
+              photo: frontHeroInput, poses: [backHeroPose], tuck: tuck ?? undefined,
+              side: 'back', clothes: clothesPayload,
+            },
           })
           if (error) { await readErr(error) }
           else {
@@ -441,9 +426,12 @@ export default function EcomStudioPage() {
             }
           }
         } else {
-          // sadece arka poz secilmis -> arka hero'yu dogrudan backClothes'tan uret
+          // sadece arka poz secilmis -> arka hero'yu dogrudan generate-ecom ile arka referanstan uret
           const { data, error } = await supabase.functions.invoke('generate-ecom', {
-            body: { model, clothes: backClothes, backgroundPrompt: bgPrompt, poses: [backHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'back' },
+            body: {
+              clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
+              poses: [backHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'back',
+            },
           })
           if (error) { await readErr(error) }
           else {
