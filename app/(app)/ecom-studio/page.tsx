@@ -21,7 +21,7 @@ import type { NewUserModel } from '@/lib/models/user-models'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
-type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null; category?: string | null }
+type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null; category?: string | null; direction?: string | null }
 type ClothItem = {
   id: string
   category: Category | null
@@ -160,7 +160,7 @@ export default function EcomStudioPage() {
       const [m, b, p] = await Promise.all([
         supabase.from('models').select('id,name,gender,image_url,scope').order('created_at', { ascending: false }),
         supabase.from('backgrounds').select('id,name,thumbnail_url,prompt').order('created_at', { ascending: false }),
-        supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type,category').order('created_at', { ascending: false }),
+        supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type,category,direction').order('created_at', { ascending: false }),
       ])
       setModels((m.data as Model[]) ?? [])
       setBackgrounds((b.data as Background[]) ?? [])
@@ -291,8 +291,8 @@ export default function EcomStudioPage() {
 
   const selectedPoses = generalPoses.filter((p) => poseIds.includes(p.id))
   const posesToRun = [
-    ...selectedPoses.map((p) => ({ id: p.id, prompt: p.prompt, shot_type: p.shot_type ?? null })),
-    ...customPoses.map((txt, i) => ({ id: `custom-${i}`, prompt: txt, shot_type: null })),
+    ...selectedPoses.map((p) => ({ id: p.id, prompt: p.prompt, shot_type: p.shot_type ?? null, direction: p.direction ?? null })),
+    ...customPoses.map((txt, i) => ({ id: `custom-${i}`, prompt: txt, shot_type: null, direction: null })),
   ]
 
   const { isDragging, dropHandlers } = useDropzone((files) => addFiles(files))
@@ -316,7 +316,6 @@ export default function EcomStudioPage() {
     setShowConfirm(false)
     setGenError(null)
     setGenerating(true)
-
     setGenProgress({ done: 0, total: posesToRun.length })
 
     let stoppedInsufficient = false
@@ -325,28 +324,22 @@ export default function EcomStudioPage() {
 
     try {
       const supabase = createClient()
+
+      // clothes payload: her urun icin front/back + detaylari
       const clothesPayload = await Promise.all(
         clothes.map(async (item) => {
           const front = item.frontFile
             ? await fileToScaledBase64(item.frontFile)
-            : item.frontUrl
-              ? await urlToScaledBase64(item.frontUrl)
-              : null
+            : item.frontUrl ? await urlToScaledBase64(item.frontUrl) : null
           const frontDetail = item.frontDetailFile
             ? await fileToScaledBase64(item.frontDetailFile, 2048)
-            : item.frontDetailUrl
-              ? await urlToScaledBase64(item.frontDetailUrl, 2048)
-              : null
+            : item.frontDetailUrl ? await urlToScaledBase64(item.frontDetailUrl, 2048) : null
           const back = item.backFile
             ? await fileToScaledBase64(item.backFile)
-            : item.backUrl
-              ? await urlToScaledBase64(item.backUrl)
-              : null
+            : item.backUrl ? await urlToScaledBase64(item.backUrl) : null
           const backDetail = item.backDetailFile
             ? await fileToScaledBase64(item.backDetailFile, 2048)
-            : item.backDetailUrl
-              ? await urlToScaledBase64(item.backDetailUrl, 2048)
-              : null
+            : item.backDetailUrl ? await urlToScaledBase64(item.backDetailUrl, 2048) : null
 
           return {
             category: item.category,
@@ -355,68 +348,113 @@ export default function EcomStudioPage() {
             frontDetail: frontDetail ? { base64: frontDetail.base64, mimeType: frontDetail.mimeType } : undefined,
             back: back ? { base64: back.base64, mimeType: back.mimeType } : undefined,
             backDetail: backDetail ? { base64: backDetail.base64, mimeType: backDetail.mimeType } : undefined,
-            // Backward-compat: edge function still reads the flat front fields (removed in Step 3)
-            base64: front?.base64,
-            mimeType: front?.mimeType,
-            detailBase64: frontDetail?.base64,
-            detailMimeType: frontDetail?.mimeType,
           }
         })
       )
+
       const selectedModel = models.find((m) => m.id === modelId)
       const background = backgrounds.find((b) => b.id === bgId)
       const model = await urlToScaledBase64(selectedModel!.image_url)
+      const bgPrompt = background?.prompt ?? ''
 
-      const heroPose = posesToRun[0]
-      const restPoses = posesToRun.slice(1)
+      // pozlari yon'e gore ayir: front + null -> ON tarafi; back -> ARKA tarafi
+      const frontPoses = posesToRun.filter((p) => p.direction !== 'back')
+      const backPoses = posesToRun.filter((p) => p.direction === 'back')
 
-      const { data: heroData, error: heroError } = await supabase.functions.invoke('generate-ecom', {
-        body: {
-          clothes: clothesPayload,
-          model,
-          backgroundPrompt: background?.prompt ?? '',
-          poses: [heroPose],
-          ratio,
-          quality,
-          tuck: tuck ?? undefined,
-        },
-      })
-
-      if (heroError) {
+      // ortak hata cozumleyici
+      const readErr = async (error: unknown) => {
         let code = ''
-        try { const ctx = await (heroError as { context: Response }).context.json(); code = ctx.error } catch {}
+        try { const ctx = await (error as { context: Response }).context.json(); code = ctx.error } catch {}
         if (code === 'insufficient_credits') stoppedInsufficient = true
         else if (code === 'model_busy') busy = true
-      } else {
-        const heroImg = (heroData?.images as string[] | undefined)?.[0]
-        if (heroImg) {
-          collectedImages.push(heroImg)
-          setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+      }
 
-          if (restPoses.length > 0) {
-            const heroInput = await urlToScaledBase64(heroImg)
+      // ---- ON HERO ----
+      let frontHeroInput: { base64: string; mimeType: string } | null = null
 
-            for (const pose of restPoses) {
-              const { data, error } = await supabase.functions.invoke('generate-pose', {
-                body: { photo: heroInput, poses: [pose], tuck: tuck ?? undefined },
+      if (frontPoses.length > 0) {
+        const heroPose = frontPoses[0]
+        const { data, error } = await supabase.functions.invoke('generate-ecom', {
+          body: {
+            clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
+            poses: [heroPose], ratio, quality, tuck: tuck ?? undefined, side: 'front',
+          },
+        })
+        if (error) { await readErr(error) }
+        else {
+          const heroImg = (data?.images as string[] | undefined)?.[0]
+          if (heroImg) {
+            collectedImages.push(heroImg)
+            setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+            frontHeroInput = await urlToScaledBase64(heroImg)
+
+            // kalan on pozlar -> on hero'dan aktar
+            for (const pose of frontPoses.slice(1)) {
+              if (stoppedInsufficient) break
+              const { data: d, error: e } = await supabase.functions.invoke('generate-pose', {
+                body: { photo: frontHeroInput, poses: [pose], tuck: tuck ?? undefined, side: 'front' },
               })
-
-              if (error) {
-                let code = ''
-                try { const ctx = await (error as { context: Response }).context.json(); code = ctx.error } catch {}
-                if (code === 'insufficient_credits') {
-                  stoppedInsufficient = true
-                  break
-                }
-                if (code === 'model_busy') busy = true
-                setGenProgress((p) => ({ ...p, done: p.done + 1 }))
-                continue
-              }
-
-              const img = (data?.images as string[] | undefined)?.[0]
+              if (e) { await readErr(e); setGenProgress((p) => ({ ...p, done: p.done + 1 })); continue }
+              const img = (d?.images as string[] | undefined)?.[0]
               if (img) collectedImages.push(img)
               setGenProgress((p) => ({ ...p, done: p.done + 1 }))
             }
+          }
+        }
+      }
+
+      // ---- ARKA HERO ----
+      if (backPoses.length > 0 && !stoppedInsufficient) {
+        const backHeroPose = backPoses[0]
+        let backHeroInput: { base64: string; mimeType: string } | null = null
+
+        if (frontHeroInput) {
+          // on hero'dan turet (manken/isik/ortam tutarli) + arka referanslari
+          const { data, error } = await supabase.functions.invoke('generate-pose', {
+            body: {
+              photo: frontHeroInput, poses: [backHeroPose], tuck: tuck ?? undefined,
+              side: 'back', clothes: clothesPayload,
+            },
+          })
+          if (error) { await readErr(error) }
+          else {
+            const img = (data?.images as string[] | undefined)?.[0]
+            if (img) {
+              collectedImages.push(img)
+              setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+              backHeroInput = await urlToScaledBase64(img)
+            }
+          }
+        } else {
+          // sadece arka poz secilmis -> arka hero'yu dogrudan generate-ecom ile arka referanstan uret
+          const { data, error } = await supabase.functions.invoke('generate-ecom', {
+            body: {
+              clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
+              poses: [backHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'back',
+            },
+          })
+          if (error) { await readErr(error) }
+          else {
+            const img = (data?.images as string[] | undefined)?.[0]
+            if (img) {
+              collectedImages.push(img)
+              setGenProgress((p) => ({ ...p, done: p.done + 1 }))
+              backHeroInput = await urlToScaledBase64(img)
+            }
+          }
+        }
+
+        // kalan arka pozlar -> arka hero'dan aktar
+        if (backHeroInput) {
+          for (const pose of backPoses.slice(1)) {
+            if (stoppedInsufficient) break
+            const { data: d, error: e } = await supabase.functions.invoke('generate-pose', {
+              body: { photo: backHeroInput, poses: [pose], tuck: tuck ?? undefined, side: 'back' },
+            })
+            if (e) { await readErr(e); setGenProgress((p) => ({ ...p, done: p.done + 1 })); continue }
+            const img = (d?.images as string[] | undefined)?.[0]
+            if (img) collectedImages.push(img)
+            setGenProgress((p) => ({ ...p, done: p.done + 1 }))
           }
         }
       }
