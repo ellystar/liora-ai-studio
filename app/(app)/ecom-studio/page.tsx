@@ -24,16 +24,46 @@ type Background = { id: string; name: string; thumbnail_url: string; prompt: str
 type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null; category?: string | null }
 type ClothItem = {
   id: string
-  previewUrl: string
   category: Category | null
   notes: string
-  file?: File
-  url?: string
   assetId?: string
   savedAsAsset?: boolean
-  detailFile?: File
-  detailPreviewUrl?: string
-  detailUrl?: string
+  // Front angle (required)
+  frontFile?: File
+  frontPreviewUrl?: string
+  frontUrl?: string
+  frontDetailFile?: File
+  frontDetailPreviewUrl?: string
+  frontDetailUrl?: string
+  // Back angle (optional)
+  backFile?: File
+  backPreviewUrl?: string
+  backUrl?: string
+  backDetailFile?: File
+  backDetailPreviewUrl?: string
+  backDetailUrl?: string
+}
+
+type Angle = 'front' | 'back'
+type SlotKind = 'main' | 'detail'
+type SlotTarget = { clothId: string; angle: Angle; kind: SlotKind }
+
+function buildSlotPatch(
+  angle: Angle,
+  kind: SlotKind,
+  v: { file?: File; preview?: string; url?: string }
+): Partial<ClothItem> {
+  if (angle === 'front' && kind === 'main') return { frontFile: v.file, frontPreviewUrl: v.preview, frontUrl: v.url }
+  if (angle === 'front' && kind === 'detail') return { frontDetailFile: v.file, frontDetailPreviewUrl: v.preview, frontDetailUrl: v.url }
+  if (angle === 'back' && kind === 'main') return { backFile: v.file, backPreviewUrl: v.preview, backUrl: v.url }
+  return { backDetailFile: v.file, backDetailPreviewUrl: v.preview, backDetailUrl: v.url }
+}
+
+function slotPreview(c: ClothItem, angle: Angle, kind: SlotKind): string | undefined {
+  if (angle === 'front' && kind === 'main') return c.frontPreviewUrl
+  if (angle === 'front' && kind === 'detail') return c.frontDetailPreviewUrl
+  if (angle === 'back' && kind === 'main') return c.backPreviewUrl
+  return c.backDetailPreviewUrl
 }
 
 const STEPS = ['clothes', 'model', 'background', 'pose', 'size'] as const
@@ -90,7 +120,7 @@ export default function EcomStudioPage() {
   const router = useRouter()
   const { t } = useI18n()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const detailFileInputRef = useRef<HTMLInputElement>(null)
+  const slotFileInputRef = useRef<HTMLInputElement>(null)
 
   const [models, setModels] = useState<Model[]>([])
   const [backgrounds, setBackgrounds] = useState<Background[]>([])
@@ -118,8 +148,8 @@ export default function EcomStudioPage() {
   const [genError, setGenError] = useState<string | null>(null)
   const [genProgress, setGenProgress] = useState({ done: 0, total: 0 })
   const [assetPickerOpen, setAssetPickerOpen] = useState(false)
-  const [detailPickClothId, setDetailPickClothId] = useState<string | null>(null)
-  const [detailAssetPickerClothId, setDetailAssetPickerClothId] = useState<string | null>(null)
+  const [pendingSlot, setPendingSlot] = useState<SlotTarget | null>(null)
+  const [slotAssetPicker, setSlotAssetPicker] = useState<SlotTarget | null>(null)
   const [tuck, setTuck] = useState<'in' | 'out' | null>(null)
 
   const step = STEPS[stepIndex]
@@ -188,15 +218,18 @@ export default function EcomStudioPage() {
     }
   }
 
+  function updateCloth(id: string, patch: Partial<ClothItem>) {
+    setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)))
+  }
   function addFiles(files: FileList | null) {
     if (!files) return
     const remaining = 6 - clothes.length
-    const toAdd = Array.from(files).slice(0, remaining).map((file) => ({
+    const toAdd: ClothItem[] = Array.from(files).slice(0, remaining).map((file) => ({
       id: crypto.randomUUID(),
-      file,
-      previewUrl: URL.createObjectURL(file),
-      category: null as Category | null,
+      category: null,
       notes: '',
+      frontFile: file,
+      frontPreviewUrl: URL.createObjectURL(file),
     }))
     setClothes((prev) => [...prev, ...toAdd])
   }
@@ -208,58 +241,40 @@ export default function EcomStudioPage() {
       : null
     setClothes((prev) => [...prev, {
       id: crypto.randomUUID(),
-      url: signedUrl,
-      assetId: asset.id,
-      previewUrl: signedUrl,
       category,
       notes: '',
+      assetId: asset.id,
+      frontUrl: signedUrl,
+      frontPreviewUrl: signedUrl,
     }])
   }
   async function handleSaveAsAsset(id: string) {
     const item = clothes.find((c) => c.id === id)
-    if (!item?.file || item.savedAsAsset) return
+    if (!item?.frontFile || item.savedAsAsset) return
     try {
-      await saveAsset(item.file, { category: item.category ?? undefined })
-      setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, savedAsAsset: true } : c)))
+      await saveAsset(item.frontFile, { category: item.category ?? undefined })
+      updateCloth(id, { savedAsAsset: true })
     } catch (e) { console.error(e) }
   }
   function removeCloth(id: string) {
     setClothes((prev) => prev.filter((c) => c.id !== id))
   }
   function setClothCategory(id: string, category: Category) {
-    setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, category } : c)))
+    updateCloth(id, { category })
   }
   function setClothNotes(id: string, notes: string) {
-    setClothes((prev) => prev.map((c) => (c.id === id ? { ...c, notes } : c)))
+    updateCloth(id, { notes })
   }
-  function setClothDetailFromFile(clothId: string, file: File) {
-    setClothes((prev) =>
-      prev.map((c) =>
-        c.id === clothId
-          ? { ...c, detailFile: file, detailPreviewUrl: URL.createObjectURL(file), detailUrl: undefined }
-          : c
-      )
-    )
+  function setSlotFromFile(clothId: string, angle: Angle, kind: SlotKind, file: File) {
+    updateCloth(clothId, buildSlotPatch(angle, kind, { file, preview: URL.createObjectURL(file), url: undefined }))
   }
-  function setClothDetailFromAsset(clothId: string, asset: Asset) {
+  function setSlotFromAsset(clothId: string, angle: Angle, kind: SlotKind, asset: Asset) {
     const signedUrl = asset.signedUrl
     if (!signedUrl) return
-    setClothes((prev) =>
-      prev.map((c) =>
-        c.id === clothId
-          ? { ...c, detailFile: undefined, detailPreviewUrl: signedUrl, detailUrl: signedUrl }
-          : c
-      )
-    )
+    updateCloth(clothId, buildSlotPatch(angle, kind, { file: undefined, preview: signedUrl, url: signedUrl }))
   }
-  function clearClothDetail(clothId: string) {
-    setClothes((prev) =>
-      prev.map((c) =>
-        c.id === clothId
-          ? { ...c, detailFile: undefined, detailPreviewUrl: undefined, detailUrl: undefined }
-          : c
-      )
-    )
+  function clearSlot(clothId: string, angle: Angle, kind: SlotKind) {
+    updateCloth(clothId, buildSlotPatch(angle, kind, { file: undefined, preview: undefined, url: undefined }))
   }
   function togglePose(id: string) {
     setPoseIds((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]))
@@ -283,7 +298,7 @@ export default function EcomStudioPage() {
   const { isDragging, dropHandlers } = useDropzone((files) => addFiles(files))
 
   const canContinue =
-    step === 'clothes' ? clothes.length > 0 && clothes.every((c) => c.category) :
+    step === 'clothes' ? clothes.length > 0 && clothes.every((c) => c.category && (c.frontFile || c.frontUrl)) :
     step === 'model' ? modelId !== null :
     step === 'background' ? bgId !== null :
     step === 'pose' ? posesToRun.length > 0 :
@@ -312,21 +327,40 @@ export default function EcomStudioPage() {
       const supabase = createClient()
       const clothesPayload = await Promise.all(
         clothes.map(async (item) => {
-          const { base64, mimeType } = item.file
-            ? await fileToScaledBase64(item.file)
-            : await urlToScaledBase64(item.url!)
-          let detailBase64: string | undefined
-          let detailMimeType: string | undefined
-          if (item.detailFile) {
-            const d = await fileToScaledBase64(item.detailFile, 2048)
-            detailBase64 = d.base64
-            detailMimeType = d.mimeType
-          } else if (item.detailUrl) {
-            const d = await urlToScaledBase64(item.detailUrl, 2048)
-            detailBase64 = d.base64
-            detailMimeType = d.mimeType
+          const front = item.frontFile
+            ? await fileToScaledBase64(item.frontFile)
+            : item.frontUrl
+              ? await urlToScaledBase64(item.frontUrl)
+              : null
+          const frontDetail = item.frontDetailFile
+            ? await fileToScaledBase64(item.frontDetailFile, 2048)
+            : item.frontDetailUrl
+              ? await urlToScaledBase64(item.frontDetailUrl, 2048)
+              : null
+          const back = item.backFile
+            ? await fileToScaledBase64(item.backFile)
+            : item.backUrl
+              ? await urlToScaledBase64(item.backUrl)
+              : null
+          const backDetail = item.backDetailFile
+            ? await fileToScaledBase64(item.backDetailFile, 2048)
+            : item.backDetailUrl
+              ? await urlToScaledBase64(item.backDetailUrl, 2048)
+              : null
+
+          return {
+            category: item.category,
+            notes: item.notes ?? '',
+            front: front ? { base64: front.base64, mimeType: front.mimeType } : undefined,
+            frontDetail: frontDetail ? { base64: frontDetail.base64, mimeType: frontDetail.mimeType } : undefined,
+            back: back ? { base64: back.base64, mimeType: back.mimeType } : undefined,
+            backDetail: backDetail ? { base64: backDetail.base64, mimeType: backDetail.mimeType } : undefined,
+            // Backward-compat: edge function still reads the flat front fields (removed in Step 3)
+            base64: front?.base64,
+            mimeType: front?.mimeType,
+            detailBase64: frontDetail?.base64,
+            detailMimeType: frontDetail?.mimeType,
           }
-          return { base64, mimeType, category: item.category, notes: item.notes ?? '', detailBase64, detailMimeType }
         })
       )
       const selectedModel = models.find((m) => m.id === modelId)
@@ -411,6 +445,94 @@ export default function EcomStudioPage() {
     setGenProgress({ done: 0, total: 0 })
   }
 
+  function openSlotFilePicker(clothId: string, angle: Angle, kind: SlotKind) {
+    setPendingSlot({ clothId, angle, kind })
+    slotFileInputRef.current?.click()
+  }
+
+  function renderMainSlot(c: ClothItem, angle: Angle) {
+    const preview = slotPreview(c, angle, 'main')
+    const label = angle === 'front' ? t('ecom.angle.front') : t('ecom.angle.back')
+    return (
+      <div>
+        <p className="mb-1 text-[10px] font-medium text-neutral-300">{label}</p>
+        {preview ? (
+          <div className="relative aspect-[3/4] overflow-hidden rounded-lg">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview} alt="" className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => clearSlot(c.id, angle, 'main')}
+              aria-label="Kaldir"
+              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/70"
+            >
+              <X className="h-3 w-3 text-white" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex aspect-[3/4] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#333] p-2 text-neutral-500">
+            <Plus className="h-5 w-5" />
+            <button
+              type="button"
+              onClick={() => openSlotFilePicker(c.id, angle, 'main')}
+              className="w-full rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
+            >
+              {t('assets.fromComputer')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSlotAssetPicker({ clothId: c.id, angle, kind: 'main' })}
+              className="w-full rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
+            >
+              {t('assets.fromAssets')}
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  function renderDetailSlot(c: ClothItem, angle: Angle) {
+    const preview = slotPreview(c, angle, 'detail')
+    const label = angle === 'front' ? t('ecom.detail.front') : t('ecom.detail.back')
+    return preview ? (
+      <div className="mt-2 flex items-start gap-2">
+        <div className="relative shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={preview} alt="" className="h-12 w-12 rounded-md object-cover" />
+          <button
+            type="button"
+            onClick={() => clearSlot(c.id, angle, 'detail')}
+            aria-label="Kaldir"
+            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/80"
+          >
+            <X className="h-2.5 w-2.5 text-white" />
+          </button>
+        </div>
+        <p className="text-[9px] leading-snug text-neutral-500">{label}</p>
+      </div>
+    ) : (
+      <div className="mt-2">
+        <div className="flex flex-wrap gap-1">
+          <button
+            type="button"
+            onClick={() => openSlotFilePicker(c.id, angle, 'detail')}
+            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
+          >
+            {label}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSlotAssetPicker({ clothId: c.id, angle, kind: 'detail' })}
+            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
+          >
+            {t('assets.fromAssets')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (generating) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
@@ -491,37 +613,43 @@ export default function EcomStudioPage() {
           <p className="mb-4 text-sm text-neutral-500">{t('ecom.clothes.subtitle')}</p>
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
           <input
-            ref={detailFileInputRef}
+            ref={slotFileInputRef}
             type="file"
             accept="image/*"
             hidden
             onChange={(e) => {
               const file = e.target.files?.[0]
-              if (file && detailPickClothId) setClothDetailFromFile(detailPickClothId, file)
+              if (file && pendingSlot) setSlotFromFile(pendingSlot.clothId, pendingSlot.angle, pendingSlot.kind, file)
               e.target.value = ''
-              setDetailPickClothId(null)
+              setPendingSlot(null)
             }}
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {clothes.map((c) => (
-              <div key={c.id} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414]">
-                <div className="relative aspect-[3/4]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.previewUrl} alt="" className="h-full w-full object-cover" />
-                  <button onClick={() => removeCloth(c.id)} aria-label="Kaldir" className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/70">
-                    <X className="h-3 w-3 text-white" />
+              <div key={c.id} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414] p-2.5">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="text-[10px] text-neutral-500">{t('ecom.clothes.title')}</span>
+                  <button onClick={() => removeCloth(c.id)} aria-label="Kaldir" className="flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-neutral-300 hover:text-white">
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
-                <div className="p-2">
-                  {!c.category && <p className="mb-1.5 text-[10px] text-amber-400">{t('ecom.clothes.pickCategory')}</p>}
-                  <div className="flex flex-wrap gap-1">
-                    {CATEGORIES.map((cat) => (
-                      <button key={cat} onClick={() => setClothCategory(c.id, cat)} className={`rounded-full px-2 py-0.5 text-[10px] transition ${c.category === cat ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}>
-                        {t(`ecom.cat.${cat}` as TranslationKey)}
-                      </button>
-                    ))}
-                  </div>
-                  {c.file && (
+
+                {!c.category && <p className="mb-1.5 text-[10px] text-amber-400">{t('ecom.clothes.pickCategory')}</p>}
+                <div className="flex flex-wrap gap-1">
+                  {CATEGORIES.map((cat) => (
+                    <button key={cat} onClick={() => setClothCategory(c.id, cat)} className={`rounded-full px-2 py-0.5 text-[10px] transition ${c.category === cat ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}>
+                      {t(`ecom.cat.${cat}` as TranslationKey)}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-2.5">
+                  {renderMainSlot(c, 'front')}
+                  {!c.frontFile && !c.frontUrl && (
+                    <p className="mt-1 text-[10px] text-amber-400">{t('ecom.angle.front')}</p>
+                  )}
+                  {renderDetailSlot(c, 'front')}
+                  {c.frontFile && (
                     <button
                       type="button"
                       onClick={() => handleSaveAsAsset(c.id)}
@@ -531,59 +659,23 @@ export default function EcomStudioPage() {
                       {c.savedAsAsset ? t('assets.saved') : t('assets.saveAsAsset')}
                     </button>
                   )}
-                  <div className="mt-2">
-                    <label className="mb-1 block text-[10px] text-neutral-500">{t('ecom.stylingNotes.label')}</label>
-                    <textarea
-                      value={c.notes}
-                      onChange={(e) => setClothNotes(c.id, e.target.value)}
-                      placeholder={t('ecom.stylingNotes.placeholder')}
-                      rows={2}
-                      className="min-h-[60px] w-full rounded-lg border border-[#242424] bg-[#141414] p-2 text-xs text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
-                    />
-                  </div>
-                  <div className="mt-2 border-t border-[#242424] pt-2">
-                    {c.detailPreviewUrl ? (
-                      <div className="flex items-start gap-2">
-                        <div className="relative shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={c.detailPreviewUrl} alt="" className="h-12 w-12 rounded-md object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => clearClothDetail(c.id)}
-                            aria-label="Kaldir"
-                            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/80"
-                          >
-                            <X className="h-2.5 w-2.5 text-white" />
-                          </button>
-                        </div>
-                        <p className="text-[9px] leading-snug text-neutral-500">{t('ecom.detail.hint')}</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex flex-wrap gap-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDetailPickClothId(c.id)
-                              detailFileInputRef.current?.click()
-                            }}
-                            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
-                          >
-                            {t('ecom.detail.add')}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDetailAssetPickerClothId(c.id)}
-                            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
-                          >
-                            {t('assets.fromAssets')}
-                          </button>
-                        </div>
-                        <p className="mt-1 text-[9px] leading-snug text-neutral-600">{t('ecom.detail.hint')}</p>
-                        <p className="mt-0.5 text-[9px] leading-snug text-neutral-600">{t('ecom.detail.photoTip')}</p>
-                      </div>
-                    )}
-                  </div>
+                </div>
+
+                <div className="mt-2.5 border-t border-[#242424] pt-2.5">
+                  {renderMainSlot(c, 'back')}
+                  {renderDetailSlot(c, 'back')}
+                  <p className="mt-1.5 text-[9px] leading-snug text-neutral-600">{t('ecom.angle.backHint')}</p>
+                </div>
+
+                <div className="mt-2.5">
+                  <label className="mb-1 block text-[10px] text-neutral-500">{t('ecom.stylingNotes.label')}</label>
+                  <textarea
+                    value={c.notes}
+                    onChange={(e) => setClothNotes(c.id, e.target.value)}
+                    placeholder={t('ecom.stylingNotes.placeholder')}
+                    rows={2}
+                    className="min-h-[60px] w-full rounded-lg border border-[#242424] bg-[#141414] p-2 text-xs text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+                  />
                 </div>
               </div>
             ))}
@@ -818,11 +910,11 @@ export default function EcomStudioPage() {
       />
 
       <AssetPicker
-        open={detailAssetPickerClothId !== null}
-        onClose={() => setDetailAssetPickerClothId(null)}
+        open={slotAssetPicker !== null}
+        onClose={() => setSlotAssetPicker(null)}
         onSelect={(asset) => {
-          if (detailAssetPickerClothId) setClothDetailFromAsset(detailAssetPickerClothId, asset)
-          setDetailAssetPickerClothId(null)
+          if (slotAssetPicker) setSlotFromAsset(slotAssetPicker.clothId, slotAssetPicker.angle, slotAssetPicker.kind, asset)
+          setSlotAssetPicker(null)
         }}
       />
 
