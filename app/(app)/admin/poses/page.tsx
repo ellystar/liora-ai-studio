@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { uploadAsset } from '@/lib/admin/upload'
 
 type ShotType = 'full_body' | 'medium_shot' | 'close_up'
+type Direction = 'front' | 'back'
 type PoseCategory = 'general' | 'shoe'
 type Pose = {
   id: string
@@ -13,6 +14,7 @@ type Pose = {
   thumbnail_url: string
   prompt: string
   shot_type: ShotType | null
+  direction: Direction | null
   category: PoseCategory
 }
 
@@ -22,6 +24,17 @@ const SHOT_TYPE_OPTIONS: { value: '' | ShotType; label: string }[] = [
   { value: 'medium_shot', label: 'Orta plan' },
   { value: 'close_up', label: 'Yakın çekim' },
 ]
+
+const DIRECTION_OPTIONS: { value: '' | Direction; label: string }[] = [
+  { value: '', label: 'Belirsiz/Nötr' },
+  { value: 'front', label: 'Ön' },
+  { value: 'back', label: 'Arka' },
+]
+
+const DIRECTION_BADGE: Record<Direction, string> = {
+  front: 'Ön',
+  back: 'Arka',
+}
 
 const CATEGORY_OPTIONS: { value: PoseCategory; label: string }[] = [
   { value: 'general', label: 'Genel' },
@@ -38,6 +51,7 @@ export default function PosesAdmin() {
   const [name, setName] = useState('')
   const [prompt, setPrompt] = useState('')
   const [shotType, setShotType] = useState<'' | ShotType>('')
+  const [direction, setDirection] = useState<'' | Direction>('')
   const [category, setCategory] = useState<PoseCategory>('general')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -64,12 +78,14 @@ export default function PosesAdmin() {
         thumbnail_url,
         prompt,
         shot_type: shotType || null,
+        direction: direction || null,
         category,
       })
       if (insErr) throw insErr
       setName('')
       setPrompt('')
       setShotType('')
+      setDirection('')
       setCategory('general')
       setFile(null)
       setFileKey((k) => k + 1)
@@ -89,6 +105,16 @@ export default function PosesAdmin() {
       return
     }
     setItems((prev) => prev.map((p) => (p.id === id ? { ...p, shot_type: next } : p)))
+  }
+
+  async function handleDirectionChange(id: string, value: string) {
+    const next = (value || null) as Direction | null
+    const { error: updErr } = await supabase.from('poses').update({ direction: next }).eq('id', id)
+    if (updErr) {
+      setError('Hata: ' + updErr.message)
+      return
+    }
+    setItems((prev) => prev.map((p) => (p.id === id ? { ...p, direction: next } : p)))
   }
 
   async function handleCategoryChange(id: string, value: PoseCategory) {
@@ -114,7 +140,7 @@ export default function PosesAdmin() {
             <input key={fileKey} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className={inputCls} title="Thumbnail görseli" />
             <input type="text" placeholder="Poz adı" value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <p className="mb-1.5 text-xs text-neutral-500">Çekim tipi</p>
               <select
@@ -123,6 +149,20 @@ export default function PosesAdmin() {
                 className={inputCls}
               >
                 {SHOT_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value || 'none'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <p className="mb-1.5 text-xs text-neutral-500">Yön</p>
+              <select
+                value={direction}
+                onChange={(e) => setDirection(e.target.value as '' | Direction)}
+                className={inputCls}
+              >
+                {DIRECTION_OPTIONS.map((o) => (
                   <option key={o.value || 'none'} value={o.value}>
                     {o.label}
                   </option>
@@ -158,9 +198,14 @@ export default function PosesAdmin() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={p.thumbnail_url} alt={p.name} className="aspect-[3/4] w-full object-cover" />
             <div className="p-2">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-neutral-200">{p.name}</p>
-                <button onClick={() => handleDelete(p.id)} aria-label="Sil" className="text-neutral-500 hover:text-red-400">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <p className="truncate text-xs text-neutral-200">{p.name}</p>
+                  <span className="shrink-0 rounded border border-neutral-700 px-1 py-0.5 text-[9px] leading-none text-neutral-400">
+                    {p.direction ? DIRECTION_BADGE[p.direction] : '—'}
+                  </span>
+                </div>
+                <button onClick={() => handleDelete(p.id)} aria-label="Sil" className="shrink-0 text-neutral-500 hover:text-red-400">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -171,6 +216,18 @@ export default function PosesAdmin() {
                 aria-label={`Çekim tipi: ${p.name}`}
               >
                 {SHOT_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value || 'none'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={p.direction ?? ''}
+                onChange={(e) => handleDirectionChange(p.id, e.target.value)}
+                className="mt-1 w-full rounded border border-neutral-800 bg-neutral-950 px-1.5 py-1 text-[10px] text-neutral-300 outline-none focus:border-neutral-600"
+                aria-label={`Yön: ${p.name}`}
+              >
+                {DIRECTION_OPTIONS.map((o) => (
                   <option key={o.value || 'none'} value={o.value}>
                     {o.label}
                   </option>
