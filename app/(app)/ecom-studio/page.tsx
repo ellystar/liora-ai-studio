@@ -143,6 +143,10 @@ export default function EcomStudioPage() {
   const [bgId, setBgId] = useState<string | null>(null)
   const [bgFilter, setBgFilter] = useState<BackgroundFilter>('preset')
   const [customBgPrompt, setCustomBgPrompt] = useState('')
+  const [usedBgPrompt, setUsedBgPrompt] = useState('')
+  const [savedBgIndices, setSavedBgIndices] = useState<Set<number>>(new Set())
+  const [savingBgIndex, setSavingBgIndex] = useState<number | null>(null)
+  const [bgSaveError, setBgSaveError] = useState<string | null>(null)
   const [poseIds, setPoseIds] = useState<string[]>([])
   const [customInput, setCustomInput] = useState('')
   const [customPoses, setCustomPoses] = useState<string[]>([])
@@ -345,11 +349,58 @@ export default function EcomStudioPage() {
     if (stepIndex < STEPS.length - 1) setStepIndex((i) => i + 1)
   }
 
+  async function handleSaveBackground(imgSrc: string, index: number) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    setSavingBgIndex(index)
+    setBgSaveError(null)
+    try {
+      const blob = await fetch(imgSrc).then((r) => r.blob())
+      const path = `user/${user.id}/${crypto.randomUUID()}.jpg`
+      const { error: uploadErr } = await supabase.storage.from('backgrounds').upload(path, blob, {
+        upsert: false,
+        contentType: 'image/jpeg',
+      })
+      if (uploadErr) throw uploadErr
+
+      const { data: inserted, error: insertErr } = await supabase
+        .from('backgrounds')
+        .insert({
+          name: usedBgPrompt ? usedBgPrompt.slice(0, 40) : 'Arkaplan',
+          thumbnail_url: '',
+          prompt: usedBgPrompt,
+          owner_id: user.id,
+          source: 'user',
+          image_path: path,
+        })
+        .select('id,name,thumbnail_url,prompt,owner_id,image_path,source')
+        .single()
+      if (insertErr) throw insertErr
+
+      const { data: signed } = await supabase.storage.from('backgrounds').createSignedUrl(path, 3600)
+      const newBg: Background = { ...(inserted as Background), signedUrl: signed?.signedUrl }
+      setBackgrounds((prev) => [newBg, ...prev])
+      setSavedBgIndices((prev) => new Set(prev).add(index))
+    } catch (e) {
+      console.error(e)
+      setBgSaveError(t('ecom.error.generic'))
+    } finally {
+      setSavingBgIndex(null)
+    }
+  }
+
   async function handleGenerate() {
     setShowConfirm(false)
     setGenError(null)
     setGenerating(true)
     setGenProgress({ done: 0, total: posesToRun.length })
+    setSavedBgIndices(new Set())
+    setBgSaveError(null)
+
+    const backgroundForPrompt = backgrounds.find((b) => b.id === bgId)
+    setUsedBgPrompt(customBgPrompt.trim() ? customBgPrompt.trim() : (backgroundForPrompt?.prompt ?? ''))
 
     let stoppedInsufficient = false
     let busy = false
@@ -500,7 +551,7 @@ export default function EcomStudioPage() {
   }
 
   function resetFlow() {
-    setStepIndex(0); setClothes([]); setModelId(null); setBgId(null); setBgFilter('preset'); setCustomBgPrompt('')
+    setStepIndex(0); setClothes([]); setModelId(null); setBgId(null); setBgFilter('preset'); setCustomBgPrompt(''); setUsedBgPrompt(''); setSavedBgIndices(new Set())
     setPoseIds([]); setCustomInput(''); setCustomPoses([]); setRatio('2:3'); setQuality('1k'); setResults(null); setLightbox(null); setGenError(null)
     setGenProgress({ done: 0, total: 0 })
   }
@@ -618,12 +669,25 @@ export default function EcomStudioPage() {
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {results.map((src, i) => (
-            <button key={i} onClick={() => setLightbox(i)} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="aspect-[3/4] w-full object-cover" />
-            </button>
+            <div key={i} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414]">
+              <button type="button" onClick={() => setLightbox(i)} className="block w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="aspect-[3/4] w-full object-cover" />
+              </button>
+              <div className="p-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveBackground(src, i)}
+                  disabled={savedBgIndices.has(i) || savingBgIndex === i}
+                  className="w-full rounded-lg border border-[#2a2a2a] px-2 py-1.5 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c] disabled:opacity-50"
+                >
+                  {savedBgIndices.has(i) ? t('ecom.bg.saved') : savingBgIndex === i ? t('ecom.generating') : t('ecom.bg.saveBtn')}
+                </button>
+              </div>
+            </div>
           ))}
         </div>
+        {bgSaveError && <p className="mt-3 text-sm text-red-400">{bgSaveError}</p>}
 
         {lightbox !== null && (
           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 px-4">
@@ -643,6 +707,14 @@ export default function EcomStudioPage() {
             <button type="button" onClick={() => downloadAsJpg(results[lightbox], `liora-ecom-${lightbox + 1}`)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
               <Download className="h-4 w-4" />
               {t('ecom.result.download')}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSaveBackground(results[lightbox], lightbox)}
+              disabled={savedBgIndices.has(lightbox) || savingBgIndex === lightbox}
+              className="mt-3 rounded-lg border border-[#2a2a2a] px-5 py-2.5 text-sm text-neutral-300 transition hover:bg-[#161616] disabled:opacity-50"
+            >
+              {savedBgIndices.has(lightbox) ? t('ecom.bg.saved') : savingBgIndex === lightbox ? t('ecom.generating') : t('ecom.bg.saveBtn')}
             </button>
           </div>
         )}
@@ -854,7 +926,9 @@ export default function EcomStudioPage() {
               </button>
             ))}
           </div>
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : filteredBackgrounds.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
+          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : filteredBackgrounds.length === 0 ? (
+            <p className="text-sm text-neutral-500">{bgFilter === 'saved' ? t('ecom.bg.savedEmpty') : t('ecom.empty')}</p>
+          ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {filteredBackgrounds.map((b) => (
                 <ItemCard
