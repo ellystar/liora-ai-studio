@@ -20,7 +20,17 @@ import { filterModels, listFavoriteModelIds, toggleFavoriteModel, type ModelFilt
 import type { NewUserModel } from '@/lib/models/user-models'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
-type Background = { id: string; name: string; thumbnail_url: string; prompt: string }
+type Background = {
+  id: string
+  name: string
+  thumbnail_url: string
+  prompt: string
+  owner_id?: string | null
+  image_path?: string | null
+  source?: string | null
+  signedUrl?: string
+}
+type BackgroundFilter = 'preset' | 'saved'
 type Pose = { id: string; name: string; thumbnail_url: string; prompt: string; shot_type?: string | null; category?: string | null; direction?: string | null }
 type ClothItem = {
   id: string
@@ -131,6 +141,8 @@ export default function EcomStudioPage() {
   const [clothes, setClothes] = useState<ClothItem[]>([])
   const [modelId, setModelId] = useState<string | null>(null)
   const [bgId, setBgId] = useState<string | null>(null)
+  const [bgFilter, setBgFilter] = useState<BackgroundFilter>('preset')
+  const [customBgPrompt, setCustomBgPrompt] = useState('')
   const [poseIds, setPoseIds] = useState<string[]>([])
   const [customInput, setCustomInput] = useState('')
   const [customPoses, setCustomPoses] = useState<string[]>([])
@@ -159,11 +171,21 @@ export default function EcomStudioPage() {
       const supabase = createClient()
       const [m, b, p] = await Promise.all([
         supabase.from('models').select('id,name,gender,image_url,scope').order('created_at', { ascending: false }),
-        supabase.from('backgrounds').select('id,name,thumbnail_url,prompt').order('created_at', { ascending: false }),
+        supabase.from('backgrounds').select('id,name,thumbnail_url,prompt,owner_id,image_path,source').order('created_at', { ascending: false }),
         supabase.from('poses').select('id,name,thumbnail_url,prompt,shot_type,category,direction').order('created_at', { ascending: false }),
       ])
       setModels((m.data as Model[]) ?? [])
-      setBackgrounds((b.data as Background[]) ?? [])
+      const bgRows = (b.data as Background[]) ?? []
+      const bgWithUrls = await Promise.all(
+        bgRows.map(async (row) => {
+          if (row.source === 'user' && row.image_path) {
+            const { data: signed } = await supabase.storage.from('backgrounds').createSignedUrl(row.image_path, 3600)
+            return { ...row, signedUrl: signed?.signedUrl }
+          }
+          return row
+        })
+      )
+      setBackgrounds(bgWithUrls)
       setPoses((p.data as Pose[]) ?? [])
       setLoadingData(false)
     })()
@@ -177,6 +199,9 @@ export default function EcomStudioPage() {
   const generalPoses = poses.filter((p) => p.category !== 'shoe')
   const filteredPoses = filterPoses(generalPoses, poseFilter, favIds)
   const filteredModels = filterModels(models, modelFilter, modelFavIds)
+  const presetBackgrounds = backgrounds.filter((b) => !b.owner_id)
+  const savedBackgrounds = backgrounds.filter((b) => b.source === 'user')
+  const filteredBackgrounds = bgFilter === 'preset' ? presetBackgrounds : savedBackgrounds
 
   async function handleToggleFavorite(poseId: string) {
     const wasFav = favIds.has(poseId)
@@ -288,6 +313,14 @@ export default function EcomStudioPage() {
   function removeCustomPose(i: number) {
     setCustomPoses((prev) => prev.filter((_, idx) => idx !== i))
   }
+  function selectBackground(id: string) {
+    setBgId(id)
+    setCustomBgPrompt('')
+  }
+  function handleCustomBgPromptChange(value: string) {
+    setCustomBgPrompt(value)
+    if (value.trim()) setBgId(null)
+  }
 
   const selectedPoses = generalPoses.filter((p) => poseIds.includes(p.id))
   const posesToRun = [
@@ -300,7 +333,7 @@ export default function EcomStudioPage() {
   const canContinue =
     step === 'clothes' ? clothes.length > 0 && clothes.every((c) => c.category && (c.frontFile || c.frontUrl)) :
     step === 'model' ? modelId !== null :
-    step === 'background' ? bgId !== null :
+    step === 'background' ? (bgId !== null || customBgPrompt.trim().length > 0) :
     step === 'pose' ? posesToRun.length > 0 :
     true
 
@@ -355,7 +388,9 @@ export default function EcomStudioPage() {
       const selectedModel = models.find((m) => m.id === modelId)
       const background = backgrounds.find((b) => b.id === bgId)
       const model = await urlToScaledBase64(selectedModel!.image_url)
-      const bgPrompt = background?.prompt ?? ''
+      const bgPrompt = customBgPrompt.trim()
+        ? customBgPrompt.trim()
+        : (background?.prompt ?? '')
 
       // pozlari yon'e gore ayir: front + null -> ON tarafi; back -> ARKA tarafi
       const frontPoses = posesToRun.filter((p) => p.direction !== 'back')
@@ -465,7 +500,7 @@ export default function EcomStudioPage() {
   }
 
   function resetFlow() {
-    setStepIndex(0); setClothes([]); setModelId(null); setBgId(null)
+    setStepIndex(0); setClothes([]); setModelId(null); setBgId(null); setBgFilter('preset'); setCustomBgPrompt('')
     setPoseIds([]); setCustomInput(''); setCustomPoses([]); setRatio('2:3'); setQuality('1k'); setResults(null); setLightbox(null); setGenError(null)
     setGenProgress({ done: 0, total: 0 })
   }
@@ -803,13 +838,46 @@ export default function EcomStudioPage() {
         <div>
           <p className="text-base font-medium text-neutral-100">{t('ecom.bg.title')}</p>
           <p className="mb-4 text-sm text-neutral-500">{t('ecom.bg.subtitle')}</p>
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : backgrounds.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
+          <div className="mb-3 flex flex-wrap gap-1">
+            {(['preset', 'saved'] as BackgroundFilter[]).map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setBgFilter(filter)}
+                className={`rounded-full px-3 py-1 text-xs transition ${
+                  bgFilter === filter
+                    ? 'bg-white text-black'
+                    : 'text-neutral-400 hover:bg-white/5 hover:text-neutral-200'
+                }`}
+              >
+                {t(filter === 'preset' ? 'ecom.bg.tab.preset' : 'ecom.bg.tab.saved')}
+              </button>
+            ))}
+          </div>
+          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : filteredBackgrounds.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {backgrounds.map((b) => (
-                <ItemCard key={b.id} selected={bgId === b.id} onClick={() => setBgId(b.id)} name={b.name} imageUrl={b.thumbnail_url} />
+              {filteredBackgrounds.map((b) => (
+                <ItemCard
+                  key={b.id}
+                  selected={bgId === b.id}
+                  onClick={() => selectBackground(b.id)}
+                  name={b.name}
+                  imageUrl={b.signedUrl ?? b.thumbnail_url}
+                />
               ))}
             </div>
           )}
+          <div className="mt-6 rounded-2xl border border-[#242424] bg-[#141414] p-4">
+            <p className="mb-3 text-sm font-medium text-neutral-200">{t('ecom.bg.customTitle')}</p>
+            <textarea
+              value={customBgPrompt}
+              onChange={(e) => handleCustomBgPromptChange(e.target.value)}
+              placeholder={t('ecom.bg.customPlaceholder')}
+              rows={4}
+              className="min-h-[90px] w-full rounded-lg border border-[#242424] bg-[#141414] p-3 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+            />
+            <p className="mt-2 text-xs text-neutral-500">{t('ecom.bg.customHint')}</p>
+          </div>
         </div>
       )}
 
