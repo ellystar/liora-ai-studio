@@ -439,9 +439,29 @@ export default function EcomStudioPage() {
       const selectedModel = models.find((m) => m.id === modelId)
       const background = backgrounds.find((b) => b.id === bgId)
       const model = await urlToScaledBase64(selectedModel!.image_url)
-      const bgPrompt = customBgPrompt.trim()
-        ? customBgPrompt.trim()
-        : (background?.prompt ?? '')
+
+      let bgPrompt: string
+      let backgroundRef: { base64: string; mimeType: string } | undefined
+      if (customBgPrompt.trim()) {
+        bgPrompt = customBgPrompt.trim()
+        backgroundRef = undefined
+      } else if (background) {
+        bgPrompt = background.prompt ?? ''
+        if (background.source === 'user' && (background.signedUrl || background.image_path)) {
+          let url = background.signedUrl
+          if (!url && background.image_path) {
+            const { data: signed } = await supabase.storage.from('backgrounds').createSignedUrl(background.image_path, 3600)
+            url = signed?.signedUrl
+          }
+          if (url) {
+            const r = await urlToScaledBase64(url)
+            backgroundRef = { base64: r.base64, mimeType: r.mimeType }
+          }
+        }
+      } else {
+        bgPrompt = ''
+        backgroundRef = undefined
+      }
 
       // pozlari yon'e gore ayir: front + null -> ON tarafi; back -> ARKA tarafi
       const frontPoses = posesToRun.filter((p) => p.direction !== 'back')
@@ -463,6 +483,7 @@ export default function EcomStudioPage() {
         const { data, error } = await supabase.functions.invoke('generate-ecom', {
           body: {
             clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
+            ...(backgroundRef ? { backgroundRef } : {}),
             poses: [heroPose], ratio, quality, tuck: tuck ?? undefined, side: 'front',
           },
         })
@@ -509,7 +530,11 @@ export default function EcomStudioPage() {
           }
         } else {
           const { data, error } = await supabase.functions.invoke('generate-ecom', {
-            body: { clothes: clothesPayload, model, backgroundPrompt: bgPrompt, poses: [backHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'back' },
+            body: {
+              clothes: clothesPayload, model, backgroundPrompt: bgPrompt,
+              ...(backgroundRef ? { backgroundRef } : {}),
+              poses: [backHeroPose], ratio, quality, tuck: tuck ?? undefined, side: 'back',
+            },
           })
           if (error) { await readErr(error) }
           else {
