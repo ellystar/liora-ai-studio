@@ -1,12 +1,13 @@
 'use client'
 
-import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { dictionaries } from '@/lib/i18n/dictionaries'
+import { LegalConsentLine } from '@/components/legal-consent-line'
 import { RequestAccessModal } from '@/components/request-access-modal'
+import { SiteFooter } from '@/components/site-footer'
 
 function ArrowIcon() {
   return (
@@ -189,6 +190,8 @@ export default function LoginPage() {
                 <SubmitArrowIcon />
               </button>
 
+              <LegalConsentLine className="consent-line" />
+
               {error && (
                 <p className="msg" role="status" aria-live="polite">
                   {error}
@@ -200,13 +203,7 @@ export default function LoginPage() {
           </section>
         </div>
 
-        <footer className="footer rise d5">
-          <span className="links">
-            <Link href="/privacy">{t('login.privacy')}</Link>
-            <span className="sep">|</span>
-            <Link href="/terms">{t('login.terms')}</Link>
-          </span>
-        </footer>
+        <SiteFooter variant="compact" className="rise d5" />
       </div>
 
       <RequestAccessModal open={requestOpen} onClose={() => setRequestOpen(false)} />

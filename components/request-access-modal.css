@@ -200,6 +200,27 @@
   cursor: not-allowed;
 }
 
+.request-access-modal .ram-consent {
+  margin-top: 10px;
+  max-width: 42ch;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #6e665a;
+}
+
+.request-access-modal .ram-consent a {
+  color: var(--on-dark-mut);
+  text-decoration: underline;
+  text-decoration-color: rgba(169, 156, 134, 0.35);
+  text-underline-offset: 2px;
+  transition: color 0.2s var(--ease), text-decoration-color 0.2s var(--ease);
+}
+
+.request-access-modal .ram-consent a:hover {
+  color: var(--bone);
+  text-decoration-color: rgba(242, 237, 227, 0.4);
+}
+
 .request-access-modal .ram-error {
   margin-top: -6px;
   font-size: 12px;

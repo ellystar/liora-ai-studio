@@ -257,6 +257,13 @@ export const dictionaries = {
     'login.showPassword': 'Şifreyi göster',
     'login.hidePassword': 'Şifreyi gizle',
     'login.noAccount': 'Hesabın yok mu? Liora ekibiyle iletişime geç.',
+    'legal.consentLine': 'Devam ederek {link} okuduğunuzu kabul etmiş olursunuz.',
+    'legal.privacyLink': 'Gizlilik Politikası',
+    'legal.footer.privacy': 'Gizlilik Politikası',
+    'legal.footer.distanceSales': 'Mesafeli Satış Sözleşmesi',
+    'legal.footer.deliveryReturns': 'Teslimat & İade Şartları',
+    'legal.footer.entity':
+      'Elif Yıldız – Melis Doğan Adi Ortaklığı · VKN 6081844358 · Kestel/Bursa · info@lioralabs.io',
   },
   en: {
     'common.signOut': 'Sign out',
@@ -516,6 +523,13 @@ export const dictionaries = {
     'login.showPassword': 'Show password',
     'login.hidePassword': 'Hide password',
     'login.noAccount': "Don't have an account? Contact the Liora team.",
+    'legal.consentLine': 'By continuing, you agree that you have read the {link}.',
+    'legal.privacyLink': 'Privacy Policy',
+    'legal.footer.privacy': 'Privacy Policy',
+    'legal.footer.distanceSales': 'Distance Sales Agreement',
+    'legal.footer.deliveryReturns': 'Delivery & Returns Terms',
+    'legal.footer.entity':
+      'Elif Yıldız – Melis Doğan Adi Ortaklığı · VKN 6081844358 · Kestel/Bursa · info@lioralabs.io',
   },
 } as const
 

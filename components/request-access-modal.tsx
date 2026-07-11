@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { LegalConsentLine } from '@/components/legal-consent-line'
 import { useI18n } from '@/lib/i18n/language-provider'
 import './request-access-modal.css'
 
@@ -147,6 +148,8 @@ export function RequestAccessModal({ open, onClose }: { open: boolean; onClose: 
                 <button type="submit" className="ram-submit" disabled={!canSubmit}>
                   {sending ? t('access.sending') : t('access.submit')}
                 </button>
+
+                <LegalConsentLine className="ram-consent" />
 
                 {error && (
                   <p className="ram-error" role="status" aria-live="polite">
