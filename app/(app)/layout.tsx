@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/navbar'
-import { SiteFooter } from '@/components/site-footer'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -17,10 +16,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
       <Navbar credits={credits} email={user?.email ?? ''} isAdmin={isAdmin} />
-      <div className="flex-1">{children}</div>
-      <SiteFooter />
+      {children}
     </div>
   )
 }

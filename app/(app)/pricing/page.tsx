@@ -1,6 +1,7 @@
 'use client'
 
 import { Check } from 'lucide-react'
+import { SiteFooter } from '@/components/site-footer'
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 
@@ -17,6 +18,7 @@ const FEATURE_KEYS: TranslationKey[] = [
 export default function PricingPage() {
   const { t } = useI18n()
   return (
+    <>
     <main className="mx-auto max-w-5xl px-6 py-12">
       <div className="text-center">
         <h1 className="text-2xl font-medium text-neutral-100">{t('pricing.title')}</h1>
@@ -63,5 +65,7 @@ export default function PricingPage() {
         </div>
       </div>
     </main>
+    <SiteFooter />
+  </>
   )
 }
