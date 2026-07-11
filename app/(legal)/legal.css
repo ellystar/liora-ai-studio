@@ -188,6 +188,12 @@
   gap: 16px;
 }
 
+.legal-page .legal-footer .legal-footer-links .legal-footer-link-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .legal-page .legal-footer .legal-footer-links a {
   transition: color 0.2s var(--ease);
 }

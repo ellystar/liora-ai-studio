@@ -3,11 +3,17 @@
 import Link from 'next/link'
 import { useI18n } from '@/lib/i18n/language-provider'
 
+const LEGAL_LINKS = [
+  { key: 'legal.footer.privacy' as const, href: 'https://lioralabs.io/gizlilik', active: 'privacy' as const },
+  { key: 'legal.footer.distanceSales' as const, href: 'https://lioralabs.io/mesafeli-satis', active: 'distanceSales' as const },
+  { key: 'legal.footer.deliveryReturns' as const, href: 'https://lioralabs.io/iade-sartlari', active: 'deliveryReturns' as const },
+]
+
 type LegalLayoutProps = {
   title: string
   effectiveDate: string
   lastUpdated: string
-  active: 'privacy' | 'terms'
+  active: 'privacy' | 'distanceSales' | 'deliveryReturns'
   children: React.ReactNode
 }
 
@@ -40,13 +46,19 @@ export function LegalLayout({ title, effectiveDate, lastUpdated, active, childre
 
         <footer className="legal-footer">
           <nav className="legal-footer-links" aria-label="Legal">
-            <Link href="/privacy" className={active === 'privacy' ? 'is-active' : undefined}>
-              {t('login.privacy')}
-            </Link>
-            <span className="sep">|</span>
-            <Link href="/terms" className={active === 'terms' ? 'is-active' : undefined}>
-              {t('login.terms')}
-            </Link>
+            {LEGAL_LINKS.map((link, i) => (
+              <span key={link.href} className="legal-footer-link-item">
+                {i > 0 && <span className="sep" aria-hidden>|</span>}
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={active === link.active ? 'is-active' : undefined}
+                >
+                  {t(link.key)}
+                </a>
+              </span>
+            ))}
           </nav>
         </footer>
       </div>

@@ -33,7 +33,9 @@ export async function updateSession(request: NextRequest) {
   const isPublic =
     pathname.startsWith('/login') ||
     pathname.startsWith('/privacy') ||
-    pathname.startsWith('/terms')
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/mesafeli-satis') ||
+    pathname.startsWith('/iade-sartlari')
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
