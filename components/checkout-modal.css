@@ -1,0 +1,189 @@
+.checkout-modal {
+  --bone: #f2ede3;
+  --stone: #c8bca8;
+  --ink: #100e0b;
+  --on-dark: #efe8da;
+  --on-dark-mut: #a99c86;
+  --on-dark-dim: #6e665a;
+  --gold: #b07a2e;
+  --ui: "Neue Haas Display", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --r: 2px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vw, 32px);
+  font-family: var(--ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+.checkout-modal *,
+.checkout-modal *::before,
+.checkout-modal *::after {
+  box-sizing: border-box;
+}
+
+.checkout-modal .cm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 8, 6, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.checkout-modal .cm-panel {
+  position: relative;
+  z-index: 1;
+  width: min(480px, 92vw);
+  max-height: calc(100dvh - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #141210;
+  border: 1px solid #2a2622;
+  border-radius: var(--r);
+  padding: clamp(24px, 4vw, 36px);
+  color: var(--on-dark);
+}
+
+.checkout-modal .cm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--stone);
+  transition: color 0.2s var(--ease);
+}
+
+.checkout-modal .cm-close:hover {
+  color: var(--bone);
+}
+
+.checkout-modal .cm-title {
+  margin: 0 0 20px;
+  padding-right: 28px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--bone);
+}
+
+.checkout-modal .cm-summary {
+  border: 1px solid #2a2622;
+  border-radius: var(--r);
+  background: #10100e;
+  padding: 16px 18px;
+}
+
+.checkout-modal .cm-pkg-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--on-dark-mut);
+}
+
+.checkout-modal .cm-credits {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--bone);
+}
+
+.checkout-modal .cm-price-row {
+  margin-top: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.checkout-modal .cm-price {
+  font-size: 28px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.checkout-modal .cm-vat {
+  font-size: 11px;
+  color: var(--on-dark-dim);
+}
+
+.checkout-modal .cm-try-note {
+  margin-top: 14px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--on-dark-dim);
+}
+
+.checkout-modal .cm-checks {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.checkout-modal .cm-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--on-dark-mut);
+}
+
+.checkout-modal .cm-check input {
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--gold);
+}
+
+.checkout-modal .cm-check a {
+  color: var(--bone);
+  text-decoration: underline;
+  text-decoration-color: rgba(169, 156, 134, 0.35);
+  text-underline-offset: 2px;
+  transition: color 0.2s var(--ease);
+}
+
+.checkout-modal .cm-check a:hover {
+  color: #fff;
+}
+
+.checkout-modal .cm-pay {
+  margin-top: 20px;
+  width: 100%;
+  background: var(--bone);
+  color: var(--ink);
+  border: 0;
+  border-radius: var(--r);
+  padding: 12px 22px;
+  font-family: var(--ui);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+
+.checkout-modal .cm-pay:hover:not(:disabled) {
+  background: #e8e2d8;
+}
+
+.checkout-modal .cm-pay:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.checkout-modal .cm-coming-soon {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--gold);
+  text-align: center;
+}
