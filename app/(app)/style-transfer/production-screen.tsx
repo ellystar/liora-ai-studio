@@ -43,7 +43,7 @@ type AiModel = {
   scope: string | null
 }
 
-type ModelMode = 'keep' | 'own' | 'ai'
+type ModelMode = 'keep' | 'product' | 'own' | 'ai'
 type GenStatus = 'idle' | 'loading' | 'done' | 'error'
 
 function ModelCard({
@@ -138,6 +138,7 @@ export function StyleTransferProduction({
   const canGenerate =
     products.length > 0 &&
     (modelMode === 'keep' ||
+      modelMode === 'product' ||
       (modelMode === 'own' && ownModel !== null) ||
       (modelMode === 'ai' && aiModelId !== null))
 
@@ -362,6 +363,9 @@ export function StyleTransferProduction({
               <button type="button" onClick={() => setModelMode('keep')} className={modeBtn(modelMode === 'keep')}>
                 {t('style.model.keepStyle')}
               </button>
+              <button type="button" onClick={() => setModelMode('product')} className={modeBtn(modelMode === 'product')}>
+                {t('style.model.keepProduct')}
+              </button>
               <button type="button" onClick={() => setModelMode('own')} className={modeBtn(modelMode === 'own')}>
                 {t('style.model.own')}
               </button>
@@ -369,6 +373,10 @@ export function StyleTransferProduction({
                 {t('style.model.ai')}
               </button>
             </div>
+
+            {modelMode === 'product' && (
+              <p className="mt-1.5 text-[10px] leading-relaxed text-neutral-500">{t('style.model.keepProductHint')}</p>
+            )}
 
             {modelMode === 'own' && (
               <div className="mt-2">
