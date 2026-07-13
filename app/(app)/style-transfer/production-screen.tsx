@@ -6,6 +6,7 @@ import { AssetPicker } from '@/components/asset-picker'
 import { ModelFilterTabs } from '@/components/model-filter-tabs'
 import type { Asset } from '@/lib/assets/assets'
 import { createClient } from '@/lib/supabase/client'
+import { STYLES_BUCKET } from '@/lib/admin/styles'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { downloadAsJpg } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
@@ -32,7 +33,55 @@ type OwnModelImage = {
   url?: string
 }
 
-type AiModel = { id: string; name: string; gender: string | null; image_url: string; scope: string | null }
+type AiModel = {
+  id: string
+  name: string
+  gender: string | null
+  image_url: string | null
+  image_path: string | null
+  scope: string | null
+}
+
+function pathFromPublicStorageUrl(url: string, bucket: string): string | null {
+  const marker = `/object/public/${bucket}/`
+  const i = url.indexOf(marker)
+  if (i === -1) return null
+  return decodeURIComponent(url.slice(i + marker.length).split('?')[0])
+}
+
+async function aiModelToScaledBase64(
+  supabase: ReturnType<typeof createClient>,
+  m: AiModel
+): Promise<{ base64: string; mimeType: string }> {
+  if (m.image_url) {
+    try {
+      return await urlToScaledBase64(m.image_url)
+    } catch (e) {
+      console.error('MODEL URL FETCH ERROR:', e)
+    }
+  }
+
+  if (m.image_path) {
+    const { data: blob, error } = await supabase.storage.from('user-models').download(m.image_path)
+    if (error || !blob) {
+      console.error('MODEL DOWNLOAD ERROR:', error)
+      throw new Error('model_download_failed')
+    }
+    const file = new File([blob], 'model.jpg', { type: blob.type || 'image/jpeg' })
+    return fileToScaledBase64(file, 1024)
+  }
+
+  const path = m.image_url ? pathFromPublicStorageUrl(m.image_url, 'models') : null
+  if (!path) throw new Error('model_download_failed')
+
+  const { data: blob, error } = await supabase.storage.from('models').download(path)
+  if (error || !blob) {
+    console.error('MODEL DOWNLOAD ERROR:', error)
+    throw new Error('model_download_failed')
+  }
+  const file = new File([blob], 'model.jpg', { type: blob.type || 'image/jpeg' })
+  return fileToScaledBase64(file, 1024)
+}
 
 type ModelMode = 'keep' | 'own' | 'ai'
 type GenStatus = 'idle' | 'loading' | 'done' | 'error'
@@ -107,7 +156,7 @@ export function StyleTransferProduction({
     const supabase = createClient()
     supabase
       .from('models')
-      .select('id,name,gender,image_url,scope')
+      .select('id,name,gender,image_url,image_path,scope')
       .order('created_at', { ascending: false })
       .then(({ data }) => setModels((data as AiModel[]) ?? []))
     listFavoriteModelIds().then(setModelFavIds).catch(console.error)
@@ -162,7 +211,7 @@ export function StyleTransferProduction({
   const { isDragging: ownDragging, dropHandlers: ownDropHandlers } = useDropzone(selectOwnModel)
 
   async function handleGenerate() {
-    if (!canGenerate || !selectedStyle.signedUrl) return
+    if (!canGenerate || !selectedStyle.image_path) return
 
     setGenStatus('loading')
     setGenError(null)
@@ -171,8 +220,18 @@ export function StyleTransferProduction({
     try {
       const supabase = createClient()
       console.log('1. stil cevriliyor', selectedStyle?.image_path)
-      const style = await urlToScaledBase64(selectedStyle.signedUrl)
-      console.log('2. stil ok', style?.base64?.length)
+
+      const { data: styleBlob, error: styleErr } = await supabase
+        .storage.from(STYLES_BUCKET)
+        .download(selectedStyle.image_path)
+      if (styleErr || !styleBlob) {
+        console.error('STYLE DOWNLOAD ERROR:', styleErr)
+        throw new Error('style_download_failed')
+      }
+      const styleFile = new File([styleBlob], 'style.jpg', { type: styleBlob.type || 'image/jpeg' })
+      const styleImg = await fileToScaledBase64(styleFile, 1024)
+      console.log('2. stil ok', styleImg?.base64?.length)
+
       const productPayload = await Promise.all(
         products.map((p) => (p.file ? fileToScaledBase64(p.file) : urlToScaledBase64(p.url!)))
       )
@@ -184,12 +243,12 @@ export function StyleTransferProduction({
           ? await fileToScaledBase64(ownModel.file)
           : await urlToScaledBase64(ownModel.url!)
       } else if (modelMode === 'ai' && selectedAiModel) {
-        model = await urlToScaledBase64(selectedAiModel.image_url)
+        model = await aiModelToScaledBase64(supabase, selectedAiModel)
       }
       console.log('4. manken', modelMode, model?.base64?.length)
 
       const body = {
-        style,
+        style: { base64: styleImg.base64, mimeType: styleImg.mimeType },
         products: productPayload,
         modelMode,
         ...(model ? { model } : {}),
@@ -508,7 +567,7 @@ export function StyleTransferProduction({
                     setModelModalOpen(false)
                   }}
                   name={m.name}
-                  imageUrl={m.image_url}
+                  imageUrl={m.image_url ?? ''}
                 />
               ))}
             </div>
