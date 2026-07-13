@@ -1,12 +1,14 @@
 import { createClient } from '@/lib/supabase/client'
 
+// User-facing style-transfer gallery: image tiles only — never render style.name (Pinterest-style).
+
 export const STYLES_BUCKET = 'styles'
 
 export type StyleCategory = { id: string; name: string; sort: number }
 
 export type Style = {
   id: string
-  name: string
+  name: string | null
   category_id: string | null
   image_path: string
   owner_id: string | null
@@ -90,11 +92,11 @@ export async function listStyles(source: 'admin' | 'user'): Promise<Style[]> {
   return (data as Style[]) ?? []
 }
 
-export async function createAdminStyle(name: string, categoryId: string | null, file: File): Promise<void> {
+export async function createAdminStyle(name: string | null, categoryId: string | null, file: File): Promise<void> {
   const image_path = await uploadAdminStyleImage(file)
   const supabase = createClient()
   const { error } = await supabase.from('styles').insert({
-    name,
+    name: name?.trim() || null,
     category_id: categoryId,
     image_path,
     owner_id: null,
@@ -103,7 +105,7 @@ export async function createAdminStyle(name: string, categoryId: string | null, 
   if (error) throw error
 }
 
-export async function updateStyle(id: string, patch: { name?: string; category_id?: string | null }): Promise<void> {
+export async function updateStyle(id: string, patch: { name?: string | null; category_id?: string | null }): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('styles').update(patch).eq('id', id)
   if (error) throw error

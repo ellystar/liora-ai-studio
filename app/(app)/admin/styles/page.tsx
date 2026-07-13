@@ -132,13 +132,13 @@ export default function StylesAdmin() {
 
   async function handleAddStyle() {
     setError(null)
-    if (!file || !styleName.trim()) {
-      setError('Görsel ve ad zorunlu.')
+    if (!file) {
+      setError('Görsel zorunlu.')
       return
     }
     setSaving(true)
     try {
-      await createAdminStyle(styleName.trim(), styleCategoryId || null, file)
+      await createAdminStyle(styleName.trim() || null, styleCategoryId || null, file)
       setStyleName('')
       setStyleCategoryId('')
       setFile(null)
@@ -151,13 +151,16 @@ export default function StylesAdmin() {
     }
   }
 
-  async function handleStyleNameBlur(style: Style, name: string) {
-    if (name.trim() === style.name || !name.trim()) return
+  async function handleStyleNameBlur(style: Style, raw: string) {
+    const trimmed = raw.trim()
+    const next = trimmed || null
+    const prev = style.name?.trim() || null
+    if (next === prev) return
     setError(null)
     try {
-      await updateStyle(style.id, { name: name.trim() })
-      setAdminStyles((prev) => prev.map((s) => (s.id === style.id ? { ...s, name: name.trim() } : s)))
-      setUserStyles((prev) => prev.map((s) => (s.id === style.id ? { ...s, name: name.trim() } : s)))
+      await updateStyle(style.id, { name: next })
+      setAdminStyles((prevList) => prevList.map((s) => (s.id === style.id ? { ...s, name: next } : s)))
+      setUserStyles((prevList) => prevList.map((s) => (s.id === style.id ? { ...s, name: next } : s)))
     } catch (e) {
       setError('Hata: ' + (e as Error).message)
     }
@@ -279,7 +282,7 @@ export default function StylesAdmin() {
               />
               <input
                 type="text"
-                placeholder="Stil adı"
+                placeholder="Stil adı (opsiyonel)"
                 value={styleName}
                 onChange={(e) => setStyleName(e.target.value)}
                 className={inputCls}
@@ -311,11 +314,13 @@ export default function StylesAdmin() {
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {visibleStyles.map((s) => (
+          {visibleStyles.map((s) => {
+            const displayName = s.name?.trim() || null
+            return (
             <div key={s.id} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414]">
               {signedUrls[s.id] ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={signedUrls[s.id]} alt={s.name} className="aspect-square w-full object-cover" />
+                <img src={signedUrls[s.id]} alt="" className="aspect-square w-full object-cover" />
               ) : (
                 <div className="flex aspect-square w-full items-center justify-center bg-[#0f0f0f] text-[10px] text-neutral-600">
                   Görsel yükleniyor…
@@ -323,16 +328,16 @@ export default function StylesAdmin() {
               )}
               <div className="p-2">
                 <div className="flex items-start justify-between gap-1.5">
-                  {tab === 'admin' ? (
+                  {tab === 'admin' && displayName ? (
                     <input
                       type="text"
-                      defaultValue={s.name}
+                      defaultValue={displayName}
                       onBlur={(e) => handleStyleNameBlur(s, e.target.value)}
                       className={`${compactInputCls} min-w-0 flex-1`}
-                      aria-label={`Stil adı: ${s.name}`}
+                      aria-label="Stil adı (opsiyonel)"
                     />
                   ) : (
-                    <p className="truncate text-xs text-neutral-200">{s.name}</p>
+                    <span className="min-w-0 flex-1" />
                   )}
                   <button
                     type="button"
@@ -353,7 +358,7 @@ export default function StylesAdmin() {
                     value={s.category_id ?? ''}
                     onChange={(e) => handleStyleCategoryChange(s, e.target.value)}
                     className={cardSelectCls}
-                    aria-label={`Kategori: ${s.name}`}
+                    aria-label="Kategori"
                   >
                     <option value="">Kategorisiz</option>
                     {categories.map((c) => (
@@ -371,7 +376,8 @@ export default function StylesAdmin() {
                 )}
               </div>
             </div>
-          ))}
+            )
+          })}
           {visibleStyles.length === 0 && (
             <p className="col-span-full text-sm text-neutral-500">
               {tab === 'admin' ? 'Henüz admin stili yok.' : 'Henüz kullanıcı stili yok.'}
