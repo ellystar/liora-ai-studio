@@ -42,47 +42,6 @@ type AiModel = {
   scope: string | null
 }
 
-function pathFromPublicStorageUrl(url: string, bucket: string): string | null {
-  const marker = `/object/public/${bucket}/`
-  const i = url.indexOf(marker)
-  if (i === -1) return null
-  return decodeURIComponent(url.slice(i + marker.length).split('?')[0])
-}
-
-async function aiModelToScaledBase64(
-  supabase: ReturnType<typeof createClient>,
-  m: AiModel
-): Promise<{ base64: string; mimeType: string }> {
-  if (m.image_url) {
-    try {
-      return await urlToScaledBase64(m.image_url)
-    } catch (e) {
-      console.error('MODEL URL FETCH ERROR:', e)
-    }
-  }
-
-  if (m.image_path) {
-    const { data: blob, error } = await supabase.storage.from('user-models').download(m.image_path)
-    if (error || !blob) {
-      console.error('MODEL DOWNLOAD ERROR:', error)
-      throw new Error('model_download_failed')
-    }
-    const file = new File([blob], 'model.jpg', { type: blob.type || 'image/jpeg' })
-    return fileToScaledBase64(file, 1024)
-  }
-
-  const path = m.image_url ? pathFromPublicStorageUrl(m.image_url, 'models') : null
-  if (!path) throw new Error('model_download_failed')
-
-  const { data: blob, error } = await supabase.storage.from('models').download(path)
-  if (error || !blob) {
-    console.error('MODEL DOWNLOAD ERROR:', error)
-    throw new Error('model_download_failed')
-  }
-  const file = new File([blob], 'model.jpg', { type: blob.type || 'image/jpeg' })
-  return fileToScaledBase64(file, 1024)
-}
-
 type ModelMode = 'keep' | 'own' | 'ai'
 type GenStatus = 'idle' | 'loading' | 'done' | 'error'
 
@@ -243,7 +202,18 @@ export function StyleTransferProduction({
           ? await fileToScaledBase64(ownModel.file)
           : await urlToScaledBase64(ownModel.url!)
       } else if (modelMode === 'ai' && selectedAiModel) {
-        model = await aiModelToScaledBase64(supabase, selectedAiModel)
+        const url = selectedAiModel.image_url
+        const path =
+          selectedAiModel.image_path ?? url?.split('/object/public/models/')[1]?.split('?')[0]
+        if (!path) throw new Error('model_download_failed')
+        const { data: modelBlob, error: modelErr } = await supabase.storage.from('models').download(path)
+        if (modelErr || !modelBlob) {
+          console.error('MODEL DOWNLOAD ERROR:', modelErr)
+          throw new Error('model_download_failed')
+        }
+        const modelFile = new File([modelBlob], 'model.jpg', { type: modelBlob.type || 'image/jpeg' })
+        const modelImg = await fileToScaledBase64(modelFile, 1024)
+        model = { base64: modelImg.base64, mimeType: modelImg.mimeType }
       }
       console.log('4. manken', modelMode, model?.base64?.length)
 
