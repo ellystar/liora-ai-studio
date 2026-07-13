@@ -10,6 +10,7 @@ import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
 import { downloadAsJpg } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { filterModels, listFavoriteModelIds, type ModelFilter } from '@/lib/models/favorites'
+import { ratios, qualities, type Quality, type Ratio } from '@/lib/ecom/mock-data'
 import { useI18n } from '@/lib/i18n/language-provider'
 
 export type StyleSelection = {
@@ -88,6 +89,8 @@ export function StyleTransferProduction({
   const [ownModel, setOwnModel] = useState<OwnModelImage | null>(null)
   const [aiModelId, setAiModelId] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
+  const [ratio, setRatio] = useState<Ratio>('2:3')
+  const [quality, setQuality] = useState<Quality>('1k')
   const [genStatus, setGenStatus] = useState<GenStatus>('idle')
   const [resultUrl, setResultUrl] = useState<string | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
@@ -186,6 +189,8 @@ export function StyleTransferProduction({
         modelMode,
         ...(model ? { model } : {}),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
+        ratio,
+        quality,
       }
 
       const { data, error } = await supabase.functions.invoke('generate-style-transfer', { body })
@@ -358,6 +363,35 @@ export function StyleTransferProduction({
                 </button>
               </div>
             )}
+          </div>
+
+          <div>
+            <p className="mb-2 text-[11px] font-medium text-neutral-300">{t('style.ratio')}</p>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {ratios.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRatio(r)}
+                  className={`rounded-lg px-4 py-2 text-sm transition ${ratio === r ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+            <p className="mb-2 text-[11px] font-medium text-neutral-300">{t('style.quality')}</p>
+            <div className="flex flex-wrap gap-2">
+              {qualities.map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => setQuality(q)}
+                  className={`rounded-lg px-4 py-2 text-sm uppercase transition ${quality === q ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
