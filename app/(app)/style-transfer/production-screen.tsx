@@ -16,6 +16,7 @@ import { useI18n } from '@/lib/i18n/language-provider'
 export type StyleSelection = {
   id: string
   signedUrl?: string
+  image_path?: string
 }
 
 type ProductImage = {
@@ -169,10 +170,13 @@ export function StyleTransferProduction({
 
     try {
       const supabase = createClient()
+      console.log('1. stil cevriliyor', selectedStyle?.image_path)
       const style = await urlToScaledBase64(selectedStyle.signedUrl)
+      console.log('2. stil ok', style?.base64?.length)
       const productPayload = await Promise.all(
         products.map((p) => (p.file ? fileToScaledBase64(p.file) : urlToScaledBase64(p.url!)))
       )
+      console.log('3. urunler ok', productPayload.length)
 
       let model: { base64: string; mimeType: string } | undefined
       if (modelMode === 'own' && ownModel) {
@@ -182,6 +186,7 @@ export function StyleTransferProduction({
       } else if (modelMode === 'ai' && selectedAiModel) {
         model = await urlToScaledBase64(selectedAiModel.image_url)
       }
+      console.log('4. manken', modelMode, model?.base64?.length)
 
       const body = {
         style,
@@ -193,7 +198,13 @@ export function StyleTransferProduction({
         quality,
       }
 
+      console.log('5. invoke ediliyor')
       const { data, error } = await supabase.functions.invoke('generate-style-transfer', { body })
+      console.log('6. yanit', data, error)
+
+      if (error) {
+        console.error('INVOKE ERROR:', error)
+      }
 
       if (error || data?.error) {
         setGenError(t('style.error.generic'))
@@ -209,7 +220,8 @@ export function StyleTransferProduction({
 
       setGenError(t('style.error.generic'))
       setGenStatus('error')
-    } catch {
+    } catch (e) {
+      console.error('STYLE TRANSFER ERROR:', e)
       setGenError(t('style.error.generic'))
       setGenStatus('error')
     }

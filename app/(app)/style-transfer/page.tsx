@@ -160,7 +160,11 @@ export default function StyleTransferPage() {
   if (selectedStyle) {
     return (
       <StyleTransferProduction
-        selectedStyle={{ id: selectedStyle.id, signedUrl: selectedStyle.signedUrl }}
+        selectedStyle={{
+          id: selectedStyle.id,
+          signedUrl: selectedStyle.signedUrl,
+          image_path: selectedStyle.image_path,
+        }}
         onChangeStyle={() => setSelectedStyle(null)}
       />
     )
