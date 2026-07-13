@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Sparkles, PersonStanding, Shirt, Wand2, LayoutGrid, Footprints, Video } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, LayoutGrid, Footprints, Video, WandSparkles } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { PixelCursor } from '@/components/pixel-cursor'
 
@@ -9,13 +9,14 @@ export default function Home() {
   const { t } = useI18n()
 
   const tools = [
-    { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title'), desc: t('tool.ecom.desc'), bgImage: '/ecom-studio.jpg', colSpan: 'col-span-2' },
-    { href: '/shoe-studio', Icon: Footprints, title: t('tool.shoe.title'), desc: t('shoe.cardDesc'), bgImage: '/shoe-studio.jpg', colSpan: 'col-span-1' },
-    { href: '/batch-studio', Icon: LayoutGrid, title: t('batch.title'), desc: t('batch.cardDesc'), bgImage: '/batch-studio.jpg', colSpan: 'col-span-1' },
-    { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title'), desc: t('tool.pose.desc'), bgImage: '/pose-generator.jpg', colSpan: 'col-span-1' },
-    { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title'), desc: t('tool.flat.desc'), bgImage: '/flat-to-ghost.jpg', colSpan: 'col-span-1' },
-    { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title'), desc: t('tool.edit.desc'), bgImage: '/edit-photo.jpg', colSpan: 'col-span-1' },
-    { href: '/video-studio', Icon: Video, title: t('tool.video.title'), desc: t('video.cardDesc'), bgImage: null, colSpan: 'col-span-1' },
+    { href: '/ecom-studio', Icon: Sparkles, title: t('tool.ecom.title'), desc: t('tool.ecom.desc'), bgImage: '/ecom-studio.jpg' },
+    { href: '/shoe-studio', Icon: Footprints, title: t('tool.shoe.title'), desc: t('shoe.cardDesc'), bgImage: '/shoe-studio.jpg' },
+    { href: '/batch-studio', Icon: LayoutGrid, title: t('batch.title'), desc: t('batch.cardDesc'), bgImage: '/batch-studio.jpg' },
+    { href: '/pose-generator', Icon: PersonStanding, title: t('tool.pose.title'), desc: t('tool.pose.desc'), bgImage: '/pose-generator.jpg' },
+    { href: '/flat-to-ghost', Icon: Shirt, title: t('tool.flat.title'), desc: t('tool.flat.desc'), bgImage: '/flat-to-ghost.jpg' },
+    { href: '/edit-photo', Icon: Wand2, title: t('tool.edit.title'), desc: t('tool.edit.desc'), bgImage: '/edit-photo.jpg' },
+    { href: '/video-studio', Icon: Video, title: t('tool.video.title'), desc: t('video.cardDesc'), bgImage: null },
+    { href: '/style-transfer', Icon: WandSparkles, title: t('tool.style.title'), desc: t('style.cardDesc'), bgImage: null },
   ]
 
   return (
@@ -28,11 +29,11 @@ export default function Home() {
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-4 grid-rows-2 gap-4">
-          {tools.map(({ href, Icon, title, desc, bgImage, colSpan }) => (
+          {tools.map(({ href, Icon, title, desc, bgImage }) => (
             <Link
               key={href}
               href={href}
-              className={`relative h-full w-full overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e] ${colSpan}`}
+              className="relative h-full w-full overflow-hidden rounded-2xl border border-[#242424] bg-[#141414] transition hover:border-[#2e2e2e]"
             >
               {bgImage && (
                 <>
