@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, Plus, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
+import { StyleTransferProduction } from './production-screen'
 import { createClient } from '@/lib/supabase/client'
 import { STYLES_BUCKET } from '@/lib/admin/styles'
 import { useI18n } from '@/lib/i18n/language-provider'
@@ -158,17 +159,10 @@ export default function StyleTransferPage() {
 
   if (selectedStyle) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <button
-          type="button"
-          onClick={() => setSelectedStyle(null)}
-          className="inline-flex items-center gap-2 text-sm text-neutral-400 transition hover:text-neutral-200"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('common.back')}
-        </button>
-        <p className="mt-8 text-center text-sm text-neutral-500">{t('style.productionSoon')}</p>
-      </main>
+      <StyleTransferProduction
+        selectedStyle={{ id: selectedStyle.id, signedUrl: selectedStyle.signedUrl }}
+        onChangeStyle={() => setSelectedStyle(null)}
+      />
     )
   }
 
