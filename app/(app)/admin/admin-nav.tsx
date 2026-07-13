@@ -9,6 +9,7 @@ const tabs: { href: string; label: string; icon?: LucideIcon }[] = [
   { href: '/admin/models', label: 'Mankenler' },
   { href: '/admin/poses', label: 'Pozlar', icon: PersonStanding },
   { href: '/admin/backgrounds', label: 'Arkaplanlar' },
+  { href: '/admin/styles', label: 'Stiller' },
 ]
 
 export function AdminNav() {
