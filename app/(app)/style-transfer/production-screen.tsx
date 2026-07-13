@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Check, Loader2, Maximize2, Upload, X } from 'lucide-react'
 import { AssetPicker } from '@/components/asset-picker'
 import { ModelFilterTabs } from '@/components/model-filter-tabs'
@@ -91,6 +92,7 @@ export function StyleTransferProduction({
   onChangeStyle: () => void
 }) {
   const { t } = useI18n()
+  const router = useRouter()
   const productInputRef = useRef<HTMLInputElement>(null)
 
   const [products, setProducts] = useState<ProductImage[]>([])
@@ -101,7 +103,7 @@ export function StyleTransferProduction({
   const [ratio, setRatio] = useState<Ratio>('2:3')
   const [quality, setQuality] = useState<Quality>('1k')
   const [genStatus, setGenStatus] = useState<GenStatus>('idle')
-  const [resultUrl, setResultUrl] = useState<string | null>(null)
+  const [resultImage, setResultImage] = useState<string | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState(false)
 
@@ -174,7 +176,7 @@ export function StyleTransferProduction({
 
     setGenStatus('loading')
     setGenError(null)
-    setResultUrl(null)
+    setResultImage(null)
 
     try {
       const supabase = createClient()
@@ -233,22 +235,35 @@ export function StyleTransferProduction({
 
       if (error) {
         console.error('INVOKE ERROR:', error)
+        let code = ''
+        try {
+          const ctx = await (error as { context: Response }).context.json()
+          code = ctx.error
+        } catch {}
+        setGenError(
+          code === 'insufficient_credits'
+            ? t('style.error.insufficient')
+            : code === 'content_blocked'
+              ? t('style.error.blocked')
+              : code === 'model_busy'
+                ? t('style.error.busy')
+                : t('style.error.generic')
+        )
+        setGenStatus('error')
+        return
       }
 
-      if (error || data?.error) {
+      const img = (data?.images as string[] | undefined)?.[0]
+      if (!img) {
+        console.error('NO IMAGE IN RESPONSE:', data)
         setGenError(t('style.error.generic'))
         setGenStatus('error')
         return
       }
 
-      if (data?.image?.base64 && data?.image?.mimeType) {
-        setResultUrl(`data:${data.image.mimeType};base64,${data.image.base64}`)
-        setGenStatus('done')
-        return
-      }
-
-      setGenError(t('style.error.generic'))
-      setGenStatus('error')
+      setResultImage(img)
+      setGenStatus('idle')
+      router.refresh()
     } catch (e) {
       console.error('STYLE TRANSFER ERROR:', e)
       setGenError(t('style.error.generic'))
@@ -461,7 +476,7 @@ export function StyleTransferProduction({
 
         <section className="flex min-h-0 min-w-0 flex-1 flex-col p-5">
           <div className="flex h-full min-h-0 flex-col rounded-2xl border border-[#242424] bg-[#141414] p-4">
-            {genStatus === 'idle' && (
+            {genStatus === 'idle' && !resultImage && (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 text-neutral-500">
                 <p className="text-sm">{t('style.previewEmpty')}</p>
               </div>
@@ -480,10 +495,10 @@ export function StyleTransferProduction({
               </div>
             )}
 
-            {genStatus === 'done' && resultUrl && (
+            {resultImage && genStatus !== 'loading' && genStatus !== 'error' && (
               <div className="flex min-h-0 flex-1 flex-col">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={resultUrl} alt="" className="max-h-full min-h-0 w-full flex-1 rounded-xl object-contain" />
+                <img src={resultImage} alt="" className="max-h-full min-h-0 w-full flex-1 rounded-xl object-contain" />
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     type="button"
@@ -495,7 +510,7 @@ export function StyleTransferProduction({
                   </button>
                   <button
                     type="button"
-                    onClick={() => downloadAsJpg(resultUrl, 'liora-style-transfer')}
+                    onClick={() => downloadAsJpg(resultImage, 'liora-style-transfer')}
                     className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-[#0a0a0a]"
                   >
                     {t('video.download')}
@@ -545,7 +560,7 @@ export function StyleTransferProduction({
         </div>
       )}
 
-      {lightbox && resultUrl && (
+      {lightbox && resultImage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
           <button
             type="button"
@@ -556,7 +571,7 @@ export function StyleTransferProduction({
             <X className="h-6 w-6" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={resultUrl} alt="" className="max-h-[90vh] max-w-full rounded-xl object-contain" />
+          <img src={resultImage} alt="" className="max-h-[90vh] max-w-full rounded-xl object-contain" />
         </div>
       )}
     </>
