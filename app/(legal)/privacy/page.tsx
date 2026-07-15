@@ -80,9 +80,12 @@ export default function PrivacyPage() {
         Altyapı ve yapay zekâ hizmet sağlayıcılarının sunucuları yurt dışında bulunabilmektedir. Bu kapsamda kişisel verileriniz, KVKK&apos;nın 9. maddesinde öngörülen şartlara uygun olarak yurt dışına aktarılabilmektedir. Platform&apos;u kullanarak ve işbu politikayı onaylayarak bu aktarımlar hakkında bilgilendirildiğinizi kabul etmiş olursunuz.
       </LegalP>
 
-      <LegalH2>6. Yüklenen İçerikler Hakkında</LegalH2>
+      <LegalH2>6. Yüklenen ve Üretilen İçerikler Hakkında</LegalH2>
       <LegalP>
         Platform&apos;a yüklediğiniz ürün görselleri ve marka materyalleri, yalnızca talep ettiğiniz içerik üretim hizmetinin sunulması amacıyla işlenir. Yüklediğiniz içerikler üzerindeki fikri mülkiyet hakları size aittir. Şirket, bu içerikleri hizmetin sunulması dışında bir amaçla kullanmaz, üçüncü taraflarla pazarlama amacıyla paylaşmaz.
+      </LegalP>
+      <LegalP>
+        Platform&apos;da ürettiğiniz görseller, hesabınızdaki çekim arşivinde en fazla <strong>7 (yedi) gün</strong> süreyle saklanır; bu sürenin sonunda otomatik olarak silinir.
       </LegalP>
 
       <LegalH2>7. Çerezler</LegalH2>
@@ -92,7 +95,7 @@ export default function PrivacyPage() {
 
       <LegalH2>8. Kişisel Verilerin Saklanma Süresi</LegalH2>
       <LegalP>
-        Kişisel verileriniz, işleme amacının gerektirdiği süre boyunca ve ilgili mevzuatta öngörülen asgari saklama sürelerine (ör. 6563 sayılı Kanun ve vergi mevzuatı kapsamındaki işlem kayıtları) uygun olarak saklanır. Sürelerin sona ermesi hâlinde verileriniz silinir, yok edilir veya anonim hâle getirilir.
+        Kişisel verileriniz, işleme amacının gerektirdiği süre boyunca ve ilgili mevzuatta öngörülen asgari saklama sürelerine (ör. 6563 sayılı Kanun ve vergi mevzuatı kapsamındaki işlem kayıtları) uygun olarak saklanır. Üretilen görsel içerikler ile Platform&apos;daki çekim arşivi kayıtları en fazla <strong>7 (yedi) gün</strong> saklanır. Sürelerin sona ermesi hâlinde verileriniz silinir, yok edilir veya anonim hâle getirilir.
       </LegalP>
 
       <LegalH2>9. Veri Güvenliği</LegalH2>
