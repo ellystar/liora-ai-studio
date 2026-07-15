@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid, FolderOpen, Footprints, Video, WandSparkles } from 'lucide-react'
+import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid, Footprints, Video, WandSparkles } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { LanguageToggle } from '@/components/language-toggle'
 
@@ -21,45 +21,45 @@ export function Navbar({ credits, email, isAdmin }: { credits: number; email: st
   const pathname = usePathname()
   const { t } = useI18n()
   const initial = email.charAt(0).toUpperCase() || '?'
+  const isHome = pathname === '/'
 
   return (
-    <nav className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-[#1c1c1c] px-5 py-3">
-      <Link href="/" className="text-base font-medium tracking-tight text-white">
+    <nav className="atelier atelier-nav grid grid-cols-[1fr_auto_1fr] items-center px-5 py-3.5 md:px-8">
+      <Link href="/" className="atelier-nav-brand">
         Liora
       </Link>
 
-      <div className="flex items-center gap-1">
-        {tools.map(({ href, Icon, label }) => {
-          const active = pathname === href
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-medium transition ${
-                active
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-neutral-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span>{label}</span>
-            </Link>
-          )
-        })}
-      </div>
+      {!isHome && (
+        <div className="flex max-w-[min(100%,520px)] items-center justify-center gap-0.5 overflow-x-auto px-1">
+          {tools.map(({ href, Icon, label }) => {
+            const active = pathname === href
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`atelier-tool-tab inline-flex items-center gap-1.5 ${active ? 'is-active' : ''}`}
+              >
+                <Icon className="h-3 w-3 shrink-0 opacity-70" strokeWidth={1.5} />
+                <span>{label}</span>
+              </Link>
+            )
+          })}
+        </div>
+      )}
 
-      <div className="flex items-center justify-end gap-2.5">
+      {isHome && <div />}
+
+      <div className="flex items-center justify-end gap-4 md:gap-5">
+        <Link href="#" className={`atelier-nav-link hidden sm:inline ${pathname === '#' ? 'is-active' : ''}`}>
+          {t('nav.shoots')}
+        </Link>
         <Link
           href="/assets"
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition ${
-            pathname === '/assets' ? 'bg-white/10 text-neutral-100' : 'text-neutral-400 hover:bg-white/5 hover:text-neutral-200'
-          }`}
+          className={`atelier-nav-link ${pathname === '/assets' ? 'is-active' : ''}`}
         >
-          <FolderOpen className="h-4 w-4" />
-          {t('assets.cardTitle')}
+          {t('nav.assets')}
         </Link>
-        <Link href="/pricing" className="inline-flex items-center gap-2 rounded-full border border-[#262626] px-3 py-1.5 text-xs text-neutral-200 cursor-pointer transition hover:border-[#2e2e2e]">
-          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+        <Link href="/pricing" className="atelier-credits-pill">
           {credits} {t('nav.credits')}
         </Link>
         <LanguageToggle />
@@ -67,16 +67,18 @@ export function Navbar({ credits, email, isAdmin }: { credits: number; email: st
           <Link
             href="/admin"
             aria-label="Admin"
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
-              pathname.startsWith('/admin') ? 'bg-white/10 text-neutral-100' : 'text-neutral-500 hover:bg-white/5 hover:text-neutral-300'
+            className={`flex h-8 w-8 items-center justify-center rounded-full border border-transparent transition ${
+              pathname.startsWith('/admin')
+                ? 'border-[#26231E] text-[#EDE8DF]'
+                : 'text-[#8F8A80] hover:border-[#26231E] hover:text-[#EDE8DF]'
             }`}
           >
-            <Shield className="h-[18px] w-[18px]" />
+            <Shield className="h-[16px] w-[16px]" strokeWidth={1.5} />
           </Link>
         )}
         <Link
           href="/profile"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#222] text-xs font-medium text-neutral-200"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#26231E] bg-[#14110c] text-[11px] font-medium text-[#EDE8DF]"
         >
           {initial}
         </Link>

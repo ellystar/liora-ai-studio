@@ -8,7 +8,7 @@ export function LanguageToggle() {
   return (
     <button
       onClick={() => setLanguage(locale === 'tr' ? 'en' : 'tr')}
-      className="rounded-lg border border-neutral-800 px-3 py-1.5 text-xs font-medium text-neutral-300 transition hover:bg-neutral-900"
+      className="rounded-full border border-[#26231E] bg-transparent px-2.5 py-1 text-[11px] font-medium tracking-wide text-[#8F8A80] transition hover:border-[#3a3530] hover:text-[#EDE8DF]"
     >
       {locale === 'tr' ? 'EN' : 'TR'}
     </button>

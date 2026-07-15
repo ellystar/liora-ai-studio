@@ -1,0 +1,166 @@
+.atelier {
+  --atelier-bg: #100e0b;
+  --atelier-text: #ede8df;
+  --atelier-text-2: #a39d92;
+  --atelier-muted: #8f8a80;
+  --atelier-line: #26231e;
+  --atelier-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --atelier-ui: "Neue Haas Display", "Hanken Grotesk", var(--font-geist-sans), -apple-system, sans-serif;
+  --atelier-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: var(--atelier-ui);
+  color: var(--atelier-text);
+}
+
+.atelier-nav {
+  border-bottom: 0.5px solid var(--atelier-line);
+  background: var(--atelier-bg);
+}
+
+.atelier-nav-brand {
+  font-family: var(--atelier-ui);
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--atelier-text);
+  text-transform: uppercase;
+}
+
+.atelier-nav-link {
+  font-family: var(--atelier-ui);
+  font-size: 12.5px;
+  color: var(--atelier-muted);
+  transition: color 200ms var(--atelier-ease);
+}
+
+.atelier-nav-link:hover,
+.atelier-nav-link.is-active {
+  color: var(--atelier-text);
+}
+
+.atelier-credits-pill {
+  border: 0.5px solid var(--atelier-line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--atelier-text-2);
+  background: transparent;
+  transition: border-color 200ms var(--atelier-ease), color 200ms var(--atelier-ease);
+}
+
+.atelier-credits-pill:hover {
+  border-color: #3a3530;
+  color: var(--atelier-text);
+}
+
+.atelier-tool-tab {
+  font-family: var(--atelier-ui);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--atelier-muted);
+  border: 0.5px solid transparent;
+  border-radius: 4px;
+  padding: 6px 10px;
+  transition: color 200ms var(--atelier-ease), border-color 200ms var(--atelier-ease), background 200ms var(--atelier-ease);
+}
+
+.atelier-tool-tab:hover {
+  color: var(--atelier-text);
+  border-color: var(--atelier-line);
+}
+
+.atelier-tool-tab.is-active {
+  color: var(--atelier-text);
+  border-color: var(--atelier-line);
+  background: rgba(237, 232, 223, 0.04);
+}
+
+.atelier-section-label {
+  font-family: var(--atelier-ui);
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--atelier-muted);
+}
+
+.atelier-display {
+  font-family: var(--atelier-display);
+  font-weight: 400;
+}
+
+.atelier-studio-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 0.5px solid var(--atelier-line);
+  background: #14110c;
+}
+
+.atelier-studio-card img {
+  transition: transform 300ms var(--atelier-ease);
+}
+
+.atelier-studio-card:hover img {
+  transform: scale(1.02);
+}
+
+.atelier-studio-overlay {
+  background: linear-gradient(to top, rgba(16, 14, 11, 0.85) 0%, rgba(16, 14, 11, 0.35) 45%, transparent 100%);
+  transition: opacity 300ms var(--atelier-ease);
+}
+
+.atelier-studio-card:hover .atelier-studio-overlay {
+  opacity: 0.92;
+}
+
+.atelier-workshop-row {
+  border-top: 0.5px solid var(--atelier-line);
+  transition: color 200ms var(--atelier-ease);
+}
+
+.atelier-workshop-row:first-child {
+  border-top: none;
+}
+
+.atelier-workshop-row:hover .atelier-workshop-name {
+  color: var(--atelier-text);
+}
+
+.atelier-cast-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 2px solid var(--atelier-bg);
+  object-fit: cover;
+}
+
+.atelier-cast-add {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 0.5px dashed var(--atelier-line);
+  color: var(--atelier-muted);
+  transition: border-color 200ms var(--atelier-ease), color 200ms var(--atelier-ease);
+}
+
+.atelier-cast-add:hover {
+  border-color: var(--atelier-text-2);
+  color: var(--atelier-text);
+}
+
+.atelier-recent-thumb {
+  border-radius: 3px;
+  border: 0.5px solid var(--atelier-line);
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: #14110c;
+  transition: border-color 200ms var(--atelier-ease);
+}
+
+.atelier-recent-thumb:hover {
+  border-color: #3a3530;
+}
+
+.atelier-recent-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
