@@ -49,7 +49,10 @@ export function Navbar({ credits, email, isAdmin }: { credits: number; email: st
       {isHome && <div />}
 
       <div className="flex items-center justify-end gap-4 md:gap-5">
-        <Link href="#" className={`atelier-nav-link hidden sm:inline ${pathname === '#' ? 'is-active' : ''}`}>
+        <Link
+          href="/cekimlerim"
+          className={`atelier-nav-link hidden sm:inline ${pathname === '/cekimlerim' ? 'is-active' : ''}`}
+        >
           {t('nav.shoots')}
         </Link>
         <Link

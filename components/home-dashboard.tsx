@@ -220,7 +220,7 @@ export function HomeDashboard({ credits }: { credits: number }) {
             <div className="mb-4 flex items-center gap-4">
               <p className="atelier-section-label shrink-0">{t('home.section.recent')}</p>
               <div className="h-[0.5px] flex-1 bg-[#26231E]" />
-              <Link href="#" className="shrink-0 text-[12px] text-[#8F8A80] transition-colors hover:text-[#EDE8DF]">
+              <Link href="/cekimlerim" className="shrink-0 text-[12px] text-[#8F8A80] transition-colors hover:text-[#EDE8DF]">
                 {t('home.recent.viewAll')}
               </Link>
             </div>

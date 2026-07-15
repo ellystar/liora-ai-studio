@@ -205,3 +205,145 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* Shoots gallery (/cekimlerim) */
+.shoots-tab {
+  position: relative;
+  font-size: 12.5px;
+  color: #8f8a80;
+  padding-bottom: 6px;
+  transition: color 150ms var(--atelier-ease);
+}
+
+.shoots-tab:hover {
+  color: #ede8df;
+}
+
+.shoots-tab.is-active {
+  color: #ede8df;
+}
+
+.shoots-tab.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5px;
+  background: #ede8df;
+}
+
+.shoots-model-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0.5px solid var(--atelier-line);
+  border-radius: 999px;
+  padding: 4px 10px 4px 4px;
+  font-size: 11px;
+  color: #8f8a80;
+  transition: border-color 150ms var(--atelier-ease), color 150ms var(--atelier-ease);
+}
+
+.shoots-model-chip:hover,
+.shoots-model-chip.is-active {
+  border-color: #3a3530;
+  color: #ede8df;
+}
+
+.shoots-thumb {
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 3px;
+  border: 0.5px solid var(--atelier-line);
+  background: #1c1914;
+}
+
+.shoots-thumb.is-selected {
+  outline: 1.5px solid #ede8df;
+  outline-offset: -1.5px;
+}
+
+.shoots-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 200ms var(--atelier-ease);
+}
+
+.shoots-thumb:hover .shoots-thumb-img {
+  filter: brightness(1.08);
+}
+
+.shoots-select-circle {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(237, 232, 223, 0.45);
+  background: rgba(16, 14, 11, 0.35);
+  opacity: 0;
+  transition: opacity 150ms var(--atelier-ease), background 150ms var(--atelier-ease);
+}
+
+.shoots-thumb:hover .shoots-select-circle,
+.shoots-select-circle.is-checked {
+  opacity: 1;
+}
+
+.shoots-select-circle.is-checked {
+  background: #ede8df;
+  border-color: #ede8df;
+  box-shadow: inset 0 0 0 3px #100e0b;
+}
+
+.shoots-load-more {
+  border: 0.5px solid var(--atelier-line);
+  border-radius: 4px;
+  padding: 10px 20px;
+  transition: border-color 150ms var(--atelier-ease);
+}
+
+.shoots-load-more:hover:not(:disabled) {
+  border-color: #3a3530;
+}
+
+.shoots-load-more:disabled {
+  opacity: 0.5;
+}
+
+.shoots-empty-link:hover {
+  text-decoration: underline;
+}
+
+.shoots-btn-ghost {
+  color: #8f8a80;
+  transition: color 150ms var(--atelier-ease);
+}
+
+.shoots-btn-ghost:hover {
+  color: #ede8df;
+}
+
+.shoots-btn-primary {
+  border-radius: 4px;
+  background: #ede8df;
+  color: #100e0b;
+  padding: 8px 16px;
+  transition: opacity 150ms var(--atelier-ease);
+}
+
+.shoots-btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.shoots-lightbox {
+  background: rgba(16, 14, 11, 0.96);
+}
+
+.shoots-selection-bar {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
