@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Sparkles, PersonStanding, Shirt, Wand2, Shield, LayoutGrid, Footprints, Video, WandSparkles } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
-import { LanguageToggle } from '@/components/language-toggle'
 
 const tools = [
   { href: '/ecom-studio', Icon: Sparkles, label: 'E-com' },
@@ -19,7 +18,7 @@ const tools = [
 
 export function Navbar({ credits, email, isAdmin }: { credits: number; email: string; isAdmin?: boolean }) {
   const pathname = usePathname()
-  const { t } = useI18n()
+  const { t, locale, setLanguage } = useI18n()
   const initial = email.charAt(0).toUpperCase() || '?'
   const isHome = pathname === '/'
 
@@ -59,10 +58,18 @@ export function Navbar({ credits, email, isAdmin }: { credits: number; email: st
         >
           {t('nav.assets')}
         </Link>
-        <Link href="/pricing" className="atelier-credits-pill">
-          {credits} {t('nav.credits')}
-        </Link>
-        <LanguageToggle />
+        {!isHome && (
+          <Link href="/pricing" className="atelier-credits-pill">
+            {credits} {t('nav.credits')}
+          </Link>
+        )}
+        <button
+          type="button"
+          onClick={() => setLanguage(locale === 'tr' ? 'en' : 'tr')}
+          className="atelier-nav-link"
+        >
+          {locale === 'tr' ? 'EN' : 'TR'}
+        </button>
         {isAdmin && (
           <Link
             href="/admin"

@@ -7,39 +7,14 @@ import { useI18n } from '@/lib/i18n/language-provider'
 import { createClient } from '@/lib/supabase/client'
 import { listRecentGenerationImages, type RecentGenerationImage } from '@/lib/generations/recent-images'
 import { UserModelUpload } from '@/components/user-model-upload'
+import { StudioCard } from '@/components/studio-card'
 import type { NewUserModel } from '@/lib/models/user-models'
 
 type OwnModel = { id: string; name: string; image_url: string | null }
 
-type StudioCardProps = {
-  href: string
-  title: string
-  desc: string
-  bgImage?: string | null
-  large?: boolean
-}
-
-function StudioCard({ href, title, desc, bgImage, large }: StudioCardProps) {
-  return (
-    <Link
-      href={href}
-      className={`atelier-studio-card group block w-full ${large ? 'aspect-[16/10]' : 'aspect-[8/10]'}`}
-    >
-      {bgImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={bgImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <div className="absolute inset-0 bg-[#14110c]" />
-      )}
-      <div className="atelier-studio-overlay absolute inset-0" />
-      <div className="absolute inset-x-0 bottom-0 z-10 p-4 md:p-5">
-        <p className={`atelier-display text-[#EDE8DF] ${large ? 'text-[20px]' : 'text-[17px] leading-snug'}`}>
-          {title}
-        </p>
-        <p className="mt-1.5 text-[11.5px] leading-relaxed text-[#A39D92] md:text-[12px]">{desc}</p>
-      </div>
-    </Link>
-  )
+function capitalizeName(name: string, locale: 'tr' | 'en') {
+  const loc = locale === 'tr' ? 'tr-TR' : 'en-US'
+  return name.charAt(0).toLocaleUpperCase(loc) + name.slice(1)
 }
 
 function greetingKey(hour: number): 'home.greeting.morning' | 'home.greeting.afternoon' | 'home.greeting.evening' {
@@ -48,7 +23,10 @@ function greetingKey(hour: number): 'home.greeting.morning' | 'home.greeting.aft
   return 'home.greeting.evening'
 }
 
-export function HomeDashboard() {
+// TODO: cast sayfası yapılınca /cast'e çevrilecek
+const CAST_HREF = '/assets'
+
+export function HomeDashboard({ credits }: { credits: number }) {
   const { t, locale } = useI18n()
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [ownModels, setOwnModels] = useState<OwnModel[]>([])
@@ -65,6 +43,7 @@ export function HomeDashboard() {
   }, [locale, now])
 
   const greeting = t(greetingKey(now.getHours()))
+  const lowCredits = credits < 10
 
   useEffect(() => {
     const supabase = createClient()
@@ -112,48 +91,65 @@ export function HomeDashboard() {
   return (
     <>
       <main className="atelier mx-auto w-full max-w-6xl px-5 py-8 md:px-8 md:py-10">
-        <section className="mb-10 md:mb-10">
-          <p className="atelier-section-label">
-            {t('home.studio.label')} · {dateLabel}
-          </p>
-          <h1 className="atelier-display mt-4 text-[30px] leading-[1.12] text-[#EDE8DF] md:text-[34px]">
-            {displayName ? `${greeting} ${displayName}.` : `${greeting}.`}
-            <span className="mt-1 block text-[#8F8A80]">{t('home.greeting.question')}</span>
-          </h1>
+        <section className="mb-12">
+          <div className="flex items-baseline justify-between gap-4">
+            <p className="atelier-section-label">
+              {t('home.studio.label')} · {dateLabel}
+            </p>
+            <p className="home-balance-label hidden shrink-0 md:block">{t('home.balance.label')}</p>
+          </div>
+          <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <h1 className="atelier-display text-[30px] leading-[1.12] text-[#EDE8DF] md:text-[34px]">
+              {displayName ? `${greeting} ${capitalizeName(displayName, locale)}.` : `${greeting}.`}
+              <span className="home-greeting-question mt-1 block">{t('home.greeting.question')}</span>
+            </h1>
+            <div className="shrink-0 md:text-right">
+              <p className="home-balance-label mb-1 md:hidden">{t('home.balance.label')}</p>
+              <p className={`home-balance-amount ${lowCredits ? 'is-low' : ''}`}>{credits}</p>
+              <p className="home-balance-unit mt-0.5">{t('nav.credits')}</p>
+              <Link href="/pricing" className="home-balance-link mt-2 inline-block">
+                {lowCredits ? t('home.balance.lowTopUp') : t('home.balance.topUp')}
+              </Link>
+            </div>
+          </div>
         </section>
 
         <section className="mb-10">
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <p className="atelier-section-label">{t('home.section.cast')}</p>
             {ownModels.length > 0 ? (
-              <div className="flex items-center">
-                {ownModels.map((model, i) => (
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center">
+                  {ownModels.map((model, i) => (
+                    <Link
+                      key={model.id}
+                      href="/ecom-studio"
+                      className="relative block"
+                      style={{ marginLeft: i === 0 ? 0 : -12, zIndex: ownModels.length - i }}
+                      title={model.name}
+                    >
+                      {model.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={model.image_url} alt={model.name} className="atelier-cast-avatar" />
+                      ) : (
+                        <span className="atelier-cast-avatar flex items-center justify-center bg-[#1a1713] text-[11px] text-[#8F8A80]">
+                          {model.name.charAt(0)}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
                   <Link
-                    key={model.id}
-                    href="/ecom-studio"
-                    className="relative block"
-                    style={{ marginLeft: i === 0 ? 0 : -10, zIndex: ownModels.length - i }}
-                    title={model.name}
+                    href={CAST_HREF}
+                    className="atelier-cast-add relative z-0 flex items-center justify-center"
+                    style={{ marginLeft: ownModels.length > 0 ? 6 : 0 }}
+                    aria-label={t('home.cast.add')}
                   >
-                    {model.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={model.image_url} alt={model.name} className="atelier-cast-avatar" />
-                    ) : (
-                      <span className="atelier-cast-avatar flex items-center justify-center bg-[#1a1713] text-[10px] text-[#8F8A80]">
-                        {model.name.charAt(0)}
-                      </span>
-                    )}
+                    <Plus className="h-4 w-4" strokeWidth={1.5} />
                   </Link>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setUploadOpen(true)}
-                  className="atelier-cast-add relative z-0 ml-1 flex items-center justify-center"
-                  style={{ marginLeft: ownModels.length > 0 ? 4 : 0 }}
-                  aria-label={t('home.cast.add')}
-                >
-                  <Plus className="h-4 w-4" strokeWidth={1.5} />
-                </button>
+                </div>
+                <span className="text-[12px] text-[#8F8A80]">
+                  {t('home.cast.ready').replace('{count}', String(ownModels.length))}
+                </span>
               </div>
             ) : (
               <button
@@ -176,32 +172,32 @@ export function HomeDashboard() {
                 large
                 title={t('tool.ecom.title')}
                 desc={t('tool.ecom.desc')}
-                bgImage="/ecom-studio.jpg"
+                coverImage="/ecom-studio.jpg"
               />
             </div>
             <StudioCard
               href="/shoe-studio"
               title={t('tool.shoe.title')}
               desc={t('shoe.cardDesc')}
-              bgImage="/shoe-studio.jpg"
+              coverImage="/shoe-studio.jpg"
             />
             <StudioCard
               href="/batch-studio"
               title={t('batch.title')}
               desc={t('batch.cardDesc')}
-              bgImage="/batch-studio.jpg"
+              coverImage="/batch-studio.jpg"
             />
             <StudioCard
               href="/style-transfer"
               title={t('tool.style.title')}
               desc={t('style.cardDesc')}
-              bgImage={null}
+              coverImage="/covers/style-transfer.jpg"
             />
             <StudioCard
               href="/video-studio"
               title={t('tool.video.title')}
               desc={t('video.cardDesc')}
-              bgImage={null}
+              coverImage="/covers/ai-video.jpg"
             />
             <div className="col-span-2">
               <div className="flex h-full min-h-[200px] flex-col rounded-[4px] border-[0.5px] border-[#26231E] bg-transparent p-4 md:aspect-[16/10] md:min-h-0 md:p-5">
