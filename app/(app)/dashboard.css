@@ -349,14 +349,22 @@
 }
 
 /* Pricing (/fiyatlandirma) */
-.pricing-marquee-wrap {
+.pricing-page {
+  background: #100e0b;
+}
+
+.pricing-marquee-section {
   border-top: 0.5px solid #26231e;
   border-bottom: 0.5px solid #26231e;
 }
 
-.pricing-marquee {
+.pricing-marquee-inner {
   overflow: hidden;
   padding: 18px 0;
+}
+
+.pricing-marquee-inner:hover .pricing-marquee-track {
+  animation-play-state: paused;
 }
 
 .pricing-marquee-track {
@@ -364,10 +372,6 @@
   width: max-content;
   gap: 48px;
   animation: pricing-marquee-scroll 40s linear infinite;
-}
-
-.pricing-marquee:hover .pricing-marquee-track {
-  animation-play-state: paused;
 }
 
 @keyframes pricing-marquee-scroll {
@@ -380,7 +384,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pricing-marquee {
+  .pricing-marquee-inner {
     overflow: visible;
   }
 
@@ -393,51 +397,51 @@
   }
 }
 
-.pricing-brand {
+.pricing-marquee-brand {
   flex-shrink: 0;
-  font-size: 13px;
-  color: #6f6b62;
   white-space: nowrap;
+  color: #6f6b62;
+  font-size: 13px;
 }
 
-.pricing-brand-sans-wide {
+.pricing-marquee-brand--sans-wide {
   font-family: var(--atelier-ui);
+  font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  font-size: 11px;
 }
 
-.pricing-brand-serif-italic {
+.pricing-marquee-brand--serif-italic {
   font-family: var(--atelier-display);
-  font-style: italic;
   font-size: 14px;
+  font-style: italic;
 }
 
-.pricing-brand-sans-bold {
+.pricing-marquee-brand--sans-bold {
   font-family: var(--atelier-ui);
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
-.pricing-brand-sans-caps {
+.pricing-marquee-brand--sans-caps {
   font-family: var(--atelier-ui);
+  font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-size: 11px;
 }
 
-.pricing-brand-serif {
+.pricing-marquee-brand--serif {
   font-family: var(--atelier-display);
   font-size: 14px;
 }
 
-.pricing-brand-sans-italic {
+.pricing-marquee-brand--sans-italic {
   font-family: var(--atelier-ui);
   font-style: italic;
   letter-spacing: 0.06em;
 }
 
-.pricing-marquee-tagline {
+.pricing-marquee-caption {
   padding: 14px 0 16px;
   text-align: center;
   font-size: 11px;
@@ -446,18 +450,21 @@
 
 .pricing-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border: 0.5px solid #26231e;
   border-radius: 4px;
-  padding: 24px 20px 20px;
   background: transparent;
+  padding: 24px 20px 20px;
 }
 
-.pricing-card.is-popular {
+.pricing-card--popular {
   border-width: 1px;
   border-color: #8f8a80;
+  padding-top: 28px;
 }
 
-.pricing-popular-badge {
+.pricing-card-badge {
   position: absolute;
   top: 0;
   left: 50%;
@@ -471,36 +478,102 @@
   white-space: nowrap;
 }
 
-.pricing-card-divider {
+.pricing-card-credits {
+  margin-top: 16px;
+  font-size: 32px;
+  line-height: 1;
+  color: #ede8df;
+}
+
+.pricing-card-credits-unit {
+  margin-left: 6px;
+  font-family: var(--atelier-ui);
+  font-size: 12px;
+  color: #8f8a80;
+}
+
+.pricing-card-custom {
+  margin-top: 16px;
+  font-size: 32px;
+  line-height: 1;
+  color: #ede8df;
+}
+
+.pricing-card-price {
+  margin-top: 16px;
+  line-height: 1.3;
+}
+
+.pricing-card-price-usd {
+  font-size: 16px;
+  color: #ede8df;
+}
+
+.pricing-card-price-try {
+  font-size: 13px;
+  color: #a39d92;
+}
+
+.pricing-card-rule {
   margin: 16px 0 14px;
   height: 0.5px;
   background: #26231e;
 }
 
-.pricing-cta {
+.pricing-card-spacer {
+  margin-top: 16px;
+  min-height: 22px;
+}
+
+.pricing-card-features {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pricing-card-features li {
+  font-size: 12px;
+  line-height: 1.9;
+  color: #a39d92;
+}
+
+.pricing-card-cta {
+  display: block;
+  margin-top: 24px;
+  width: 100%;
   border-radius: 4px;
   padding: 10px 16px;
   font-size: 12.5px;
+  text-align: center;
+  text-decoration: none;
   transition: opacity 150ms var(--atelier-ease), border-color 150ms var(--atelier-ease);
 }
 
-.pricing-cta-filled {
+.pricing-card-cta--filled {
+  border: none;
   background: #ede8df;
   color: #100e0b;
 }
 
-.pricing-cta-filled:hover {
+.pricing-card-cta--filled:hover {
   opacity: 0.92;
 }
 
-.pricing-cta-ghost {
+.pricing-card-cta--ghost {
   border: 0.5px solid #26231e;
-  color: #ede8df;
   background: transparent;
+  color: #ede8df;
 }
 
-.pricing-cta-ghost:hover {
+.pricing-card-cta--ghost:hover {
   border-color: #3a3530;
+}
+
+.pricing-footer-line {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #57544d;
 }
 
 .pricing-footer-link {
