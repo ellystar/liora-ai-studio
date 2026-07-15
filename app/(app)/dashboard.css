@@ -347,3 +347,168 @@
 .shoots-selection-bar {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
+
+/* Pricing (/fiyatlandirma) */
+.pricing-marquee-wrap {
+  border-top: 0.5px solid #26231e;
+  border-bottom: 0.5px solid #26231e;
+}
+
+.pricing-marquee {
+  overflow: hidden;
+  padding: 18px 0;
+}
+
+.pricing-marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 48px;
+  animation: pricing-marquee-scroll 40s linear infinite;
+}
+
+.pricing-marquee:hover .pricing-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes pricing-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pricing-marquee {
+    overflow: visible;
+  }
+
+  .pricing-marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    gap: 20px 32px;
+  }
+}
+
+.pricing-brand {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #6f6b62;
+  white-space: nowrap;
+}
+
+.pricing-brand-sans-wide {
+  font-family: var(--atelier-ui);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.pricing-brand-serif-italic {
+  font-family: var(--atelier-display);
+  font-style: italic;
+  font-size: 14px;
+}
+
+.pricing-brand-sans-bold {
+  font-family: var(--atelier-ui);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.pricing-brand-sans-caps {
+  font-family: var(--atelier-ui);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.pricing-brand-serif {
+  font-family: var(--atelier-display);
+  font-size: 14px;
+}
+
+.pricing-brand-sans-italic {
+  font-family: var(--atelier-ui);
+  font-style: italic;
+  letter-spacing: 0.06em;
+}
+
+.pricing-marquee-tagline {
+  padding: 14px 0 16px;
+  text-align: center;
+  font-size: 11px;
+  color: #57544d;
+}
+
+.pricing-card {
+  position: relative;
+  border: 0.5px solid #26231e;
+  border-radius: 4px;
+  padding: 24px 20px 20px;
+  background: transparent;
+}
+
+.pricing-card.is-popular {
+  border-width: 1px;
+  border-color: #8f8a80;
+}
+
+.pricing-popular-badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 3px;
+  background: #ede8df;
+  color: #100e0b;
+  padding: 4px 10px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+
+.pricing-card-divider {
+  margin: 16px 0 14px;
+  height: 0.5px;
+  background: #26231e;
+}
+
+.pricing-cta {
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  transition: opacity 150ms var(--atelier-ease), border-color 150ms var(--atelier-ease);
+}
+
+.pricing-cta-filled {
+  background: #ede8df;
+  color: #100e0b;
+}
+
+.pricing-cta-filled:hover {
+  opacity: 0.92;
+}
+
+.pricing-cta-ghost {
+  border: 0.5px solid #26231e;
+  color: #ede8df;
+  background: transparent;
+}
+
+.pricing-cta-ghost:hover {
+  border-color: #3a3530;
+}
+
+.pricing-footer-link {
+  color: #57544d;
+  text-decoration: none;
+  transition: color 150ms var(--atelier-ease);
+}
+
+.pricing-footer-link:hover {
+  color: #8f8a80;
+}

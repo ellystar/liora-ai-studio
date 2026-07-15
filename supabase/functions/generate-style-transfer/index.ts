@@ -31,6 +31,91 @@ function json(obj: unknown, status = 200) {
   })
 }
 
+const TOOL = 'style_transfer'
+
+async function decodeImageSource(src: string): Promise<{ mime: string; bytes: Uint8Array } | null> {
+  const dataUrlMatch = src.match(/^data:([^;]+);base64,(.+)$/s)
+  if (dataUrlMatch) {
+    const mime = dataUrlMatch[1]
+    const b64 = dataUrlMatch[2].replace(/\s/g, '')
+    try {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+      return { mime, bytes }
+    } catch (e) {
+      console.error('base64 decode failed', e)
+      return null
+    }
+  }
+
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    try {
+      const resp = await fetch(src)
+      if (!resp.ok) {
+        console.error('image fetch failed', resp.status, src.slice(0, 120))
+        return null
+      }
+      const mime = resp.headers.get('content-type') ?? 'image/png'
+      return { mime, bytes: new Uint8Array(await resp.arrayBuffer()) }
+    } catch (e) {
+      console.error('image fetch error', e)
+      return null
+    }
+  }
+
+  const trimmed = src.replace(/\s/g, '')
+  if (trimmed.length > 64 && /^[A-Za-z0-9+/=]+$/.test(trimmed)) {
+    try {
+      const bytes = Uint8Array.from(atob(trimmed), (c) => c.charCodeAt(0))
+      return { mime: 'image/png', bytes }
+    } catch (e) {
+      console.error('raw base64 decode failed', e)
+      return null
+    }
+  }
+
+  console.error('unrecognized image format', src.slice(0, 80))
+  return null
+}
+
+async function saveGenerationImages(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  genId: string,
+  images: string[],
+  modelId: string | null,
+): Promise<{ id: string; storage_path: string }[]> {
+  const savedImages: { id: string; storage_path: string }[] = []
+
+  for (let i = 0; i < images.length; i++) {
+    try {
+      const parsed = await decodeImageSource(images[i])
+      if (!parsed) continue
+
+      const { mime, bytes } = parsed
+      const ext = mime.includes('jpeg') ? 'jpg' : mime.includes('webp') ? 'webp' : 'png'
+      const path = `${userId}/${genId}/${i}.${ext}`
+
+      const { error: upErr } = await admin.storage.from('outputs')
+        .upload(path, bytes, { contentType: mime, upsert: true })
+      if (upErr) { console.error('outputs upload failed', upErr); continue }
+
+      const { data: imgRow, error: insErr } = await admin.from('generation_images').insert({
+        generation_id: genId,
+        user_id: userId,
+        tool: TOOL,
+        model_id: modelId,
+        storage_path: path,
+      }).select('id, storage_path').single()
+      if (insErr) { console.error('generation_images insert failed', insErr); continue }
+      if (imgRow) savedImages.push(imgRow)
+    } catch (e) {
+      console.error('image save failed', e)
+    }
+  }
+
+  return savedImages
+}
+
 async function generateImage(parts: any[], imageConfig: Record<string, string>) {
   let blocked = false
   let httpError = false
@@ -168,7 +253,7 @@ Deno.serve(async (req) => {
 
     if (!result.image) {
       await admin.from('generations').insert({
-        user_id: user.id, tool: 'style_transfer', status: 'failed',
+        user_id: user.id, tool: TOOL, status: 'failed',
         credits_charged: 0, image_count: 0,
         params: { modelMode, ratio, quality, productCount: products.length },
       })
@@ -177,46 +262,22 @@ Deno.serve(async (req) => {
       return json({ error: 'generation_failed' }, 500)
     }
 
-    await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: 'style_transfer' })
-    const { data: genRow } = await admin.from('generations').insert({
-      user_id: user.id, tool: 'style_transfer', status: 'success',
-      credits_charged: 1, image_count: 1,
+    const images = [result.image]
+
+    await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: TOOL })
+    const { data: genRow, error: genErr } = await admin.from('generations').insert({
+      user_id: user.id, tool: TOOL, status: 'success',
+      credits_charged: 1, image_count: images.length,
       params: { modelMode, ratio, quality, productCount: products.length, modelId },
     }).select('id').single()
 
-    const images = [result.image]
-
-    // Üretilen görselleri kalıcı depoya kaydet (hata olursa akışı bozma)
-    const savedImages: { id: string; storage_path: string }[] = []
-    if (genRow?.id) {
-      for (let i = 0; i < images.length; i++) {
-        try {
-          const dataUrl = images[i]
-          const m = dataUrl.match(/^data:(.+?);base64,(.+)$/)
-          if (!m) continue
-          const mime = m[1]
-          const ext = mime.includes('jpeg') ? 'jpg' : mime.includes('webp') ? 'webp' : 'png'
-          const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0))
-          const path = `${user.id}/${genRow.id}/${i}.${ext}`
-
-          const { error: upErr } = await admin.storage.from('outputs')
-            .upload(path, bytes, { contentType: mime, upsert: true })
-          if (upErr) { console.error('outputs upload failed', upErr); continue }
-
-          const { data: imgRow, error: insErr } = await admin.from('generation_images').insert({
-            generation_id: genRow.id,
-            user_id: user.id,
-            tool: 'style_transfer',
-            model_id: modelId,
-            storage_path: path,
-          }).select('id, storage_path').single()
-          if (insErr) { console.error('generation_images insert failed', insErr); continue }
-          if (imgRow) savedImages.push(imgRow)
-        } catch (e) {
-          console.error('image save failed', e)
-        }
-      }
+    if (genErr || !genRow?.id) {
+      console.error('generations insert failed', genErr, 'genRow', genRow)
     }
+
+    const savedImages = genRow?.id
+      ? await saveGenerationImages(admin, user.id, genRow.id, images, modelId)
+      : []
 
     return json({ images, creditsCharged: 1, savedImages })
   } catch (e) {

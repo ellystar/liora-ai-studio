@@ -35,7 +35,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/privacy') ||
     pathname.startsWith('/terms') ||
     pathname.startsWith('/mesafeli-satis') ||
-    pathname.startsWith('/iade-sartlari')
+    pathname.startsWith('/iade-sartlari') ||
+    pathname.startsWith('/fiyatlandirma')
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()

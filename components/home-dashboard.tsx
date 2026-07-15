@@ -107,7 +107,7 @@ export function HomeDashboard({ credits }: { credits: number }) {
               <p className="home-balance-label mb-1 md:hidden">{t('home.balance.label')}</p>
               <p className={`home-balance-amount ${lowCredits ? 'is-low' : ''}`}>{credits}</p>
               <p className="home-balance-unit mt-0.5">{t('nav.credits')}</p>
-              <Link href="/pricing" className="home-balance-link mt-2 inline-block">
+              <Link href="/fiyatlandirma" className="home-balance-link mt-2 inline-block">
                 {lowCredits ? t('home.balance.lowTopUp') : t('home.balance.topUp')}
               </Link>
             </div>

@@ -62,7 +62,7 @@ export function Navbar({ credits, email, isAdmin }: { credits: number; email: st
           {t('nav.assets')}
         </Link>
         {!isHome && (
-          <Link href="/pricing" className="atelier-credits-pill">
+          <Link href="/fiyatlandirma" className="atelier-credits-pill">
             {credits} {t('nav.credits')}
           </Link>
         )}
