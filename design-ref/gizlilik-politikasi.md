@@ -18,7 +18,7 @@ Platform'u kullanmanız sırasında aşağıdaki kişisel verileriniz işlenebil
 - **Kimlik Bilgileri:** Ad, soyad
 - **İletişim Bilgileri:** E-posta adresi
 - **Hesap Bilgileri:** Kullanıcı hesabı kayıtları, kredi bakiyesi, işlem geçmişi
-- **Fatura ve Ödeme Bilgileri:** Fatura adresi, vergi bilgileri (kurumsal kullanıcılar için), ödeme işlem kayıtları. **Kredi kartı bilgileriniz Şirket tarafından görüntülenmez ve saklanmaz;** ödeme işlemleri, PCI-DSS sertifikalı ödeme kuruluşu **PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.** altyapısı üzerinden gerçekleştirilir.
+- **Fatura ve Ödeme Bilgileri:** Fatura adresi, vergi bilgileri (kurumsal kullanıcılar için), ödeme işlem kayıtları. **Kredi kartı bilgileriniz Şirket tarafından görüntülenmez ve saklanmaz;** ödeme işlemleri, PCI-DSS sertifikalı ödeme kuruluşu altyapısı üzerinden gerçekleştirilir.
 - **Kullanım Verileri:** IP adresi, tarayıcı bilgisi, cihaz bilgisi, Platform içi kullanım istatistikleri, çerez verileri
 - **İçerik Verileri:** Platform'a yüklediğiniz ürün görselleri, markaya ait görsel materyaller ve oluşturduğunuz içerikler
 
@@ -49,7 +49,7 @@ Kişisel verileriniz, KVKK'nın 5. maddesinde belirtilen aşağıdaki hukuki seb
 
 Kişisel verileriniz, yukarıda belirtilen amaçların gerçekleştirilmesi ile sınırlı olmak üzere aşağıdaki taraflara aktarılabilmektedir:
 
-- **Ödeme kuruluşu:** Ödeme işlemlerinin gerçekleştirilmesi amacıyla PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.
+- **Ödeme kuruluşu:** Ödeme işlemlerinin gerçekleştirilmesi amacıyla yetkili ödeme ve elektronik para kuruluşu
 - **Barındırma ve altyapı sağlayıcıları:** Platform'un çalışması için gerekli sunucu, veri tabanı ve dağıtım hizmetleri (ör. Supabase, Vercel)
 - **Yapay zekâ hizmet sağlayıcıları:** İçerik üretim hizmetinin sunulabilmesi amacıyla, yüklediğiniz görsellerin işlenmesi için üçüncü taraf yapay zekâ model sağlayıcıları
 - **Yetkili kamu kurum ve kuruluşları:** Hukuki yükümlülüklerin yerine getirilmesi kapsamında

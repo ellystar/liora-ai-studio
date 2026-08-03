@@ -25,7 +25,7 @@
 
 **3.2.** Satın alınan paketin/planın içeriği, kredi adedi, vergiler dâhil toplam satış fiyatı ve ödeme koşulları, sipariş anında Platform'daki satın alma sayfasında ve sipariş özetinde ALICI'ya gösterilir ve işbu Sözleşme'nin ayrılmaz bir parçasını oluşturur.
 
-**3.3.** Ödemeler, **PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.** güvenli ödeme altyapısı üzerinden kredi kartı/banka kartı ile tahsil edilir. ALICI'nın kart bilgileri SATICI tarafından görüntülenmez ve saklanmaz.
+**3.3.** Ödemeler, **güvenli ödeme altyapısı** üzerinden kredi kartı/banka kartı ile tahsil edilir. ALICI'nın kart bilgileri SATICI tarafından görüntülenmez ve saklanmaz.
 
 **3.4.** İlan edilen fiyatlar güncelleme yapılana kadar geçerlidir. Kampanya ve promosyon fiyatları, belirtilen süre ile sınırlıdır.
 

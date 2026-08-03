@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       <LegalP>
         İşbu Gizlilik Politikası, 6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) uyarınca, veri sorumlusu sıfatıyla{' '}
         <strong>Elif Yıldız – Melis Doğan Adi Ortaklığı</strong> (&quot;Liora Labs&quot; veya &quot;Şirket&quot;) tarafından,{' '}
-        <strong>atelier.lioralabs.io</strong> adresinde sunulan Liora Atelier platformu (&quot;Platform&quot;) kapsamında hazırlanmıştır.
+        <strong>atelier.lioralabs.io</strong>{' '}adresinde sunulan Liora Atelier platformu (&quot;Platform&quot;) kapsamında hazırlanmıştır.
       </LegalP>
       <LegalP>
         <strong>Ticari Unvan:</strong> Elif Yıldız – Melis Doğan Adi Ortaklığı
@@ -36,8 +36,7 @@ export default function PrivacyPage() {
         <LegalLi><strong>Hesap Bilgileri:</strong> Kullanıcı hesabı kayıtları, kredi bakiyesi, işlem geçmişi</LegalLi>
         <LegalLi>
           <strong>Fatura ve Ödeme Bilgileri:</strong> Fatura adresi, vergi bilgileri (kurumsal kullanıcılar için), ödeme işlem kayıtları.{' '}
-          <strong>Kredi kartı bilgileriniz Şirket tarafından görüntülenmez ve saklanmaz;</strong> ödeme işlemleri, PCI-DSS sertifikalı ödeme kuruluşu{' '}
-          <strong>PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.</strong> altyapısı üzerinden gerçekleştirilir.
+          <strong>Kredi kartı bilgileriniz Şirket tarafından görüntülenmez ve saklanmaz;</strong> ödeme işlemleri, PCI-DSS sertifikalı ödeme kuruluşu altyapısı üzerinden gerçekleştirilir.
         </LegalLi>
         <LegalLi><strong>Kullanım Verileri:</strong> IP adresi, tarayıcı bilgisi, cihaz bilgisi, Platform içi kullanım istatistikleri, çerez verileri</LegalLi>
         <LegalLi><strong>İçerik Verileri:</strong> Platform&apos;a yüklediğiniz ürün görselleri, markaya ait görsel materyaller ve oluşturduğunuz içerikler</LegalLi>
@@ -71,7 +70,7 @@ export default function PrivacyPage() {
         Kişisel verileriniz, yukarıda belirtilen amaçların gerçekleştirilmesi ile sınırlı olmak üzere aşağıdaki taraflara aktarılabilmektedir:
       </LegalP>
       <LegalUl>
-        <LegalLi><strong>Ödeme kuruluşu:</strong> Ödeme işlemlerinin gerçekleştirilmesi amacıyla PayTR Ödeme ve Elektronik Para Kuruluşu A.Ş.</LegalLi>
+        <LegalLi><strong>Ödeme kuruluşu:</strong> Ödeme işlemlerinin gerçekleştirilmesi amacıyla yetkili ödeme ve elektronik para kuruluşu</LegalLi>
         <LegalLi><strong>Barındırma ve altyapı sağlayıcıları:</strong> Platform&apos;un çalışması için gerekli sunucu, veri tabanı ve dağıtım hizmetleri (ör. Supabase, Vercel)</LegalLi>
         <LegalLi><strong>Yapay zekâ hizmet sağlayıcıları:</strong> İçerik üretim hizmetinin sunulabilmesi amacıyla, yüklediğiniz görsellerin işlenmesi için üçüncü taraf yapay zekâ model sağlayıcıları</LegalLi>
         <LegalLi><strong>Yetkili kamu kurum ve kuruluşları:</strong> Hukuki yükümlülüklerin yerine getirilmesi kapsamında</LegalLi>

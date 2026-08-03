@@ -22,7 +22,7 @@ export default function IadeSartlariPage() {
         <strong>1.1.</strong> Liora Atelier üzerinden satılan tüm ürünler <strong>dijital hizmetlerdir</strong>. Fiziksel bir ürün gönderimi, kargo süreci veya teslimat ücreti bulunmaz.
       </LegalP>
       <LegalP>
-        <strong>1.2.</strong> Satın alınan krediler, ödemenin PayTR güvenli ödeme altyapısı üzerinden onaylanmasının ardından <strong>anında</strong> hesabınıza tanımlanır ve Platform üzerindeki kredi bakiyenizde görüntülenir.
+        <strong>1.2.</strong> Satın alınan krediler, ödemenin güvenli ödeme altyapısı üzerinden onaylanmasının ardından <strong>anında</strong> hesabınıza tanımlanır ve Platform üzerindeki kredi bakiyenizde görüntülenir.
       </LegalP>
       <LegalP>
         <strong>1.3.</strong> Abonelik planlarında dönemsel krediler, her fatura döneminin başında otomatik olarak hesabınıza tanımlanır.
@@ -52,7 +52,7 @@ export default function IadeSartlariPage() {
         <LegalLi>Aynı işlem için mükerrer (çift) tahsilat yapılması</LegalLi>
       </LegalUl>
       <LegalP>
-        Bu hâllerde iade, ödemenin yapıldığı karta PayTR aracılığıyla gerçekleştirilir. Bankanıza bağlı olarak iadenin kartınıza yansıması 3–14 iş günü sürebilir.
+        Bu hâllerde iade, ödemenin yapıldığı karta gerçekleştirilir. Bankanıza bağlı olarak iadenin kartınıza yansıması 3–14 iş günü sürebilir.
       </LegalP>
       <LegalP>
         <strong>3.4.</strong> Yapay zekâ ile üretilen içeriklerin doğası gereği sonuçlar değişkenlik gösterebilir. Üretim işleminin gerçekleşmesi ile hizmet ifa edilmiş sayılır; üretilen sonucun beklentiyi karşılamaması iade sebebi değildir. Teknik bir hata nedeniyle üretimin hiç gerçekleşmemesi ve kredinin düşülmesi hâlinde ilgili kredi hesabınıza iade edilir.

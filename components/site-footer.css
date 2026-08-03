@@ -59,23 +59,6 @@
   color: var(--on-dark-mut);
 }
 
-.site-footer__entity {
-  margin-top: 10px;
-  font-size: 10px;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: 0.02em;
-  color: var(--on-dark-dim);
-  opacity: 0.85;
-}
-
-.site-footer--compact .site-footer__entity {
-  margin-top: 8px;
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
-}
-
 @media (max-width: 640px) {
   .site-footer__links {
     flex-direction: column;

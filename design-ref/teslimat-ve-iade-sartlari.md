@@ -8,7 +8,7 @@ Bu sayfa, **atelier.lioralabs.io** ("Liora Atelier") üzerinden satın alınan d
 
 **1.1.** Liora Atelier üzerinden satılan tüm ürünler **dijital hizmetlerdir**. Fiziksel bir ürün gönderimi, kargo süreci veya teslimat ücreti bulunmaz.
 
-**1.2.** Satın alınan krediler, ödemenin PayTR güvenli ödeme altyapısı üzerinden onaylanmasının ardından **anında** hesabınıza tanımlanır ve Platform üzerindeki kredi bakiyenizde görüntülenir.
+**1.2.** Satın alınan krediler, ödemenin güvenli ödeme altyapısı üzerinden onaylanmasının ardından **anında** hesabınıza tanımlanır ve Platform üzerindeki kredi bakiyenizde görüntülenir.
 
 **1.3.** Abonelik planlarında dönemsel krediler, her fatura döneminin başında otomatik olarak hesabınıza tanımlanır.
 
@@ -30,7 +30,7 @@ Bu sayfa, **atelier.lioralabs.io** ("Liora Atelier") üzerinden satın alınan d
 - Ödeme alındığı hâlde kredilerin hesabınıza hiç tanımlanamaması (teknik arıza) ve 24 saat içinde giderilememesi
 - Aynı işlem için mükerrer (çift) tahsilat yapılması
 
-Bu hâllerde iade, ödemenin yapıldığı karta PayTR aracılığıyla gerçekleştirilir. Bankanıza bağlı olarak iadenin kartınıza yansıması 3–14 iş günü sürebilir.
+Bu hâllerde iade, ödemenin yapıldığı karta gerçekleştirilir. Bankanıza bağlı olarak iadenin kartınıza yansıması 3–14 iş günü sürebilir.
 
 **3.4.** Yapay zekâ ile üretilen içeriklerin doğası gereği sonuçlar değişkenlik gösterebilir. Üretim işleminin gerçekleşmesi ile hizmet ifa edilmiş sayılır; üretilen sonucun beklentiyi karşılamaması iade sebebi değildir. Teknik bir hata nedeniyle üretimin hiç gerçekleşmemesi ve kredinin düşülmesi hâlinde ilgili kredi hesabınıza iade edilir.
 

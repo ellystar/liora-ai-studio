@@ -42,7 +42,7 @@ export const dictionaries = {
     'pricingPage.buy': 'Paketi al',
     'pricingPage.contact': 'İletişime geç',
     'pricingPage.footer.line1':
-      'Yeni hesaplara 3 deneme kredisi tanımlanır · Fiyatlara KDV dahildir · Güvenli ödeme PayTR altyapısıyla',
+      'Yeni hesaplara 3 deneme kredisi tanımlanır · Fiyatlara KDV dahildir · Güvenli ödeme altyapısı',
     'shoots.sectionLabel': 'ARŞİV · ÇEKİMLERİM',
     'shoots.title': 'Çekimlerim',
     'shoots.subtitle': 'Çekimlerin 7 gün boyunca burada saklanır',
@@ -415,7 +415,7 @@ export const dictionaries = {
     'pricingPage.buy': 'Get package',
     'pricingPage.contact': 'Contact us',
     'pricingPage.footer.line1':
-      'New accounts receive 3 trial credits · Prices include VAT · Secure payments via PayTR',
+      'New accounts receive 3 trial credits · Prices include VAT · Secure payment infrastructure',
     'shoots.sectionLabel': 'ARCHIVE · MY SHOOTS',
     'shoots.title': 'My Shoots',
     'shoots.subtitle': 'Your shoots are kept here for 7 days',

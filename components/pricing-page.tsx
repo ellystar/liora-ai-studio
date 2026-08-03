@@ -30,7 +30,7 @@ export function PricingPage() {
       router.push('/login')
       return
     }
-    // TODO: PayTR iFrame entegrasyonu bu sayfaya kurulacak
+    // TODO: ödeme sağlayıcısı entegrasyonu bu sayfaya kurulacak
     router.push(`/odeme?paket=${packageId}`)
   }
 

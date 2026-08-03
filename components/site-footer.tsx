@@ -32,7 +32,6 @@ export function SiteFooter({ variant = 'default', className }: SiteFooterProps) 
           </span>
         ))}
       </nav>
-      <p className="site-footer__entity">{t('legal.footer.entity')}</p>
     </footer>
   )
 }
