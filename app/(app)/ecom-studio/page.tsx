@@ -617,7 +617,7 @@ export default function EcomStudioPage() {
   if (generating) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-pill border-2 border-border-default border-t-white" />
+        <div className="h-10 w-10 animate-spin rounded-pill border-2 border-border-default border-t-content-primary" />
         <p className="text-sm text-content-secondary">{t('ecom.generating')}</p>
         <p className="text-sm text-content-secondary">{genProgress.done}/{genProgress.total}</p>
       </main>
@@ -691,7 +691,7 @@ export default function EcomStudioPage() {
 
       <div className="mb-1.5 flex items-center gap-1.5">
         {STEPS.map((s, i) => (
-          <div key={s} className={`h-1 flex-1 rounded-pill ${i <= stepIndex ? 'bg-action-primary' : 'bg-border-default'}`} />
+          <div key={s} className={`h-1 flex-1 rounded-liora ${i <= stepIndex ? 'bg-action-primary' : 'bg-track'}`} />
         ))}
       </div>
       <div className="mb-8 flex justify-between text-[11px]">
@@ -732,7 +732,7 @@ export default function EcomStudioPage() {
                 {!c.category && <p className="mb-1.5 text-[10px] text-accent-primary">{t('ecom.clothes.pickCategory')}</p>}
                 <div className="flex flex-wrap gap-1">
                   {CATEGORIES.map((cat) => (
-                    <button key={cat} onClick={() => setClothCategory(c.id, cat)} className={`rounded-pill px-2 py-0.5 text-[10px] transition ${c.category === cat ? 'bg-action-primary text-action-primary-fg' : 'border border-border-default text-content-secondary hover:text-content-primary'}`}>
+                    <button key={cat} onClick={() => setClothCategory(c.id, cat)} className={`rounded-liora px-2 py-0.5 text-[10px] transition ${c.category === cat ? 'bg-action-primary text-action-primary-fg' : 'border border-border-default text-content-secondary hover:text-content-primary'}`}>
                       {t(`ecom.cat.${cat}` as TranslationKey)}
                     </button>
                   ))}
@@ -863,7 +863,7 @@ export default function EcomStudioPage() {
                 key={filter}
                 type="button"
                 onClick={() => setBgFilter(filter)}
-                className={`rounded-pill px-3 py-1 text-xs transition ${
+                className={`rounded-liora px-3 py-1 text-xs transition ${
                   bgFilter === filter
                     ? 'bg-action-primary text-action-primary-fg'
                     : 'text-content-secondary hover:bg-surface-sunken hover:text-content-primary'
@@ -951,7 +951,7 @@ export default function EcomStudioPage() {
                 <p className="mb-2 text-xs text-content-secondary">{t('poses.customAdded')}</p>
                 <div className="flex flex-wrap gap-2">
                   {customPoses.map((txt, i) => (
-                    <span key={i} className="inline-flex max-w-full items-center gap-1.5 rounded-pill border border-border-default bg-surface-sunken px-2.5 py-1 text-xs text-content-primary">
+                    <span key={i} className="inline-flex max-w-full items-center gap-1.5 rounded-liora border border-border-default bg-surface-sunken px-2.5 py-1 text-xs text-content-primary">
                       <span className="truncate">{txt}</span>
                       <button type="button" onClick={() => removeCustomPose(i)} aria-label="Kaldir" className="shrink-0 text-content-secondary hover:text-content-primary">
                         <X className="h-3 w-3" />

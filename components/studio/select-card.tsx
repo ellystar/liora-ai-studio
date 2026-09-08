@@ -41,7 +41,7 @@ export function SelectCard({
       }}
       className={`relative cursor-pointer overflow-hidden rounded-liora bg-surface-raised text-left transition ${
         selected
-          ? 'border-[1.5px] border-content-primary'
+          ? 'border-[1.5px] border-accent-primary'
           : 'border border-border-subtle hover:border-border-default'
       }`}
     >
@@ -84,7 +84,7 @@ export function SelectCard({
         <p className="text-xs text-content-primary">{name}</p>
         {badge && (
           <span
-            className={`mt-1 inline-block rounded-pill px-1.5 py-0.5 text-[9px] ${
+            className={`mt-1 inline-block rounded-liora px-1.5 py-0.5 text-[9px] ${
               badge.own
                 ? 'bg-state-success-surface text-state-success'
                 : 'bg-state-info-surface text-state-info'

@@ -34,6 +34,8 @@
   --color-surface-raised: var(--surface-raised);
   --color-surface-sunken: var(--surface-sunken);
   --color-surface-overlay: var(--surface-overlay);
+  --color-scrim-review: var(--scrim-review);
+  --color-track: var(--track);
 
   --color-border-subtle: var(--border-subtle);
   --color-border-default: var(--border-default);
@@ -45,6 +47,7 @@
   --color-content-muted: var(--content-muted);
   --color-content-inverse: var(--content-inverse);
   --color-content-disabled: var(--content-disabled);
+  --color-content-label: var(--content-label);
 
   --color-accent-primary: var(--accent-primary);
   --color-accent-emphasis: var(--accent-emphasis);

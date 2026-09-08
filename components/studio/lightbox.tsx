@@ -30,7 +30,7 @@ export function Lightbox({
   if (index === null) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface-overlay px-4">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-scrim-review px-4">
       <button
         type="button"
         onClick={onClose}

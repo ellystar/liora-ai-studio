@@ -49,6 +49,15 @@
   --liora-olive: #5f6b4b;
   --liora-olive-lift: #9baa82; /* on dark */
 
+  /* Product-only extension.
+     The app needs a quieter tone than on-dark-mut for micro-labels and
+     inactive navigation; the marketing site never did. Derived by moving
+     on-dark-mut toward ink until it matches the tone the product was
+     already using, so it sits on the existing ramp rather than beside it:
+     on-dark #EFE8DA → on-dark-mut #A99C86 → on-dark-dim #978C78 → content-muted.
+     Keeps 5.8:1 on ink; the value it replaces (#8F8A80) was a cool grey. */
+  --liora-on-dark-dim: #978c78;
+
   /* Type families */
   --liora-font-display: var(--font-display, "Newsreader", Georgia, serif);
   --liora-font-ui: var(--font-ui, "Neue Haas Display", -apple-system, sans-serif);
@@ -102,6 +111,15 @@
   --surface-inverse: var(--liora-ink); /* dark sections inside a light app */
   --surface-overlay: rgba(16, 14, 11, 0.55); /* modal scrim */
 
+  /* The review scrim is deliberately denser than the modal overlay: an image
+     is being judged on it, and surrounding UI must not tint the verdict.
+     Theme-independent on purpose — it is not redefined for dark. */
+  --scrim-review: rgba(0, 0, 0, 0.88);
+
+  /* Rails for progress bars and meters. Quieter than a control, more present
+     than a hairline — a track is read as a container, not as a divider. */
+  --track: var(--liora-bone-2);
+
   /* Borders — Liora separates with hairlines, not shadows. */
   --border-subtle: rgba(200, 188, 168, 0.45);
   --border-default: var(--liora-stone);
@@ -115,6 +133,7 @@
   --content-inverse: var(--liora-on-dark);
   --content-link: var(--liora-gold);
   --content-disabled: rgba(110, 102, 90, 0.45);
+  --content-label: var(--liora-text-mut); /* micro-labels, inactive nav */
 
   /* Accents */
   --accent-primary: var(--liora-gold);
@@ -171,6 +190,7 @@
   --surface-sunken: #15110d;
   --surface-inverse: var(--liora-bone);
   --surface-overlay: rgba(0, 0, 0, 0.66);
+  --track: rgba(239, 232, 218, 0.14);
 
   --border-subtle: rgba(239, 232, 218, 0.1);
   --border-default: rgba(239, 232, 218, 0.16);
@@ -183,6 +203,7 @@
   --content-inverse: var(--liora-text);
   --content-link: var(--liora-gold);
   --content-disabled: rgba(169, 156, 134, 0.4);
+  --content-label: var(--liora-on-dark-dim);
 
   --accent-emphasis: var(--liora-oxblood-lift);
 

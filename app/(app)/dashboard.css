@@ -19,9 +19,10 @@
   --atelier-text-2: var(--content-secondary); /* → --liora-on-dark-mut #a99c86 */
   --atelier-line: var(--border-subtle); /* → rgba(239,232,218,.1) */
 
-  /* DS'te karşılığı YOK — bilerek hex olarak bırakıldı; boşluk Faz B'de
-     DS tarafında doldurulacak, buraya uydurma değer yazılmıyor. */
-  --atelier-muted: #8f8a80;
+  /* Eskiden #8f8a80 idi; soğuk gri olduğu için DS'in "never cool grey"
+     kuralına aykırıydı. DS'e --content-label rolü eklendi
+     (koyu temada --liora-on-dark-dim #978c78). */
+  --atelier-muted: var(--content-label);
 
   font-family: var(--atelier-ui);
   color: var(--atelier-text);
@@ -335,6 +336,20 @@
   text-decoration: underline;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   TUZAK — aşağıdaki dört seçici .atelier KAPSAMININ DIŞINDA render ediliyor.
+
+   shoots-page.tsx'te seçim çubuğu ve lightbox <main className="atelier ...">
+   kapanışından SONRA, onun kardeşi olarak basılıyor. Dolayısıyla bu kuralların
+   içinde var(--atelier-*) KULLANMAYIN: değişkenler .atelier üzerinde tanımlı,
+   burada tanımsız kalır ve CSS o bildirimin tamamını geçersiz sayar — renk
+   sessizce miras alınır, hata da vermez.
+
+   Token gerekiyorsa doğrudan DS rollerini kullanın (--content-primary,
+   --border-subtle, --scrim-review ...); onlar :root üzerinde tanımlı.
+   Etkilenenler: .shoots-btn-ghost, .shoots-btn-primary, .shoots-lightbox,
+   .shoots-selection-bar
+   ───────────────────────────────────────────────────────────────────────── */
 .shoots-btn-ghost {
   color: #8f8a80;
   transition: color 150ms var(--atelier-ease);
