@@ -23,6 +23,49 @@
   --font-mono: "Spline Sans Mono", ui-monospace, Menlo, monospace;
 }
 
+/* ── DS rolleri → Tailwind yardımcı sınıfları ──────────────────────────────
+   Burada tek bir yeni değer üretilmiyor; her satır liora-tokens.css'teki bir
+   semantik rolü işaret ediyor. "inline" olması şart: roller
+   <html data-theme="dark"> ile yeniden tanımlandığı için yardımcı sınıflar
+   değeri kopyalamak yerine değişkeni izlemeli.
+   ──────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-surface-page: var(--surface-page);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+
+  --color-content-primary: var(--content-primary);
+  --color-content-secondary: var(--content-secondary);
+  --color-content-muted: var(--content-muted);
+  --color-content-inverse: var(--content-inverse);
+  --color-content-disabled: var(--content-disabled);
+
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-emphasis: var(--accent-emphasis);
+
+  --color-state-danger: var(--state-danger);
+  --color-state-danger-surface: var(--state-danger-surface);
+  --color-state-success: var(--state-success);
+  --color-state-success-surface: var(--state-success-surface);
+  --color-state-warning: var(--state-warning);
+  --color-state-info: var(--state-info);
+  --color-state-info-surface: var(--state-info-surface);
+
+  --color-action-primary: var(--action-primary-bg);
+  --color-action-primary-fg: var(--action-primary-fg);
+  --color-action-primary-hover: var(--action-primary-bg-hover);
+
+  /* DS: "near-square, editorial" — 2px. Pill yalnızca avatar ve sayaçlarda. */
+  --radius-liora: var(--liora-radius);
+  --radius-pill: var(--liora-radius-pill);
+}
+
 body {
   /* Uygulamadaki her sayfa kabı (.atelier sarmalayıcı, .login-page,
      .legal-page) zaten ink zemininde. Body'yi de aynı zemine oturtuyoruz ki
@@ -31,11 +74,11 @@ body {
   background: var(--liora-ink);
   color: var(--liora-on-dark);
 
-  /* DİKKAT — Faz A'da bilerek DEĞİŞTİRİLMEDİ.
+  /* Faz B · Bulgu 1'in düzeltmesi.
      .atelier kapsamı dışında kalan 10 ekran (8 stüdyo + assets + admin) UI
-     fontunu bu satırdan miras alıyor; var(--font-ui)'ye geçiş görsel bir
-     değişikliktir. Bkz. design-ref/faz-a-token-raporu.md — Bulgu 1. */
-  font-family: Arial, Helvetica, sans-serif;
+     fontunu bu satırdan miras alıyor. Eskiden Arial'di — panel markanın
+     fontuyla hiç çalışmıyordu. */
+  font-family: var(--font-ui);
 }
 
 /* ── batch-studio slayt geçişleri (page.tsx:844) ───────────────────────── */

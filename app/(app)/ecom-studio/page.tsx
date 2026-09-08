@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, X, Plus, ArrowRight, ArrowLeft, Download, ChevronLeft, ChevronRight, Star } from 'lucide-react'
+import { X, Plus, ArrowRight, ArrowLeft } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import type { TranslationKey } from '@/lib/i18n/dictionaries'
 import { createClient } from '@/lib/supabase/client'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
-import { downloadAsJpg } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { AssetPicker } from '@/components/asset-picker'
 import { saveAsset, type Asset } from '@/lib/assets/assets'
@@ -18,6 +17,11 @@ import { UserModelUpload } from '@/components/user-model-upload'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 import { filterModels, listFavoriteModelIds, toggleFavoriteModel, type ModelFilter } from '@/lib/models/favorites'
 import type { NewUserModel } from '@/lib/models/user-models'
+import { SelectCard } from '@/components/studio/select-card'
+import { UploadTile } from '@/components/studio/upload-tile'
+import { CreditConfirmDialog } from '@/components/studio/credit-confirm-dialog'
+import { ResultGrid } from '@/components/studio/result-grid'
+import { Lightbox } from '@/components/studio/lightbox'
 
 type Model = { id: string; name: string; gender: string | null; image_url: string; scope: string }
 type Background = {
@@ -78,53 +82,6 @@ function slotPreview(c: ClothItem, angle: Angle, kind: SlotKind): string | undef
 
 const STEPS = ['clothes', 'model', 'background', 'pose', 'size'] as const
 const CATEGORIES: Category[] = ['top', 'bottom', 'outerwear', 'onepiece', 'shoes', 'accessory']
-
-function ItemCard({ selected, onClick, name, imageUrl, badge, multi, isFavorite, onFavoriteToggle }: {
-  selected: boolean
-  onClick: () => void
-  name: string
-  imageUrl: string
-  badge?: { text: string; own?: boolean }
-  multi?: boolean
-  isFavorite?: boolean
-  onFavoriteToggle?: () => void
-}) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
-      className={`relative cursor-pointer overflow-hidden rounded-xl bg-[#141414] text-left transition ${selected ? 'border-[1.5px] border-white' : 'border border-[#242424] hover:border-[#2e2e2e]'}`}
-    >
-      <div className="relative aspect-[3/4] bg-[#1c1c1c]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
-        {onFavoriteToggle && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onFavoriteToggle() }}
-            className="absolute left-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 transition hover:bg-black/70"
-            aria-label="Favori"
-          >
-            <Star className={`h-3.5 w-3.5 ${isFavorite ? 'fill-amber-400 text-amber-400' : 'text-white/80'}`} />
-          </button>
-        )}
-        {selected && (
-          <span className={`absolute right-1.5 top-1.5 flex h-[18px] w-[18px] items-center justify-center bg-white ${multi ? 'rounded' : 'rounded-full'}`}>
-            <Check className="h-3 w-3 text-[#0a0a0a]" />
-          </span>
-        )}
-      </div>
-      <div className="p-2">
-        <p className="text-xs text-neutral-200">{name}</p>
-        {badge && (
-          <span className={`mt-1 inline-block rounded-full px-1.5 py-0.5 text-[9px] ${badge.own ? 'bg-[#1f3a2c] text-[#7fd6a8]' : 'bg-[#262626] text-neutral-400'}`}>{badge.text}</span>
-        )}
-      </div>
-    </div>
-  )
-}
 
 export default function EcomStudioPage() {
   const router = useRouter()
@@ -591,38 +548,26 @@ export default function EcomStudioPage() {
     const label = angle === 'front' ? t('ecom.angle.front') : t('ecom.angle.back')
     return (
       <div>
-        <p className="mb-1 text-[10px] font-medium text-neutral-300">{label}</p>
+        <p className="mb-1 text-[10px] font-medium text-content-primary">{label}</p>
         {preview ? (
-          <div className="relative aspect-[3/4] overflow-hidden rounded-lg">
+          <div className="relative aspect-[3/4] overflow-hidden rounded-liora">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="" className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={() => clearSlot(c.id, angle, 'main')}
               aria-label="Kaldir"
-              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/70"
+              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-pill bg-surface-overlay"
             >
-              <X className="h-3 w-3 text-white" />
+              <X className="h-3 w-3 text-content-primary" />
             </button>
           </div>
         ) : (
-          <div className="flex aspect-[3/4] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#333] p-2 text-neutral-500">
-            <Plus className="h-5 w-5" />
-            <button
-              type="button"
-              onClick={() => openSlotFilePicker(c.id, angle, 'main')}
-              className="w-full rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
-            >
-              {t('assets.fromComputer')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSlotAssetPicker({ clothId: c.id, angle, kind: 'main' })}
-              className="w-full rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
-            >
-              {t('assets.fromAssets')}
-            </button>
-          </div>
+          <UploadTile
+            size="sm"
+            onPickFile={() => openSlotFilePicker(c.id, angle, 'main')}
+            onPickAsset={() => setSlotAssetPicker({ clothId: c.id, angle, kind: 'main' })}
+          />
         )}
       </div>
     )
@@ -635,17 +580,17 @@ export default function EcomStudioPage() {
       <div className="mt-2 flex items-start gap-2">
         <div className="relative shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="" className="h-12 w-12 rounded-md object-cover" />
+          <img src={preview} alt="" className="h-12 w-12 rounded-liora object-cover" />
           <button
             type="button"
             onClick={() => clearSlot(c.id, angle, 'detail')}
             aria-label="Kaldir"
-            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-black/80"
+            className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-pill bg-surface-overlay"
           >
-            <X className="h-2.5 w-2.5 text-white" />
+            <X className="h-2.5 w-2.5 text-content-primary" />
           </button>
         </div>
-        <p className="text-[9px] leading-snug text-neutral-500">{label}</p>
+        <p className="text-[9px] leading-snug text-content-secondary">{label}</p>
       </div>
     ) : (
       <div className="mt-2">
@@ -653,14 +598,14 @@ export default function EcomStudioPage() {
           <button
             type="button"
             onClick={() => openSlotFilePicker(c.id, angle, 'detail')}
-            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
+            className="rounded-liora border border-border-default px-2 py-1 text-[10px] text-content-secondary transition hover:bg-surface-sunken hover:text-content-primary"
           >
             {label}
           </button>
           <button
             type="button"
             onClick={() => setSlotAssetPicker({ clothId: c.id, angle, kind: 'detail' })}
-            className="rounded-md border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] hover:text-neutral-200"
+            className="rounded-liora border border-border-default px-2 py-1 text-[10px] text-content-secondary transition hover:bg-surface-sunken hover:text-content-primary"
           >
             {t('assets.fromAssets')}
           </button>
@@ -672,93 +617,86 @@ export default function EcomStudioPage() {
   if (generating) {
     return (
       <main className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-700 border-t-white" />
-        <p className="text-sm text-neutral-400">{t('ecom.generating')}</p>
-        <p className="text-sm text-neutral-500">{genProgress.done}/{genProgress.total}</p>
+        <div className="h-10 w-10 animate-spin rounded-pill border-2 border-border-default border-t-white" />
+        <p className="text-sm text-content-secondary">{t('ecom.generating')}</p>
+        <p className="text-sm text-content-secondary">{genProgress.done}/{genProgress.total}</p>
       </main>
     )
   }
 
   if (results) {
+    const saveBgLabel = (i: number) =>
+      savedBgIndices.has(i) ? t('ecom.bg.saved') : savingBgIndex === i ? t('ecom.generating') : t('ecom.bg.saveBtn')
+    const saveBgDisabled = (i: number) => savedBgIndices.has(i) || savingBgIndex === i
+
     return (
       <main className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-medium text-neutral-100">{t('ecom.result.title')}</h1>
-            <p className="mt-1 text-sm text-neutral-500">{t('ecom.result.subtitle')}</p>
+            <h1 className="text-lg font-medium text-content-primary">{t('ecom.result.title')}</h1>
+            <p className="mt-1 text-sm text-content-secondary">{t('ecom.result.subtitle')}</p>
           </div>
-          <button onClick={resetFlow} className="rounded-lg border border-[#2a2a2a] px-4 py-2 text-sm text-neutral-300 hover:bg-[#161616]">
+          <button
+            onClick={resetFlow}
+            className="rounded-liora border border-border-default px-4 py-2 text-sm text-content-primary transition hover:bg-surface-sunken"
+          >
             {t('ecom.result.startOver')}
           </button>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {results.map((src, i) => (
-            <div key={i} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414]">
-              <button type="button" onClick={() => setLightbox(i)} className="block w-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="aspect-[3/4] w-full object-cover" />
+        <div className="mt-6">
+          <ResultGrid
+            images={results}
+            onOpen={setLightbox}
+            renderFooter={(src, i) => (
+              <button
+                type="button"
+                onClick={() => handleSaveBackground(src, i)}
+                disabled={saveBgDisabled(i)}
+                className="w-full rounded-liora border border-border-default px-2 py-1.5 text-[10px] text-content-primary transition hover:bg-surface-sunken disabled:opacity-50"
+              >
+                {saveBgLabel(i)}
               </button>
-              <div className="p-2">
-                <button
-                  type="button"
-                  onClick={() => handleSaveBackground(src, i)}
-                  disabled={savedBgIndices.has(i) || savingBgIndex === i}
-                  className="w-full rounded-lg border border-[#2a2a2a] px-2 py-1.5 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c] disabled:opacity-50"
-                >
-                  {savedBgIndices.has(i) ? t('ecom.bg.saved') : savingBgIndex === i ? t('ecom.generating') : t('ecom.bg.saveBtn')}
-                </button>
-              </div>
-            </div>
-          ))}
+            )}
+          />
         </div>
-        {bgSaveError && <p className="mt-3 text-sm text-red-400">{bgSaveError}</p>}
+        {bgSaveError && <p className="mt-3 text-sm text-state-danger">{bgSaveError}</p>}
 
-        {lightbox !== null && (
-          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 px-4">
-            <button onClick={() => setLightbox(null)} aria-label="Kapat" className="absolute right-5 top-5 text-neutral-400 hover:text-white">
-              <X className="h-6 w-6" />
-            </button>
-            <div className="flex items-center gap-4">
-              <button onClick={() => setLightbox((v) => (v! > 0 ? v! - 1 : v))} disabled={lightbox === 0} aria-label="Onceki" className="text-neutral-400 disabled:opacity-30">
-                <ChevronLeft className="h-8 w-8" />
+        <Lightbox
+          images={results}
+          index={lightbox}
+          onClose={() => setLightbox(null)}
+          onIndexChange={setLightbox}
+          downloadBaseName="liora-ecom"
+          footer={
+            lightbox !== null && (
+              <button
+                type="button"
+                onClick={() => handleSaveBackground(results[lightbox], lightbox)}
+                disabled={saveBgDisabled(lightbox)}
+                className="mt-3 rounded-liora border border-border-default px-5 py-2.5 text-sm text-content-primary transition hover:bg-surface-sunken disabled:opacity-50"
+              >
+                {saveBgLabel(lightbox)}
               </button>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={results[lightbox]} alt="" className="max-h-[70vh] w-auto rounded-xl" />
-              <button onClick={() => setLightbox((v) => (v! < results.length - 1 ? v! + 1 : v))} disabled={lightbox === results.length - 1} aria-label="Sonraki" className="text-neutral-400 disabled:opacity-30">
-                <ChevronRight className="h-8 w-8" />
-              </button>
-            </div>
-            <button type="button" onClick={() => downloadAsJpg(results[lightbox], `liora-ecom-${lightbox + 1}`)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]">
-              <Download className="h-4 w-4" />
-              {t('ecom.result.download')}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSaveBackground(results[lightbox], lightbox)}
-              disabled={savedBgIndices.has(lightbox) || savingBgIndex === lightbox}
-              className="mt-3 rounded-lg border border-[#2a2a2a] px-5 py-2.5 text-sm text-neutral-300 transition hover:bg-[#161616] disabled:opacity-50"
-            >
-              {savedBgIndices.has(lightbox) ? t('ecom.bg.saved') : savingBgIndex === lightbox ? t('ecom.generating') : t('ecom.bg.saveBtn')}
-            </button>
-          </div>
-        )}
+            )
+          }
+        />
       </main>
     )
   }
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-8">
-      <p className="mb-4 text-xs text-neutral-500">{t('tool.ecom.title')}</p>
+      <p className="mb-4 text-xs text-content-secondary">{t('tool.ecom.title')}</p>
 
       <div className="mb-1.5 flex items-center gap-1.5">
         {STEPS.map((s, i) => (
-          <div key={s} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-white' : 'bg-[#2a2a2a]'}`} />
+          <div key={s} className={`h-1 flex-1 rounded-pill ${i <= stepIndex ? 'bg-action-primary' : 'bg-border-default'}`} />
         ))}
       </div>
       <div className="mb-8 flex justify-between text-[11px]">
         {STEPS.map((s, i) => (
-          <span key={s} className={i === stepIndex ? 'font-medium text-neutral-100' : 'text-neutral-600'}>
+          <span key={s} className={i === stepIndex ? 'font-medium text-content-primary' : 'text-content-muted'}>
             {t(`ecom.step.${s}` as TranslationKey)}
           </span>
         ))}
@@ -766,8 +704,8 @@ export default function EcomStudioPage() {
 
       {step === 'clothes' && (
         <div>
-          <p className="text-base font-medium text-neutral-100">{t('ecom.clothes.title')}</p>
-          <p className="mb-4 text-sm text-neutral-500">{t('ecom.clothes.subtitle')}</p>
+          <p className="text-base font-medium text-content-primary">{t('ecom.clothes.title')}</p>
+          <p className="mb-4 text-sm text-content-secondary">{t('ecom.clothes.subtitle')}</p>
           <input ref={fileInputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { addFiles(e.target.files); e.target.value = '' }} />
           <input
             ref={slotFileInputRef}
@@ -783,18 +721,18 @@ export default function EcomStudioPage() {
           />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {clothes.map((c) => (
-              <div key={c.id} className="overflow-hidden rounded-xl border border-[#242424] bg-[#141414] p-2.5">
+              <div key={c.id} className="overflow-hidden rounded-liora border border-border-subtle bg-surface-raised p-2.5">
                 <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-[10px] text-neutral-500">{t('ecom.clothes.title')}</span>
-                  <button onClick={() => removeCloth(c.id)} aria-label="Kaldir" className="flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-neutral-300 hover:text-white">
+                  <span className="text-[10px] text-content-secondary">{t('ecom.clothes.title')}</span>
+                  <button onClick={() => removeCloth(c.id)} aria-label="Kaldir" className="flex h-5 w-5 items-center justify-center rounded-pill bg-surface-overlay text-content-primary hover:text-content-primary">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
 
-                {!c.category && <p className="mb-1.5 text-[10px] text-amber-400">{t('ecom.clothes.pickCategory')}</p>}
+                {!c.category && <p className="mb-1.5 text-[10px] text-accent-primary">{t('ecom.clothes.pickCategory')}</p>}
                 <div className="flex flex-wrap gap-1">
                   {CATEGORIES.map((cat) => (
-                    <button key={cat} onClick={() => setClothCategory(c.id, cat)} className={`rounded-full px-2 py-0.5 text-[10px] transition ${c.category === cat ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}>
+                    <button key={cat} onClick={() => setClothCategory(c.id, cat)} className={`rounded-pill px-2 py-0.5 text-[10px] transition ${c.category === cat ? 'bg-action-primary text-action-primary-fg' : 'border border-border-default text-content-secondary hover:text-content-primary'}`}>
                       {t(`ecom.cat.${cat}` as TranslationKey)}
                     </button>
                   ))}
@@ -803,7 +741,7 @@ export default function EcomStudioPage() {
                 <div className="mt-2.5">
                   {renderMainSlot(c, 'front')}
                   {!c.frontFile && !c.frontUrl && (
-                    <p className="mt-1 text-[10px] text-amber-400">{t('ecom.angle.front')}</p>
+                    <p className="mt-1 text-[10px] text-accent-primary">{t('ecom.angle.front')}</p>
                   )}
                   {renderDetailSlot(c, 'front')}
                   {c.frontFile && (
@@ -811,73 +749,57 @@ export default function EcomStudioPage() {
                       type="button"
                       onClick={() => handleSaveAsAsset(c.id)}
                       disabled={c.savedAsAsset}
-                      className="mt-2 w-full rounded-lg border border-[#2a2a2a] px-2 py-1 text-[10px] text-neutral-400 transition hover:bg-[#1c1c1c] disabled:opacity-50"
+                      className="mt-2 w-full rounded-liora border border-border-default px-2 py-1 text-[10px] text-content-secondary transition hover:bg-surface-sunken disabled:opacity-50"
                     >
                       {c.savedAsAsset ? t('assets.saved') : t('assets.saveAsAsset')}
                     </button>
                   )}
                 </div>
 
-                <div className="mt-2.5 border-t border-[#242424] pt-2.5">
+                <div className="mt-2.5 border-t border-border-subtle pt-2.5">
                   {renderMainSlot(c, 'back')}
                   {renderDetailSlot(c, 'back')}
-                  <p className="mt-1.5 text-[9px] leading-snug text-neutral-600">{t('ecom.angle.backHint')}</p>
+                  <p className="mt-1.5 text-[9px] leading-snug text-content-muted">{t('ecom.angle.backHint')}</p>
                 </div>
 
                 <div className="mt-2.5">
-                  <label className="mb-1 block text-[10px] text-neutral-500">{t('ecom.stylingNotes.label')}</label>
+                  <label className="mb-1 block text-[10px] text-content-secondary">{t('ecom.stylingNotes.label')}</label>
                   <textarea
                     value={c.notes}
                     onChange={(e) => setClothNotes(c.id, e.target.value)}
                     placeholder={t('ecom.stylingNotes.placeholder')}
                     rows={2}
-                    className="min-h-[60px] w-full rounded-lg border border-[#242424] bg-[#141414] p-2 text-xs text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+                    className="min-h-[60px] w-full rounded-liora border border-border-subtle bg-surface-raised p-2 text-xs text-content-primary outline-none transition placeholder:text-content-muted focus:border-border-focus"
                   />
                 </div>
               </div>
             ))}
             {clothes.length < 6 && (
-              <div
-                {...dropHandlers}
-                className={`flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#333] p-3 text-neutral-500 transition${isDragging ? ' border-white bg-[#161616]' : ''}`}
-              >
-                <Plus className="h-6 w-6" />
-                <div className="flex w-full flex-col gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="rounded-lg border border-[#2a2a2a] px-2 py-1.5 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
-                  >
-                    {t('assets.fromComputer')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAssetPickerOpen(true)}
-                    className="rounded-lg border border-[#2a2a2a] px-2 py-1.5 text-[10px] text-neutral-300 transition hover:bg-[#1c1c1c]"
-                  >
-                    {t('assets.fromAssets')}
-                  </button>
-                </div>
-                <span className="text-[10px] text-neutral-600">{clothes.length} / 6</span>
-              </div>
+              <UploadTile
+                onPickFile={() => fileInputRef.current?.click()}
+                onPickAsset={() => setAssetPickerOpen(true)}
+                caption={`${clothes.length} / 6`}
+                isDragging={isDragging}
+                dropHandlers={dropHandlers}
+              />
             )}
           </div>
-          <p className="mt-3 text-[11px] text-neutral-600">{t('ecom.clothes.max')}</p>
+          <p className="mt-3 text-[11px] text-content-muted">{t('ecom.clothes.max')}</p>
 
           <div className="mt-6">
-            <p className="text-xs text-neutral-500">{t('ecom.tuck.title')}</p>
+            <p className="text-xs text-content-secondary">{t('ecom.tuck.title')}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => setTuck(tuck === 'out' ? null : 'out')}
-                className={`rounded-lg border px-4 py-2 text-sm transition ${tuck === 'out' ? 'border-white text-neutral-100' : 'border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}
+                className={`rounded-liora border px-4 py-2 text-sm transition ${tuck === 'out' ? 'border-content-primary text-content-primary' : 'border-border-default text-content-secondary hover:text-content-primary'}`}
               >
                 {t('ecom.tuck.out')}
               </button>
               <button
                 type="button"
                 onClick={() => setTuck(tuck === 'in' ? null : 'in')}
-                className={`rounded-lg border px-4 py-2 text-sm transition ${tuck === 'in' ? 'border-white text-neutral-100' : 'border-[#2a2a2a] text-neutral-400 hover:text-neutral-200'}`}
+                className={`rounded-liora border px-4 py-2 text-sm transition ${tuck === 'in' ? 'border-content-primary text-content-primary' : 'border-border-default text-content-secondary hover:text-content-primary'}`}
               >
                 {t('ecom.tuck.in')}
               </button>
@@ -888,32 +810,32 @@ export default function EcomStudioPage() {
 
       {step === 'model' && (
         <div>
-          <p className="text-base font-medium text-neutral-100">{t('ecom.model.title')}</p>
-          <p className="mb-4 text-sm text-neutral-500">{t('ecom.model.subtitle')}</p>
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : (
+          <p className="text-base font-medium text-content-primary">{t('ecom.model.title')}</p>
+          <p className="mb-4 text-sm text-content-secondary">{t('ecom.model.subtitle')}</p>
+          {loadingData ? <p className="text-sm text-content-secondary">{t('ecom.loading')}</p> : (
             <>
               <ModelFilterTabs value={modelFilter} onChange={setModelFilter} className="mb-3" />
               {modelFilter === 'own' && (
-                <p className="mb-3 text-xs text-neutral-500">{t('models.own.info')}</p>
+                <p className="mb-3 text-xs text-content-secondary">{t('models.own.info')}</p>
               )}
               {modelFilter !== 'own' && models.length === 0 ? (
-                <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
+                <p className="text-sm text-content-secondary">{t('ecom.empty')}</p>
               ) : modelFilter !== 'own' && filteredModels.length === 0 ? (
-                <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
+                <p className="text-sm text-content-secondary">{t('ecom.empty')}</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {modelFilter === 'own' && (
                     <button
                       type="button"
                       onClick={() => setModelUploadOpen(true)}
-                      className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#333] bg-[#141414] text-neutral-500 transition hover:border-[#444] hover:text-neutral-400"
+                      className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center rounded-liora border border-dashed border-border-default bg-surface-raised text-content-secondary transition hover:border-border-strong hover:text-content-secondary"
                     >
                       <Plus className="h-5 w-5" />
                       <span className="mt-1 px-2 text-center text-[10px]">{t('models.upload.tile')}</span>
                     </button>
                   )}
                   {filteredModels.map((m) => (
-                    <ItemCard
+                    <SelectCard
                       key={m.id}
                       selected={modelId === m.id}
                       onClick={() => setModelId(m.id)}
@@ -933,30 +855,30 @@ export default function EcomStudioPage() {
 
       {step === 'background' && (
         <div>
-          <p className="text-base font-medium text-neutral-100">{t('ecom.bg.title')}</p>
-          <p className="mb-4 text-sm text-neutral-500">{t('ecom.bg.subtitle')}</p>
+          <p className="text-base font-medium text-content-primary">{t('ecom.bg.title')}</p>
+          <p className="mb-4 text-sm text-content-secondary">{t('ecom.bg.subtitle')}</p>
           <div className="mb-3 flex flex-wrap gap-1">
             {(['preset', 'saved'] as BackgroundFilter[]).map((filter) => (
               <button
                 key={filter}
                 type="button"
                 onClick={() => setBgFilter(filter)}
-                className={`rounded-full px-3 py-1 text-xs transition ${
+                className={`rounded-pill px-3 py-1 text-xs transition ${
                   bgFilter === filter
-                    ? 'bg-white text-black'
-                    : 'text-neutral-400 hover:bg-white/5 hover:text-neutral-200'
+                    ? 'bg-action-primary text-action-primary-fg'
+                    : 'text-content-secondary hover:bg-surface-sunken hover:text-content-primary'
                 }`}
               >
                 {t(filter === 'preset' ? 'ecom.bg.tab.preset' : 'ecom.bg.tab.saved')}
               </button>
             ))}
           </div>
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : filteredBackgrounds.length === 0 ? (
-            <p className="text-sm text-neutral-500">{bgFilter === 'saved' ? t('ecom.bg.savedEmpty') : t('ecom.empty')}</p>
+          {loadingData ? <p className="text-sm text-content-secondary">{t('ecom.loading')}</p> : filteredBackgrounds.length === 0 ? (
+            <p className="text-sm text-content-secondary">{bgFilter === 'saved' ? t('ecom.bg.savedEmpty') : t('ecom.empty')}</p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {filteredBackgrounds.map((b) => (
-                <ItemCard
+                <SelectCard
                   key={b.id}
                   selected={bgId === b.id}
                   onClick={() => selectBackground(b.id)}
@@ -966,33 +888,33 @@ export default function EcomStudioPage() {
               ))}
             </div>
           )}
-          <div className="mt-6 rounded-2xl border border-[#242424] bg-[#141414] p-4">
-            <p className="mb-3 text-sm font-medium text-neutral-200">{t('ecom.bg.customTitle')}</p>
+          <div className="mt-6 rounded-liora border border-border-subtle bg-surface-raised p-4">
+            <p className="mb-3 text-sm font-medium text-content-primary">{t('ecom.bg.customTitle')}</p>
             <textarea
               value={customBgPrompt}
               onChange={(e) => handleCustomBgPromptChange(e.target.value)}
               placeholder={t('ecom.bg.customPlaceholder')}
               rows={4}
-              className="min-h-[90px] w-full rounded-lg border border-[#242424] bg-[#141414] p-3 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+              className="min-h-[90px] w-full rounded-liora border border-border-subtle bg-surface-raised p-3 text-sm text-content-primary outline-none transition placeholder:text-content-muted focus:border-border-focus"
             />
-            <p className="mt-2 text-xs text-neutral-500">{t('ecom.bg.customHint')}</p>
+            <p className="mt-2 text-xs text-content-secondary">{t('ecom.bg.customHint')}</p>
           </div>
         </div>
       )}
 
       {step === 'pose' && (
         <div>
-          <p className="text-base font-medium text-neutral-100">{t('ecom.pose.title')}</p>
-          <p className="mb-4 text-sm text-neutral-500">{t('ecom.pose.subtitle')}</p>
+          <p className="text-base font-medium text-content-primary">{t('ecom.pose.title')}</p>
+          <p className="mb-4 text-sm text-content-secondary">{t('ecom.pose.subtitle')}</p>
 
-          <p className="mb-2 text-sm font-medium text-neutral-200">{t('poses.presetTitle')}</p>
+          <p className="mb-2 text-sm font-medium text-content-primary">{t('poses.presetTitle')}</p>
           <PoseFilterTabs value={poseFilter} onChange={setPoseFilter} className="mb-3" />
-          {loadingData ? <p className="text-sm text-neutral-500">{t('ecom.loading')}</p> : generalPoses.length === 0 ? <p className="text-sm text-neutral-500">{t('ecom.empty')}</p> : filteredPoses.length === 0 ? (
-            <p className="text-sm text-neutral-500">{t('ecom.empty')}</p>
+          {loadingData ? <p className="text-sm text-content-secondary">{t('ecom.loading')}</p> : generalPoses.length === 0 ? <p className="text-sm text-content-secondary">{t('ecom.empty')}</p> : filteredPoses.length === 0 ? (
+            <p className="text-sm text-content-secondary">{t('ecom.empty')}</p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {filteredPoses.map((p) => (
-                <ItemCard
+                <SelectCard
                   key={p.id}
                   selected={poseIds.includes(p.id)}
                   onClick={() => togglePose(p.id)}
@@ -1006,32 +928,32 @@ export default function EcomStudioPage() {
             </div>
           )}
 
-          <div className="mt-6 rounded-2xl border border-[#242424] bg-[#141414] p-4">
-            <p className="mb-3 text-sm font-medium text-neutral-200">{t('poses.customTitle')}</p>
+          <div className="mt-6 rounded-liora border border-border-subtle bg-surface-raised p-4">
+            <p className="mb-3 text-sm font-medium text-content-primary">{t('poses.customTitle')}</p>
             <textarea
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addCustomPose() } }}
               placeholder={t('poses.customPlaceholder')}
               rows={4}
-              className="min-h-[90px] w-full rounded-lg border border-[#242424] bg-[#141414] p-3 text-sm text-neutral-100 outline-none transition placeholder:text-neutral-600 focus:border-[#3a3a3a]"
+              className="min-h-[90px] w-full rounded-liora border border-border-subtle bg-surface-raised p-3 text-sm text-content-primary outline-none transition placeholder:text-content-muted focus:border-border-focus"
             />
             <button
               type="button"
               onClick={addCustomPose}
               disabled={!customInput.trim()}
-              className="mt-2 rounded-lg border border-[#2a2a2a] px-4 py-1.5 text-sm text-neutral-200 transition hover:bg-[#1c1c1c] disabled:opacity-40"
+              className="mt-2 rounded-liora border border-border-default px-4 py-1.5 text-sm text-content-primary transition hover:bg-surface-sunken disabled:opacity-40"
             >
               {t('poses.addBtn')}
             </button>
             {customPoses.length > 0 && (
               <div className="mt-4">
-                <p className="mb-2 text-xs text-neutral-500">{t('poses.customAdded')}</p>
+                <p className="mb-2 text-xs text-content-secondary">{t('poses.customAdded')}</p>
                 <div className="flex flex-wrap gap-2">
                   {customPoses.map((txt, i) => (
-                    <span key={i} className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-[#2a2a2a] bg-[#1c1c1c] px-2.5 py-1 text-xs text-neutral-300">
+                    <span key={i} className="inline-flex max-w-full items-center gap-1.5 rounded-pill border border-border-default bg-surface-sunken px-2.5 py-1 text-xs text-content-primary">
                       <span className="truncate">{txt}</span>
-                      <button type="button" onClick={() => removeCustomPose(i)} aria-label="Kaldir" className="shrink-0 text-neutral-500 hover:text-white">
+                      <button type="button" onClick={() => removeCustomPose(i)} aria-label="Kaldir" className="shrink-0 text-content-secondary hover:text-content-primary">
                         <X className="h-3 w-3" />
                       </button>
                     </span>
@@ -1045,55 +967,48 @@ export default function EcomStudioPage() {
 
       {step === 'size' && (
         <div>
-          <p className="text-base font-medium text-neutral-100">{t('ecom.size.title')}</p>
-          <p className="mb-5 text-sm text-neutral-500">{t('ecom.size.subtitle')}</p>
-          <p className="mb-2 text-xs text-neutral-400">{t('ecom.size.ratio')}</p>
+          <p className="text-base font-medium text-content-primary">{t('ecom.size.title')}</p>
+          <p className="mb-5 text-sm text-content-secondary">{t('ecom.size.subtitle')}</p>
+          <p className="mb-2 text-xs text-content-secondary">{t('ecom.size.ratio')}</p>
           <div className="mb-6 flex flex-wrap gap-2">
             {ratios.map((r) => (
-              <button key={r} onClick={() => setRatio(r)} className={`rounded-lg px-4 py-2 text-sm transition ${ratio === r ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}>{r}</button>
+              <button key={r} onClick={() => setRatio(r)} className={`rounded-liora px-4 py-2 text-sm transition ${ratio === r ? 'bg-action-primary text-action-primary-fg' : 'border border-border-default text-content-primary hover:bg-surface-sunken'}`}>{r}</button>
             ))}
           </div>
-          <p className="mb-2 text-xs text-neutral-400">{t('ecom.size.quality')}</p>
+          <p className="mb-2 text-xs text-content-secondary">{t('ecom.size.quality')}</p>
           <div className="flex flex-wrap gap-2">
             {qualities.map((q) => (
-              <button key={q} onClick={() => setQuality(q)} className={`rounded-lg px-4 py-2 text-sm uppercase transition ${quality === q ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}>{q}</button>
+              <button key={q} onClick={() => setQuality(q)} className={`rounded-liora px-4 py-2 text-sm uppercase transition ${quality === q ? 'bg-action-primary text-action-primary-fg' : 'border border-border-default text-content-primary hover:bg-surface-sunken'}`}>{q}</button>
             ))}
           </div>
         </div>
       )}
 
-      {genError && <p className="mt-6 text-sm text-red-400">{genError}</p>}
+      {genError && <p className="mt-6 text-sm text-state-danger">{genError}</p>}
 
       <div className="mt-8 flex items-center justify-between">
-        <button onClick={handleBack} className="inline-flex items-center gap-1.5 rounded-lg border border-[#2a2a2a] px-4 py-2 text-sm text-neutral-300 hover:bg-[#161616]">
+        <button onClick={handleBack} className="inline-flex items-center gap-1.5 rounded-liora border border-border-default px-4 py-2 text-sm text-content-primary hover:bg-surface-sunken">
           <ArrowLeft className="h-4 w-4" />
           {t('common.back')}
         </button>
         {step === 'size' ? (
-          <button onClick={() => setShowConfirm(true)} className="rounded-lg bg-white px-6 py-2 text-sm font-medium text-[#0a0a0a]">
+          <button onClick={() => setShowConfirm(true)} className="rounded-liora bg-action-primary px-6 py-2 text-sm font-medium text-action-primary-fg">
             {t('ecom.generate')}
           </button>
         ) : (
-          <button onClick={handleNext} disabled={!canContinue} className="inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-2 text-sm font-medium text-[#0a0a0a] disabled:opacity-40">
+          <button onClick={handleNext} disabled={!canContinue} className="inline-flex items-center gap-1.5 rounded-liora bg-action-primary px-5 py-2 text-sm font-medium text-action-primary-fg disabled:opacity-40">
             {t('common.continue')}
             <ArrowRight className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-sm rounded-2xl border border-[#242424] bg-[#141414] p-6 text-center">
-            <p className="text-base font-medium text-neutral-100">{t('ecom.confirm.title')}</p>
-            <p className="mt-2 text-sm text-neutral-400">{t('ecom.confirm.body')}</p>
-            <p className="mt-4 text-3xl font-medium text-white">{posesToRun.length} <span className="text-base text-neutral-400">{t('nav.credits')}</span></p>
-            <div className="mt-6 flex gap-3">
-              <button onClick={() => setShowConfirm(false)} className="flex-1 rounded-lg border border-[#2a2a2a] py-2.5 text-sm text-neutral-300">{t('ecom.confirm.cancel')}</button>
-              <button onClick={handleGenerate} className="flex-1 rounded-lg bg-white py-2.5 text-sm font-medium text-[#0a0a0a]">{t('ecom.confirm.confirm')}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreditConfirmDialog
+        open={showConfirm}
+        credits={posesToRun.length}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleGenerate}
+      />
 
       <AssetPicker
         open={assetPickerOpen}

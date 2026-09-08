@@ -10,14 +10,18 @@
      değişti (var(--font-geist-sans) çıktı, BlinkMacSystemFont/"Segoe UI" girdi). */
   --atelier-ui: var(--liora-font-ui);
 
-  /* ── DS'te BİREBİR KARŞILIĞI OLMAYANLAR ──────────────────────────────────
-     Faz A'da hex'ler bilerek korundu: token'a bağlamak görsel değişiklik olur.
-     Hizalama önerileri ve delta'lar: design-ref/faz-a-token-raporu.md
+  /* ── Faz A kararıyla DS'e hizalananlar ───────────────────────────────────
+     Eski hex'ler DS'ten sürüklenmişti (#ede8df, #a39d92, #26231e); semantik
+     rollere bağlandı. Roller <html data-theme="dark"> ile koyu değerlere
+     çözülüyor.
      ──────────────────────────────────────────────────────────────────────── */
-  --atelier-text: #ede8df; /* ≈ --liora-on-dark      #efe8da */
-  --atelier-text-2: #a39d92; /* ≈ --liora-on-dark-mut  #a99c86 */
-  --atelier-line: #26231e; /* ≈ --border-subtle (ink üzerinde) ≈ #262420 */
-  --atelier-muted: #8f8a80; /* karşılığı yok */
+  --atelier-text: var(--content-primary); /* → --liora-on-dark     #efe8da */
+  --atelier-text-2: var(--content-secondary); /* → --liora-on-dark-mut #a99c86 */
+  --atelier-line: var(--border-subtle); /* → rgba(239,232,218,.1) */
+
+  /* DS'te karşılığı YOK — bilerek hex olarak bırakıldı; boşluk Faz B'de
+     DS tarafında doldurulacak, buraya uydurma değer yazılmıyor. */
+  --atelier-muted: #8f8a80;
 
   font-family: var(--atelier-ui);
   color: var(--atelier-text);
