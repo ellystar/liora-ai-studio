@@ -7,6 +7,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // woff2/woff/ttf/otf listede yoktu: /fonts/*.woff2 istekleri auth
+    // kontrolüne giriyor ve oturumu olmayan ziyaretçide /login'e
+    // yönleniyordu. Sonuç: login, legal ve fiyatlandırma sayfalarında
+    // Neue Haas hiç yüklenmiyordu.
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf|otf)$).*)',
   ],
 }
