@@ -2,6 +2,9 @@
 
 Branch: `faz-a/token-katmani` · Kaynak: `liora-design-system/liora-tokens.css` (v1.0)
 
+> **Durum:** Bu raporun sonundaki üç karar da onaylandı ve Faz B'de uygulandı.
+> Paylaşılabilir birleşik rapor (Faz A + Faz B) ayrıca yayında.
+
 Bu faz görsel çıktıyı değiştirmez; yalnızca değerlerin nereden geldiğini değiştirir.
 Aşağıda (a) değişen dosyalar, (b) DS'te birebir karşılığı olmayan değerler,
 (c) koda gömülü renk kararlarının tam dökümü, (d) karar bekleyen maddeler var.
@@ -41,8 +44,8 @@ Tek fark: DS'in varsayılanında olmayan `"Hanken Grotesk"` ara halkası korundu
 
 ## 2 · Bulgu 1 — `body { font-family: Arial }` ölü değil, 10 ekranın UI fontu
 
-**Bu maddeyi bilerek uygulamadım.** Talimatta "create-next-app kalıntısı" olarak
-geçiyordu; kod tabanında ise canlı bir bağımlılık.
+**Faz A'da bilerek uygulanmadı, Faz B'de düzeltildi.** Talimatta "create-next-app
+kalıntısı" olarak geçiyordu; kod tabanında ise canlı bir bağımlılık çıktı.
 
 `.atelier` sınıfı yalnızca 5 bileşende var: `navbar`, `home-dashboard`,
 `studio-card`, `shoots-page`, `pricing-page`. Aşağıdaki ekranlar bu kapsamın
@@ -59,9 +62,8 @@ Neue Haas Display ile değil.
 - `font-family` satırını **silmek**: tarayıcı varsayılanına (serif) düşer — çok daha kötü.
 - `var(--font-ui)` **yapmak**: 10 ekran Arial → Neue Haas Display olur. Doğru hedef, ama görsel bir değişiklik ve canlı kullanıcı var.
 
-Faz A'da satır olduğu gibi bırakıldı, üstüne açıklama düşüldü. **Bu tek satır
-Faz B'nin en yüksek getirili değişikliği**: tek commit, 10 ekran markanın
-fontuna geçer.
+Faz A'da satır olduğu gibi bırakıldı. **Faz B'de `var(--font-ui)` yapıldı** —
+10 ekran markanın fontuna geçti.
 
 ---
 
@@ -197,20 +199,21 @@ Pilot olarak seçilen **`ecom-studio` tek başına 202 renk kararı** taşıyor.
 
 ---
 
-## 5 · Karar bekleyen 3 madde
+## 5 · Kararlar (üçü de onaylandı, uygulandı)
 
-**Karar 1 — `--atelier-*` hizalaması.** Bölüm 3'teki 4 değer DS'e çekilsin mi?
-(Öneri: evet. `--atelier-muted` için DS'e yeni bir değer eklemen gerekecek.)
+**Karar 1 — `--atelier-*` hizalaması. → UYGULANDI.** Bölüm 3'teki 4 değer DS'e çekilsin mi?
+`--atelier-text`, `--atelier-text-2` ve `--atelier-line` semantik rollere bağlandı.
+`--atelier-muted` DS'te karşılığı olmadığı için hex kaldı — boşluk DS tarafında
+doldurulacak.
 
-**Karar 2 — DS'in iki canlı kuralı.** `liora-tokens.css` yalnız token içermiyor;
+**Karar 2 — DS'in iki canlı kuralı. → İKİSİ DE KALDI.** `liora-tokens.css` yalnız token içermiyor;
 iki kuralı render'ı etkiliyor:
 - `*:focus-visible { outline: 2px solid gold }` — klavyeyle gezerken odak halkası tarayıcı varsayılanından DS altınına döner. DS bunu şart koşuyor ("never remove it").
 - `@media (prefers-reduced-motion: reduce)` — bu tercihi açmış kullanıcılarda animasyonlar durur.
 
-İkisi de erişilebilirlik iyileştirmesi ve DS'in kendi kararı, o yüzden dosyayı
-olduğu gibi import ettim. İstersen ikisini de kapatabilirim — tek satır.
+İkisi de erişilebilirlik iyileştirmesi ve DS'in kendi kararı; olduğu gibi kaldı.
 
-**Karar 3 — `body` zemini.** Eski hâli işletim sistemi temasına göre `#ffffff`
+**Karar 3 — `body` zemini. → INK KALDI.** Eski hâli işletim sistemi temasına göre `#ffffff`
 veya `#0a0a0a` idi. Uygulamadaki **her** sayfa kabı (`.atelier` sarmalayıcı,
 `.login-page`, `.legal-page`) zaten ink zemininde olduğu için `body` de
 `--liora-ink`'e alındı. Görünür tek fark: sayfayı aşağı/yukarı esnetirken
@@ -219,12 +222,14 @@ parlamayı da kaldırıyor.
 
 ---
 
-## 6 · Sıradaki adım için not (Faz B değil, ön hazırlık)
+## 6 · Faz B'de ne oldu
 
-`data-theme="dark"` / `.liora-dark` kancası derlenmiş CSS'te hazır ama
-**hiçbir yerde aktif değil** — Faz A'da bilerek açılmadı. Açıldığı anda
-`--surface-*`, `--content-*`, `--border-*` rolleri koyu değerlere döner ve
-uygulamanın semantik katmanı kullanılabilir hâle gelir. Bu, Faz B'nin ilk adımı.
+`data-theme="dark"` kancası `app/layout.tsx`'te `<html>` üzerinde aktif edildi;
+`--surface-*`, `--content-*`, `--border-*` rolleri artık koyu değerlere çözülüyor.
+`globals.css`'e `@theme inline` eklenerek bu roller Tailwind yardımcı sınıflarına
+bağlandı. `components/studio/` altında beş ortak bileşen oluşturuldu ve
+`ecom-studio` bunlarla yeniden yazıldı — davranış birebir aynı, 202 renk kararı
+token'lara taşındı.
 
 ---
 
@@ -246,5 +251,7 @@ Geçici çözüm (repoya yazmaz, `package.json`/`package-lock.json` değişmedi)
 npm install --no-save lightningcss-darwin-x64@1.32.0
 ```
 
-Kalıcı çözümü sen seçmelisin: ya arm64 Node'a geçiş, ya `node_modules`'ı
-silip yeniden kurma. Bu düzeltme yapılmadan projeyi lokalde build edemezsin.
+**Kalıcı çözüm uygulandı:** makine Intel (Core i5-8279U) olduğu için x64 Node
+doğru; hatalı olan `node_modules` idi. Silinip `npm ci` ile yeniden kuruldu,
+`lightningcss-darwin-x64` artık doğru mimaride. `package.json` ve
+`package-lock.json` değişmedi.
