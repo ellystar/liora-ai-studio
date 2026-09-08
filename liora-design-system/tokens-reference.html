@@ -1,0 +1,371 @@
+<title>Liora Design Tokens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=Instrument+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap">
+
+<style>
+  /* ══ LIGHT (complete palette — every token defined here) ══ */
+  :root {
+    --bone: #F2EDE3;
+    --bone-2: #E9E2D5;
+    --stone: #C8BCA8;
+    --ink: #100E0B;
+    --ink-2: #1C1813;
+    --gold: #B07A2E;
+    --oxblood: #5C1F29;
+    --oxblood-lift: #CF8076;
+    --olive: #5F6B4B;
+
+    --page: var(--bone);
+    --raised: #FBF8F2;
+    --sunken: var(--bone-2);
+    --fg: #1A1611;
+    --fg-mut: #6E665A;
+    --fg-faint: #948B7C;
+    --line: rgba(200,188,168,.62);
+    --line-strong: var(--stone);
+    --accent: var(--gold);
+    --emph: var(--oxblood);
+    --chip-ring: rgba(16,14,11,.12);
+
+    --display: "Newsreader", Georgia, serif;
+    --ui: "Instrument Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    --mono: "Spline Sans Mono", ui-monospace, Menlo, monospace;
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: var(--ink);
+      --raised: var(--ink-2);
+      --sunken: #15110D;
+      --fg: #EFE8DA;
+      --fg-mut: #A99C86;
+      --fg-faint: #7C7364;
+      --line: rgba(239,232,218,.14);
+      --line-strong: rgba(239,232,218,.28);
+      --emph: var(--oxblood-lift);
+      --chip-ring: rgba(239,232,218,.16);
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: var(--ink);
+    --raised: var(--ink-2);
+    --sunken: #15110D;
+    --fg: #EFE8DA;
+    --fg-mut: #A99C86;
+    --fg-faint: #7C7364;
+    --line: rgba(239,232,218,.14);
+    --line-strong: rgba(239,232,218,.28);
+    --emph: var(--oxblood-lift);
+    --chip-ring: rgba(239,232,218,.16);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--fg);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background .4s var(--ease), color .4s var(--ease);
+  }
+  .wrap { width: 100%; max-width: 1080px; margin-inline: auto; padding-inline: clamp(22px,5vw,64px); }
+
+  /* ── type roles ── */
+  .d1 { font-family: var(--display); font-weight: 300; font-size: clamp(38px,6vw,72px); line-height: 1.03; letter-spacing: -.022em; margin: 0; text-wrap: balance; }
+  .d2 { font-family: var(--display); font-weight: 300; font-size: clamp(27px,4vw,44px); line-height: 1.07; letter-spacing: -.016em; margin: 0; text-wrap: balance; }
+  .d3 { font-family: var(--display); font-weight: 400; font-size: clamp(21px,2.5vw,27px); line-height: 1.16; letter-spacing: -.01em; margin: 0; }
+  .soul { font-style: italic; font-weight: 400; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--fg-mut); margin: 0; }
+  .lede { font-size: 17px; line-height: 1.62; color: var(--fg-mut); max-width: 62ch; }
+  p { max-width: 68ch; }
+  code, .mono { font-family: var(--mono); font-size: .86em; letter-spacing: .01em; }
+  code { color: var(--accent); }
+
+  /* ── header ── */
+  header.top { padding: clamp(48px,8vw,96px) 0 clamp(30px,4vw,44px); border-bottom: 1px solid var(--line); }
+  .wordmark { font-family: var(--display); font-size: 20px; letter-spacing: .22em; margin: 0 0 clamp(32px,6vw,60px); }
+  .head-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 26px; }
+  .head-meta span { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; color: var(--fg-mut); }
+
+  /* ── sections ── */
+  section { padding: clamp(46px,7vw,82px) 0; border-bottom: 1px solid var(--line); }
+  .s-head { display: flex; flex-direction: column; gap: 12px; margin-bottom: clamp(28px,4vw,42px); }
+  .s-head .lede { margin: 6px 0 0; }
+
+  /* ── swatches ── */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px,1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .sw { background: var(--page); padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 11px; }
+  .chip { height: 62px; border-radius: 2px; box-shadow: inset 0 0 0 1px var(--chip-ring); }
+  .sw-name { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; }
+  .sw-hex { font-family: var(--mono); font-size: 11.5px; color: var(--fg-mut); text-transform: uppercase; }
+  .sw-note { font-size: 13px; line-height: 1.45; color: var(--fg-mut); }
+
+  /* ── role table ── */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--fg-mut); font-weight: 400; background: var(--sunken); }
+  tr:last-child td { border-bottom: 0; }
+  td.tok { font-family: var(--mono); font-size: 12px; white-space: nowrap; color: var(--accent); }
+  td.val { font-family: var(--mono); font-size: 11.5px; color: var(--fg-mut); white-space: nowrap; }
+  td.desc { font-size: 13.5px; line-height: 1.5; color: var(--fg-mut); }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; box-shadow: inset 0 0 0 1px var(--chip-ring); vertical-align: baseline; }
+
+  /* ── specimens ── */
+  .spec { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .spec-row { background: var(--page); display: grid; grid-template-columns: 118px 1fr; gap: 20px; padding: 20px 16px; align-items: baseline; }
+  .spec-key { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--fg-mut); text-transform: uppercase; }
+  .spec-val { min-width: 0; }
+  .spec-note { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--fg-faint); margin-top: 9px; letter-spacing: .04em; }
+  .t-body-l { font-size: 18px; line-height: 1.65; }
+  .t-body { font-size: 16px; line-height: 1.6; }
+  .t-body-s { font-size: 14px; line-height: 1.55; color: var(--fg-mut); }
+  .t-meta { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; color: var(--fg-mut); }
+  .t-quote { font-family: var(--display); font-style: italic; font-weight: 300; font-size: clamp(21px,2.6vw,30px); line-height: 1.3; color: var(--emph); }
+
+  /* ── rules (do / don't) ── */
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(272px,1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .rule { background: var(--page); padding: 20px 18px; }
+  .rule h4 { margin: 0 0 8px; font-family: var(--display); font-weight: 400; font-size: 18px; letter-spacing: -.008em; }
+  .rule p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--fg-mut); max-width: none; }
+  .verdict { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; display: block; margin-bottom: 10px; }
+  .yes { color: var(--olive); }
+  .no { color: var(--emph); }
+
+  /* ── translation list ── */
+  .trans { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .trans-row { background: var(--page); padding: 20px 18px; display: grid; grid-template-columns: 1fr; gap: 8px; }
+  @media (min-width: 760px) { .trans-row { grid-template-columns: 0.85fr 1.15fr; gap: 26px; } }
+  .trans-q { font-family: var(--display); font-size: 19px; font-weight: 400; letter-spacing: -.008em; }
+  .trans-a { font-size: 14px; line-height: 1.6; color: var(--fg-mut); }
+  .trans-a strong { color: var(--fg); font-weight: 500; }
+
+  /* ── install ── */
+  pre { background: var(--sunken); border: 1px solid var(--line); border-radius: 2px; padding: 16px 18px; overflow-x: auto; margin: 0; }
+  pre code { color: var(--fg); font-size: 12.5px; line-height: 1.7; }
+  .files { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 24px; }
+  .file { background: var(--page); padding: 16px 18px; display: grid; grid-template-columns: 1fr; gap: 5px; }
+  @media (min-width: 700px) { .file { grid-template-columns: 230px 1fr; gap: 22px; align-items: baseline; } }
+  .file-name { font-family: var(--mono); font-size: 12.5px; color: var(--accent); }
+  .file-desc { font-size: 13.5px; color: var(--fg-mut); line-height: 1.5; }
+
+  /* ── theme toggle ── */
+  .toggle { position: fixed; top: 16px; right: 16px; z-index: 10; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mut); background: var(--raised); border: 1px solid var(--line-strong); border-radius: 2px; padding: 8px 13px; cursor: pointer; transition: color .3s var(--ease), border-color .3s var(--ease); }
+  .toggle:hover { color: var(--fg); border-color: var(--fg-mut); }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  footer { padding: clamp(40px,6vw,72px) 0 clamp(56px,8vw,90px); }
+  footer p { font-family: var(--mono); font-size: 11.5px; color: var(--fg-faint); letter-spacing: .05em; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+</style>
+
+<button class="toggle" id="themeBtn" aria-label="Switch theme">Theme</button>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="wordmark">LIORA</p>
+    <p class="eyebrow">Design tokens · v1.0</p>
+    <h1 class="d1" style="margin-top:18px">One language, <span class="soul">two</span> surfaces.</h1>
+    <p class="lede" style="margin-top:22px">These are the values the marketing site is built from, extracted verbatim and extended just far enough to run a product. The site is read; the Atelier is used. Everything below exists so that difference never becomes a difference in identity.</p>
+    <div class="head-meta">
+      <span>lioralabs.io</span>
+      <span>atelier.lioralabs.io</span>
+      <span>3 files · CSS · JSON · Tailwind preset</span>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section>
+    <div class="s-head">
+      <p class="eyebrow">01 · The principle</p>
+      <h2 class="d2">Primitives are the brand.<br>Roles are the interface.</h2>
+      <p class="lede">Two layers, and the split is the whole point. Primitives hold the brand constants — bone, ink, gold, oxblood. Semantic roles describe a job — surface, border, content, danger. Components may only ever touch the second layer.</p>
+    </div>
+    <div class="rules">
+      <div class="rule">
+        <span class="verdict yes">Do</span>
+        <h4><code>color: var(--content-primary)</code></h4>
+        <p>Names a job. Survives a theme switch, a palette revision, and the day the app grows a dark mode. This is the only layer a component should know about.</p>
+      </div>
+      <div class="rule">
+        <span class="verdict no">Don't</span>
+        <h4><code>color: var(--ink)</code></h4>
+        <p>Names a colour. Reads perfectly in light and disappears in dark. Every primitive referenced inside a component is a future bug with a delay fuse.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="s-head">
+      <p class="eyebrow">02 · Colour · primitives</p>
+      <h2 class="d2">Warm, never grey.</h2>
+      <p class="lede">The neutrals carry a paper warmth; there is no cool grey anywhere in the system. There are exactly two accents, and they hold different jobs — using one where the other belongs is the fastest way to make the brand look borrowed.</p>
+    </div>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#F2EDE3"></div><span class="sw-name">bone</span><span class="sw-hex">#F2EDE3</span><span class="sw-note">The page.</span></div>
+      <div class="sw"><div class="chip" style="background:#E9E2D5"></div><span class="sw-name">bone-2</span><span class="sw-hex">#E9E2D5</span><span class="sw-note">A second light plane; wells and inputs.</span></div>
+      <div class="sw"><div class="chip" style="background:#C8BCA8"></div><span class="sw-name">stone</span><span class="sw-hex">#C8BCA8</span><span class="sw-note">Hairlines and dividers.</span></div>
+      <div class="sw"><div class="chip" style="background:#100E0B"></div><span class="sw-name">ink</span><span class="sw-hex">#100E0B</span><span class="sw-note">The dark plane; the primary action.</span></div>
+      <div class="sw"><div class="chip" style="background:#1C1813"></div><span class="sw-name">ink-2</span><span class="sw-hex">#1C1813</span><span class="sw-note">A raised surface in dark.</span></div>
+      <div class="sw"><div class="chip" style="background:#B07A2E"></div><span class="sw-name">gold</span><span class="sw-hex">#B07A2E</span><span class="sw-note"><strong>Attention.</strong> Links, active state, focus, the live detail.</span></div>
+      <div class="sw"><div class="chip" style="background:#5C1F29"></div><span class="sw-name">oxblood</span><span class="sw-hex">#5C1F29</span><span class="sw-note"><strong>Emotion.</strong> Pull quotes, primary hover, danger. Rationed.</span></div>
+      <div class="sw"><div class="chip" style="background:#CF8076"></div><span class="sw-name">oxblood-lift</span><span class="sw-hex">#CF8076</span><span class="sw-note">Oxblood raised to stay legible on ink.</span></div>
+      <div class="sw"><div class="chip" style="background:#5F6B4B"></div><span class="sw-name">olive</span><span class="sw-hex">#5F6B4B</span><span class="sw-note">Product-only. Success, kept inside the warm palette.</span></div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="s-head">
+      <p class="eyebrow">03 · Colour · semantic roles</p>
+      <h2 class="d2">What components actually use.</h2>
+      <p class="lede">Each role resolves differently in light and dark. Style through these and the theme becomes an attribute on <code>&lt;html&gt;</code> rather than a second stylesheet.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Role</th><th>Light</th><th>Dark</th><th>Job</th></tr></thead>
+        <tbody>
+          <tr><td class="tok">--surface-page</td><td class="val"><span class="dot" style="background:#F2EDE3"></span>bone</td><td class="val"><span class="dot" style="background:#100E0B"></span>ink</td><td class="desc">The ground everything sits on.</td></tr>
+          <tr><td class="tok">--surface-raised</td><td class="val"><span class="dot" style="background:#FFF"></span>white</td><td class="val"><span class="dot" style="background:#1C1813"></span>ink-2</td><td class="desc">Cards, menus, modals.</td></tr>
+          <tr><td class="tok">--surface-sunken</td><td class="val"><span class="dot" style="background:#E9E2D5"></span>bone-2</td><td class="val"><span class="dot" style="background:#15110D"></span>#15110D</td><td class="desc">Inputs at rest, wells, table stripes.</td></tr>
+          <tr><td class="tok">--border-default</td><td class="val"><span class="dot" style="background:#C8BCA8"></span>stone</td><td class="val">on-dark 16%</td><td class="desc">The hairline that does most of the separating.</td></tr>
+          <tr><td class="tok">--content-primary</td><td class="val"><span class="dot" style="background:#1A1611"></span>#1A1611</td><td class="val"><span class="dot" style="background:#EFE8DA"></span>#EFE8DA</td><td class="desc">Body and headings.</td></tr>
+          <tr><td class="tok">--content-secondary</td><td class="val"><span class="dot" style="background:#6E665A"></span>#6E665A</td><td class="val"><span class="dot" style="background:#A99C86"></span>#A99C86</td><td class="desc">Support text, labels, meta.</td></tr>
+          <tr><td class="tok">--accent-primary</td><td class="val"><span class="dot" style="background:#B07A2E"></span>gold</td><td class="val"><span class="dot" style="background:#B07A2E"></span>gold</td><td class="desc">Links, focus, active. Identical in both themes.</td></tr>
+          <tr><td class="tok">--state-success</td><td class="val"><span class="dot" style="background:#5F6B4B"></span>olive</td><td class="val"><span class="dot" style="background:#9BAA82"></span>olive-lift</td><td class="desc">Credits added, generation complete.</td></tr>
+          <tr><td class="tok">--state-warning</td><td class="val"><span class="dot" style="background:#B07A2E"></span>gold</td><td class="val"><span class="dot" style="background:#D69F52"></span>#D69F52</td><td class="desc">Low balance, approaching a limit.</td></tr>
+          <tr><td class="tok">--state-danger</td><td class="val"><span class="dot" style="background:#5C1F29"></span>oxblood</td><td class="val"><span class="dot" style="background:#CF8076"></span>oxblood-lift</td><td class="desc">Failed payment, destructive confirm.</td></tr>
+          <tr><td class="tok">--action-primary-bg</td><td class="val"><span class="dot" style="background:#100E0B"></span>ink</td><td class="val"><span class="dot" style="background:#F2EDE3"></span>bone</td><td class="desc">The button warms to oxblood on hover — the brand's most recognisable interaction.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="s-head">
+      <p class="eyebrow">04 · Typography</p>
+      <h2 class="d2">Three faces, three jobs.</h2>
+      <p class="lede">Display is for saying something. UI is for using something. Mono is for data. Swapping their jobs is the single loudest way to break the brand — a serif button, or a sans headline, and the whole thing reads as someone else's product.</p>
+    </div>
+    <div class="spec">
+      <div class="spec-row"><span class="spec-key">d1</span><div class="spec-val"><div class="d1">Scale without losing soul.</div><span class="spec-note">Newsreader 300 · clamp(40px, 6.4vw, 78px) / 1.03 · −0.022em · page opener, one per view</span></div></div>
+      <div class="spec-row"><span class="spec-key">d2</span><div class="spec-val"><div class="d2">The systems, now a platform.</div><span class="spec-note">Newsreader 300 · clamp(29px, 4.2vw, 48px) / 1.07 · −0.016em · section heading</span></div></div>
+      <div class="spec-row"><span class="spec-key">d3</span><div class="spec-val"><div class="d3">Visual Systems</div><span class="spec-note">Newsreader 400 · clamp(22px, 2.6vw, 28px) / 1.16 · −0.01em · card title, panel heading</span></div></div>
+      <div class="spec-row"><span class="spec-key">soul</span><div class="spec-val"><div class="d2">Questions we're often <span class="soul">asked</span>.</div><span class="spec-note">Italic 400 · one word per view, never a whole line — it stops meaning anything if it is everywhere</span></div></div>
+      <div class="spec-row"><span class="spec-key">quote</span><div class="spec-val"><div class="t-quote">Only aesthetic intelligence can preserve a brand.</div><span class="spec-note">Newsreader italic 300 · oxblood · the rare emotional moment</span></div></div>
+      <div class="spec-row"><span class="spec-key">body-l</span><div class="spec-val"><div class="t-body-l">We build a custom visual system for each brand — one that scales its imagery without losing what makes it itself.</div><span class="spec-note">UI 18px / 1.65 · max 54ch · lede paragraph</span></div></div>
+      <div class="spec-row"><span class="spec-key">body</span><div class="spec-val"><div class="t-body">Credits are added to your balance the moment payment clears. There is no delivery step and no shipping cost.</div><span class="spec-note">UI 16px / 1.6 · max 60ch · default reading size</span></div></div>
+      <div class="spec-row"><span class="spec-key">body-s</span><div class="spec-val"><div class="t-body-s">Unused credits roll over for as long as the subscription stays active.</div><span class="spec-note">UI 14px / 1.55 · secondary colour · support text, helper copy</span></div></div>
+      <div class="spec-row"><span class="spec-key">meta</span><div class="spec-val"><div class="t-meta">1,240 CREDITS · RENEWS 12 OCT</div><span class="spec-note">Spline Sans Mono 12px · 0.1em · counts, IDs, timestamps — anything the eye reads as data</span></div></div>
+      <div class="spec-row"><span class="spec-key">eyebrow</span><div class="spec-val"><p class="eyebrow">04 · Typography</p><span class="spec-note">Spline Sans Mono 11px · 0.2em · uppercase · section marker</span></div></div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="s-head">
+      <p class="eyebrow">05 · Motion &amp; form</p>
+      <h2 class="d2">One curve. Two tempos.</h2>
+      <p class="lede">The whole brand eases on <code>cubic-bezier(.22, 1, .36, 1)</code> — a fast start that settles rather than bounces. What changes between the site and the app is duration, not character.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Token</th><th>Value</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td class="tok">--liora-dur-fast</td><td class="val">150ms</td><td class="desc">Hover, press, focus. State feedback should feel instant.</td></tr>
+          <tr><td class="tok">--liora-dur-base</td><td class="val">300ms</td><td class="desc"><strong>The app default.</strong> Menus, tabs, toggles, drawers.</td></tr>
+          <tr><td class="tok">--liora-dur-slow</td><td class="val">500ms</td><td class="desc">Disclosure, panel open, height changes.</td></tr>
+          <tr><td class="tok">--liora-dur-reveal</td><td class="val">800ms</td><td class="desc">Marketing scroll reveals <em>only</em>. In a tool this reads as lag, not elegance.</td></tr>
+          <tr><td class="tok">--liora-radius</td><td class="val">2px</td><td class="desc">The house radius. Liora is not a rounded brand — pills are for avatars and counters, nothing else.</td></tr>
+          <tr><td class="tok">--focus-ring</td><td class="val">2px gold</td><td class="desc">Offset 2px. Never removed; recoloured at most.</td></tr>
+          <tr><td class="tok">--control-height-md</td><td class="val">40px</td><td class="desc">Default control. 32px compact, 48px prominent.</td></tr>
+          <tr><td class="tok">--elevation-1…3</td><td class="val">barely there</td><td class="desc">Try a hairline first. Shadow is for layers that genuinely float — menus, modals, toasts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="s-head">
+      <p class="eyebrow">06 · Site → Atelier</p>
+      <h2 class="d2">What a product needs that an essay doesn't.</h2>
+      <p class="lede">The site never had to tell anyone a payment failed. These are the five decisions taken while extending the language, and the reasoning behind each — so the next person extends it the same way.</p>
+    </div>
+    <div class="trans">
+      <div class="trans-row">
+        <div class="trans-q">Feedback colours</div>
+        <div class="trans-a"><strong>Danger reuses oxblood, warning reuses gold.</strong> Only success needed a new hue, and it is a muted olive rather than a supermarket green. A restrained palette is part of the brand, not a limitation to route around.</div>
+      </div>
+      <div class="trans-row">
+        <div class="trans-q">Separation</div>
+        <div class="trans-a"><strong>Hairlines before shadows.</strong> The site separates everything with a 1px stone rule and no elevation at all. The app keeps that instinct; shadow is reserved for things that truly float above the page.</div>
+      </div>
+      <div class="trans-row">
+        <div class="trans-q">Tempo</div>
+        <div class="trans-a"><strong>300ms, not 800ms.</strong> The site's slow reveals are a reading experience. In a tool the same timing reads as latency — same curve, shorter duration.</div>
+      </div>
+      <div class="trans-row">
+        <div class="trans-q">Density</div>
+        <div class="trans-a"><strong>New UI sizes, no new families.</strong> 15 / 13 / 12px were added for dense interface text. The display scale was left untouched — an app still gets full-size headings where it is saying something.</div>
+      </div>
+      <div class="trans-row">
+        <div class="trans-q">The italic</div>
+        <div class="trans-a"><strong>Ration it harder in product.</strong> One <span class="soul">soul</span> word per view on the site; in the Atelier, reserve it for empty states and moments of arrival. It cannot survive appearing next to a data table.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="s-head">
+      <p class="eyebrow">07 · Install</p>
+      <h2 class="d2">Three files.</h2>
+    </div>
+    <div class="files">
+      <div class="file"><span class="file-name">liora-tokens.css</span><span class="file-desc">Primitives, semantic roles, light and dark, plus the type classes. Framework-agnostic — drops into the existing design-system HTML as-is.</span></div>
+      <div class="file"><span class="file-name">liora.preset.ts</span><span class="file-desc">Tailwind preset. Exposes both the raw brand colours and the semantic roles, so <code>bg-surface-raised</code> and <code>text-content-secondary</code> are theme-aware out of the box.</span></div>
+      <div class="file"><span class="file-name">liora-tokens.json</span><span class="file-desc">W3C-format tokens for Figma, Style Dictionary, or any pipeline that wants the values as data.</span></div>
+    </div>
+    <pre><code>// app/layout.tsx
+import "./liora-tokens.css";
+
+// tailwind.config.ts
+import liora from "./liora.preset";
+export default {
+  presets: [liora],
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+};
+
+// then, in a component
+&lt;button className="h-control-md rounded bg-surface-raised
+  text-content border border-line transition-colors
+  duration-fast ease-liora hover:border-line-strong"&gt;</code></pre>
+  </section>
+
+  <footer>
+    <p>Values extracted from lioralabs.io · Neue Haas Display is licensed and ships with the app; this page renders it as Instrument Sans.</p>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById("themeBtn");
+    btn.addEventListener("click", function () {
+      var root = document.documentElement;
+      var explicit = root.getAttribute("data-theme");
+      var dark = explicit
+        ? explicit === "dark"
+        : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      root.setAttribute("data-theme", dark ? "light" : "dark");
+    });
+  })();
+</script>

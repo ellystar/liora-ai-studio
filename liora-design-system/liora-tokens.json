@@ -1,0 +1,125 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "Liora design tokens v1.0 — shared by lioralabs.io (site) and atelier.lioralabs.io (app). Primitives are the brand; semantic roles are what product components consume.",
+  "primitive": {
+    "color": {
+      "bone": { "$type": "color", "$value": "#F2EDE3", "$description": "The page. Warm paper, never cool grey." },
+      "bone2": { "$type": "color", "$value": "#E9E2D5", "$description": "A second light plane." },
+      "stone": { "$type": "color", "$value": "#C8BCA8", "$description": "Hairlines and dividers." },
+      "ink": { "$type": "color", "$value": "#100E0B", "$description": "The dark plane." },
+      "ink2": { "$type": "color", "$value": "#1C1813", "$description": "A raised dark plane." },
+      "text": { "$type": "color", "$value": "#1A1611" },
+      "textMuted": { "$type": "color", "$value": "#6E665A" },
+      "onDark": { "$type": "color", "$value": "#EFE8DA" },
+      "onDarkMuted": { "$type": "color", "$value": "#A99C86" },
+      "gold": { "$type": "color", "$value": "#B07A2E", "$description": "Attention and wayfinding: links, active, focus, fine detail." },
+      "oxblood": { "$type": "color", "$value": "#5C1F29", "$description": "Emotion and rarity: pull quotes, primary hover, danger. Never decorative." },
+      "oxbloodLift": { "$type": "color", "$value": "#CF8076", "$description": "Oxblood raised for legibility on ink." },
+      "olive": { "$type": "color", "$value": "#5F6B4B", "$description": "Product-only. Success, kept inside the warm palette." },
+      "oliveLift": { "$type": "color", "$value": "#9BAA82", "$description": "Olive raised for legibility on ink." }
+    },
+    "font": {
+      "display": { "$type": "fontFamily", "$value": ["Newsreader", "Georgia", "serif"], "$description": "For saying something. Headlines, quotes." },
+      "ui": { "$type": "fontFamily", "$value": ["Neue Haas Display", "-apple-system", "sans-serif"], "$description": "For using something. Body, controls, labels." },
+      "mono": { "$type": "fontFamily", "$value": ["Spline Sans Mono", "ui-monospace", "monospace"], "$description": "For data. Meta, counts, IDs, timestamps." }
+    },
+    "motion": {
+      "ease": { "$type": "cubicBezier", "$value": [0.22, 1, 0.36, 1], "$description": "One curve for the entire brand." },
+      "durationFast": { "$type": "duration", "$value": "150ms", "$description": "State feedback: hover, press." },
+      "durationBase": { "$type": "duration", "$value": "300ms", "$description": "App default: menus, tabs, toggles." },
+      "durationSlow": { "$type": "duration", "$value": "500ms", "$description": "Disclosure, panel open." },
+      "durationReveal": { "$type": "duration", "$value": "800ms", "$description": "Marketing scroll reveals only. Too slow for an app." }
+    },
+    "radius": {
+      "default": { "$type": "dimension", "$value": "2px", "$description": "The house radius. Liora is not a rounded brand." },
+      "pill": { "$type": "dimension", "$value": "999px", "$description": "Avatars and counters only." }
+    },
+    "space": {
+      "1": { "$type": "dimension", "$value": "4px" },
+      "2": { "$type": "dimension", "$value": "8px" },
+      "3": { "$type": "dimension", "$value": "12px" },
+      "4": { "$type": "dimension", "$value": "16px" },
+      "5": { "$type": "dimension", "$value": "20px" },
+      "6": { "$type": "dimension", "$value": "24px" },
+      "8": { "$type": "dimension", "$value": "32px" },
+      "10": { "$type": "dimension", "$value": "40px" },
+      "12": { "$type": "dimension", "$value": "48px" },
+      "16": { "$type": "dimension", "$value": "64px" },
+      "20": { "$type": "dimension", "$value": "80px" },
+      "24": { "$type": "dimension", "$value": "96px" }
+    },
+    "layout": {
+      "maxWidth": { "$type": "dimension", "$value": "1280px" },
+      "prose": { "$type": "dimension", "$value": "65ch" },
+      "gutter": { "$type": "dimension", "$value": "clamp(22px, 5vw, 64px)" }
+    },
+    "letterSpacing": {
+      "wordmark": { "$type": "dimension", "$value": "0.22em" },
+      "eyebrow": { "$type": "dimension", "$value": "0.2em" },
+      "meta": { "$type": "dimension", "$value": "0.1em" }
+    }
+  },
+  "semantic": {
+    "light": {
+      "surfacePage": { "$value": "{primitive.color.bone}" },
+      "surfaceRaised": { "$value": "#FFFFFF" },
+      "surfaceSunken": { "$value": "{primitive.color.bone2}" },
+      "surfaceInverse": { "$value": "{primitive.color.ink}" },
+      "surfaceOverlay": { "$value": "rgba(16,14,11,0.55)" },
+      "borderSubtle": { "$value": "rgba(200,188,168,0.45)" },
+      "borderDefault": { "$value": "{primitive.color.stone}" },
+      "borderStrong": { "$value": "{primitive.color.textMuted}" },
+      "contentPrimary": { "$value": "{primitive.color.text}" },
+      "contentSecondary": { "$value": "{primitive.color.textMuted}" },
+      "contentInverse": { "$value": "{primitive.color.onDark}" },
+      "contentLink": { "$value": "{primitive.color.gold}" },
+      "accentPrimary": { "$value": "{primitive.color.gold}" },
+      "accentEmphasis": { "$value": "{primitive.color.oxblood}" },
+      "stateSuccess": { "$value": "{primitive.color.olive}" },
+      "stateWarning": { "$value": "{primitive.color.gold}" },
+      "stateDanger": { "$value": "{primitive.color.oxblood}" },
+      "stateInfo": { "$value": "{primitive.color.textMuted}" },
+      "actionPrimaryBg": { "$value": "{primitive.color.ink}" },
+      "actionPrimaryFg": { "$value": "{primitive.color.bone}" },
+      "actionPrimaryBgHover": { "$value": "{primitive.color.oxblood}" }
+    },
+    "dark": {
+      "surfacePage": { "$value": "{primitive.color.ink}" },
+      "surfaceRaised": { "$value": "{primitive.color.ink2}" },
+      "surfaceSunken": { "$value": "#15110D" },
+      "surfaceInverse": { "$value": "{primitive.color.bone}" },
+      "surfaceOverlay": { "$value": "rgba(0,0,0,0.66)" },
+      "borderSubtle": { "$value": "rgba(239,232,218,0.10)" },
+      "borderDefault": { "$value": "rgba(239,232,218,0.16)" },
+      "borderStrong": { "$value": "rgba(239,232,218,0.34)" },
+      "contentPrimary": { "$value": "{primitive.color.onDark}" },
+      "contentSecondary": { "$value": "{primitive.color.onDarkMuted}" },
+      "contentInverse": { "$value": "{primitive.color.text}" },
+      "contentLink": { "$value": "{primitive.color.gold}" },
+      "accentPrimary": { "$value": "{primitive.color.gold}" },
+      "accentEmphasis": { "$value": "{primitive.color.oxbloodLift}" },
+      "stateSuccess": { "$value": "{primitive.color.oliveLift}" },
+      "stateWarning": { "$value": "#D69F52" },
+      "stateDanger": { "$value": "{primitive.color.oxbloodLift}" },
+      "stateInfo": { "$value": "{primitive.color.onDarkMuted}" },
+      "actionPrimaryBg": { "$value": "{primitive.color.bone}" },
+      "actionPrimaryFg": { "$value": "{primitive.color.ink}" },
+      "actionPrimaryBgHover": { "$value": "{primitive.color.oxbloodLift}" }
+    }
+  },
+  "typography": {
+    "d1": { "fontFamily": "display", "fontWeight": 300, "fontSize": "clamp(40px, 6.4vw, 78px)", "lineHeight": 1.03, "letterSpacing": "-0.022em" },
+    "d2": { "fontFamily": "display", "fontWeight": 300, "fontSize": "clamp(29px, 4.2vw, 48px)", "lineHeight": 1.07, "letterSpacing": "-0.016em" },
+    "d3": { "fontFamily": "display", "fontWeight": 400, "fontSize": "clamp(22px, 2.6vw, 28px)", "lineHeight": 1.16, "letterSpacing": "-0.01em" },
+    "d4": { "fontFamily": "display", "fontWeight": 400, "fontSize": "21px", "lineHeight": 1.2, "letterSpacing": "-0.006em" },
+    "quote": { "fontFamily": "display", "fontWeight": 300, "fontStyle": "italic", "fontSize": "clamp(22px, 2.8vw, 32px)", "lineHeight": 1.3, "color": "accentEmphasis" },
+    "bodyL": { "fontFamily": "ui", "fontSize": "18px", "lineHeight": 1.65, "maxWidth": "54ch" },
+    "body": { "fontFamily": "ui", "fontSize": "16px", "lineHeight": 1.6, "maxWidth": "60ch" },
+    "bodyS": { "fontFamily": "ui", "fontSize": "14px", "lineHeight": 1.55, "maxWidth": "62ch" },
+    "uiMd": { "fontFamily": "ui", "fontSize": "15px", "lineHeight": 1.5 },
+    "uiSm": { "fontFamily": "ui", "fontSize": "13px", "lineHeight": 1.45 },
+    "uiXs": { "fontFamily": "ui", "fontSize": "12px", "lineHeight": 1.4 },
+    "meta": { "fontFamily": "mono", "fontSize": "12px", "letterSpacing": "0.1em" },
+    "eyebrow": { "fontFamily": "mono", "fontSize": "11px", "letterSpacing": "0.2em", "textTransform": "uppercase" }
+  }
+}

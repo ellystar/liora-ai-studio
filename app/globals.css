@@ -1,3 +1,7 @@
+@import "tailwindcss";
+@import "../liora-design-system/liora-tokens.css";
+
+/* ── Neue Haas Display — lisanslı UI ailesi, self-hosted ───────────────── */
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Thin.woff2") format("woff2");font-weight:100;font-style:normal;font-display:swap}
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Light.woff2") format("woff2");font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Roman.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
@@ -5,34 +9,36 @@
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Black.woff2") format("woff2");font-weight:900;font-style:normal;font-display:swap}
 
-@import "tailwindcss";
-
+/* ── DS font hook'ları ─────────────────────────────────────────────────────
+   liora-tokens.css aileleri var(--font-display / --font-ui / --font-mono)
+   üzerinden override edilebilir tanımlıyor. Buraya yazılan stack'ler yeni
+   değer değil: login.css, legal.css, site-footer.css, checkout-modal.css ve
+   request-access-modal.css dosyalarında birebir aynı stack zaten kullanılıyor.
+   Tek fark, DS'in varsayılanında olmayan "Hanken Grotesk" ara halkasının
+   korunması.
+   ──────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --ui: "Neue Haas Display", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-ui: "Neue Haas Display", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, Menlo, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  /* Uygulamadaki her sayfa kabı (.atelier sarmalayıcı, .login-page,
+     .legal-page) zaten ink zemininde. Body'yi de aynı zemine oturtuyoruz ki
+     overscroll bandında beyaz şerit kalmasın ve zemin işletim sisteminin
+     tema tercihine göre değişmesin. */
+  background: var(--liora-ink);
+  color: var(--liora-on-dark);
+
+  /* DİKKAT — Faz A'da bilerek DEĞİŞTİRİLMEDİ.
+     .atelier kapsamı dışında kalan 10 ekran (8 stüdyo + assets + admin) UI
+     fontunu bu satırdan miras alıyor; var(--font-ui)'ye geçiş görsel bir
+     değişikliktir. Bkz. design-ref/faz-a-token-raporu.md — Bulgu 1. */
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ── batch-studio slayt geçişleri (page.tsx:844) ───────────────────────── */
 @keyframes batchSlideNext {
   from {
     opacity: 0;

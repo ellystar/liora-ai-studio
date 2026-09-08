@@ -1,12 +1,24 @@
+/* Bu dosya artık kendi renklerini tanımlamıyor; DS token'larını uygulamanın
+   "atelier" takma adlarına bağlıyor. Kaynak: liora-design-system/liora-tokens.css */
 .atelier {
-  --atelier-bg: #100e0b;
-  --atelier-text: #ede8df;
-  --atelier-text-2: #a39d92;
-  --atelier-muted: #8f8a80;
-  --atelier-line: #26231e;
-  --atelier-display: "Newsreader", Georgia, "Times New Roman", serif;
-  --atelier-ui: "Neue Haas Display", "Hanken Grotesk", var(--font-geist-sans), -apple-system, sans-serif;
-  --atelier-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* ── DS ile birebir eşleşenler ───────────────────────────────────────── */
+  --atelier-bg: var(--liora-ink); /* #100e0b */
+  --atelier-ease: var(--liora-ease); /* cubic-bezier(.22, 1, .36, 1) */
+  --atelier-display: var(--liora-font-display); /* Newsreader, Georgia, "Times New Roman", serif */
+
+  /* Eşdeğer: ilk iki aile aynı, yalnızca hiç ulaşılmayan fallback halkası
+     değişti (var(--font-geist-sans) çıktı, BlinkMacSystemFont/"Segoe UI" girdi). */
+  --atelier-ui: var(--liora-font-ui);
+
+  /* ── DS'te BİREBİR KARŞILIĞI OLMAYANLAR ──────────────────────────────────
+     Faz A'da hex'ler bilerek korundu: token'a bağlamak görsel değişiklik olur.
+     Hizalama önerileri ve delta'lar: design-ref/faz-a-token-raporu.md
+     ──────────────────────────────────────────────────────────────────────── */
+  --atelier-text: #ede8df; /* ≈ --liora-on-dark      #efe8da */
+  --atelier-text-2: #a39d92; /* ≈ --liora-on-dark-mut  #a99c86 */
+  --atelier-line: #26231e; /* ≈ --border-subtle (ink üzerinde) ≈ #262420 */
+  --atelier-muted: #8f8a80; /* karşılığı yok */
+
   font-family: var(--atelier-ui);
   color: var(--atelier-text);
 }

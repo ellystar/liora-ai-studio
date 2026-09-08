@@ -1,0 +1,342 @@
+/* ============================================================================
+   LIORA — DESIGN TOKENS
+   v1.0 · for lioralabs.io (site) and atelier.lioralabs.io (app)
+
+   Two layers, and the distinction matters:
+
+     1. PRIMITIVES  — the raw brand values. Extracted verbatim from the live
+                      marketing site. Never change these casually; they are
+                      the brand. Never reference them directly in a component.
+
+     2. SEMANTIC    — role-based aliases (surface, border, content, state…).
+                      This is the ONLY layer components should touch. It is
+                      what lets the app grow without drifting from the site,
+                      and what makes a dark theme a token swap rather than a
+                      rewrite.
+
+   Rule of thumb: if a component says `color: var(--ink)` it will break in
+   dark mode. If it says `color: var(--content-primary)` it will not.
+   ============================================================================ */
+
+/* ─────────────────────────────────────────────────────────────
+   1 · PRIMITIVES — the brand constants
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* Neutrals — warm, paper-like. Liora is never cool grey. */
+  --liora-bone: #f2ede3; /* the page */
+  --liora-bone-2: #e9e2d5; /* a second light plane */
+  --liora-stone: #c8bca8; /* hairlines, dividers */
+  --liora-ink: #100e0b; /* the dark plane */
+  --liora-ink-2: #1c1813; /* a raised dark plane */
+
+  /* Text */
+  --liora-text: #1a1611; /* on light */
+  --liora-text-mut: #6e665a; /* on light, secondary */
+  --liora-on-dark: #efe8da; /* on dark */
+  --liora-on-dark-mut: #a99c86; /* on dark, secondary */
+
+  /* Accents — exactly two, and they are NOT interchangeable.
+     gold    = attention, wayfinding, the live detail (links, active, focus)
+     oxblood = emotion, rarity, the moment that matters (quotes, danger) */
+  --liora-gold: #b07a2e;
+  --liora-oxblood: #5c1f29;
+  --liora-oxblood-lift: #cf8076; /* oxblood raised for legibility on ink */
+
+  /* Product-only extension.
+     The site needs no success state; an app does. Derived to sit inside the
+     warm palette — a muted olive, not a supermarket green. Everything else
+     (danger, warning) reuses the existing accents, on purpose. */
+  --liora-olive: #5f6b4b;
+  --liora-olive-lift: #9baa82; /* on dark */
+
+  /* Type families */
+  --liora-font-display: var(--font-display, "Newsreader", Georgia, serif);
+  --liora-font-ui: var(--font-ui, "Neue Haas Display", -apple-system, sans-serif);
+  --liora-font-mono: var(--font-mono, "Spline Sans Mono", ui-monospace, monospace);
+
+  /* Motion — one curve for the whole brand. */
+  --liora-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --liora-dur-fast: 150ms; /* state feedback: hover, press */
+  --liora-dur-base: 300ms; /* app default: menus, tabs, toggles */
+  --liora-dur-slow: 500ms; /* disclosure, panel open */
+  --liora-dur-reveal: 800ms; /* marketing only — too slow for an app */
+
+  /* Form */
+  --liora-radius: 2px; /* near-square. Liora is not a rounded brand. */
+  --liora-radius-pill: 999px; /* avatars and counters only */
+  --liora-hairline: 1px;
+
+  /* Space — 4px rhythm */
+  --liora-space-1: 4px;
+  --liora-space-2: 8px;
+  --liora-space-3: 12px;
+  --liora-space-4: 16px;
+  --liora-space-5: 20px;
+  --liora-space-6: 24px;
+  --liora-space-8: 32px;
+  --liora-space-10: 40px;
+  --liora-space-12: 48px;
+  --liora-space-16: 64px;
+  --liora-space-20: 80px;
+  --liora-space-24: 96px;
+
+  /* Layout */
+  --liora-maxw: 1280px;
+  --liora-maxw-prose: 65ch;
+  --liora-pad: clamp(22px, 5vw, 64px);
+
+  /* Letter spacing */
+  --liora-ls-wordmark: 0.22em;
+  --liora-ls-eyebrow: 0.2em;
+  --liora-ls-meta: 0.1em;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   2 · SEMANTIC — light (default). Components use only these.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* Surfaces */
+  --surface-page: var(--liora-bone);
+  --surface-raised: #ffffff; /* cards, menus, modals on a bone page */
+  --surface-sunken: var(--liora-bone-2); /* wells, inputs at rest, table stripes */
+  --surface-inverse: var(--liora-ink); /* dark sections inside a light app */
+  --surface-overlay: rgba(16, 14, 11, 0.55); /* modal scrim */
+
+  /* Borders — Liora separates with hairlines, not shadows. */
+  --border-subtle: rgba(200, 188, 168, 0.45);
+  --border-default: var(--liora-stone);
+  --border-strong: var(--liora-text-mut);
+  --border-focus: var(--liora-gold);
+
+  /* Content */
+  --content-primary: var(--liora-text);
+  --content-secondary: var(--liora-text-mut);
+  --content-muted: rgba(110, 102, 90, 0.7);
+  --content-inverse: var(--liora-on-dark);
+  --content-link: var(--liora-gold);
+  --content-disabled: rgba(110, 102, 90, 0.45);
+
+  /* Accents */
+  --accent-primary: var(--liora-gold);
+  --accent-emphasis: var(--liora-oxblood);
+
+  /* Feedback — danger reuses oxblood, warning reuses gold. Deliberate:
+     a restrained palette is part of the brand, not a limitation. */
+  --state-success: var(--liora-olive);
+  --state-success-surface: rgba(95, 107, 75, 0.1);
+  --state-warning: var(--liora-gold);
+  --state-warning-surface: rgba(176, 122, 46, 0.12);
+  --state-danger: var(--liora-oxblood);
+  --state-danger-surface: rgba(92, 31, 41, 0.09);
+  --state-info: var(--liora-text-mut);
+  --state-info-surface: rgba(110, 102, 90, 0.08);
+
+  /* Interactive — the primary action is ink, and it warms to oxblood.
+     That single move is the most recognisable interaction in the brand. */
+  --action-primary-bg: var(--liora-ink);
+  --action-primary-fg: var(--liora-bone);
+  --action-primary-bg-hover: var(--liora-oxblood);
+  --action-primary-fg-hover: var(--liora-bone);
+  --action-secondary-bg: transparent;
+  --action-secondary-fg: var(--liora-text);
+  --action-secondary-border: var(--liora-text);
+  --action-ghost-fg: var(--liora-text-mut);
+
+  /* Elevation — almost nothing. If you think you need a shadow, try a
+     hairline first; reach for these only when a layer truly floats. */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(16, 14, 11, 0.05);
+  --elevation-2: 0 4px 16px rgba(16, 14, 11, 0.08);
+  --elevation-3: 0 12px 40px rgba(16, 14, 11, 0.12);
+
+  /* Focus ring — never remove it; recolour it if you must. */
+  --focus-ring: 2px solid var(--liora-gold);
+  --focus-offset: 2px;
+
+  /* Controls — comfortable touch targets for a working tool. */
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+  --control-pad-x: 16px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3 · SEMANTIC — dark. Only the roles are redefined.
+   Use whichever hook your app prefers; both are wired.
+   ───────────────────────────────────────────────────────────── */
+:root[data-theme="dark"],
+.liora-dark {
+  --surface-page: var(--liora-ink);
+  --surface-raised: var(--liora-ink-2);
+  --surface-sunken: #15110d;
+  --surface-inverse: var(--liora-bone);
+  --surface-overlay: rgba(0, 0, 0, 0.66);
+
+  --border-subtle: rgba(239, 232, 218, 0.1);
+  --border-default: rgba(239, 232, 218, 0.16);
+  --border-strong: rgba(239, 232, 218, 0.34);
+  --border-focus: var(--liora-gold);
+
+  --content-primary: var(--liora-on-dark);
+  --content-secondary: var(--liora-on-dark-mut);
+  --content-muted: rgba(169, 156, 134, 0.7);
+  --content-inverse: var(--liora-text);
+  --content-link: var(--liora-gold);
+  --content-disabled: rgba(169, 156, 134, 0.4);
+
+  --accent-emphasis: var(--liora-oxblood-lift);
+
+  --state-success: var(--liora-olive-lift);
+  --state-success-surface: rgba(155, 170, 130, 0.12);
+  --state-warning: #d69f52;
+  --state-warning-surface: rgba(214, 159, 82, 0.14);
+  --state-danger: var(--liora-oxblood-lift);
+  --state-danger-surface: rgba(207, 128, 118, 0.12);
+  --state-info: var(--liora-on-dark-mut);
+  --state-info-surface: rgba(169, 156, 134, 0.1);
+
+  --action-primary-bg: var(--liora-bone);
+  --action-primary-fg: var(--liora-ink);
+  --action-primary-bg-hover: var(--liora-oxblood-lift);
+  --action-primary-fg-hover: var(--liora-ink);
+  --action-secondary-fg: var(--liora-on-dark);
+  --action-secondary-border: var(--liora-on-dark);
+  --action-ghost-fg: var(--liora-on-dark-mut);
+
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --elevation-2: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --elevation-3: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4 · TYPOGRAPHY — the site's scale, verbatim.
+   Display is for saying something. UI is for using something.
+   Mono is for data and labels. Do not swap their jobs.
+   ───────────────────────────────────────────────────────────── */
+.liora-d1 {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(40px, 6.4vw, 78px);
+  line-height: 1.03;
+  letter-spacing: -0.022em;
+}
+.liora-d2 {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(29px, 4.2vw, 48px);
+  line-height: 1.07;
+  letter-spacing: -0.016em;
+}
+.liora-d3 {
+  font-family: var(--liora-font-display);
+  font-weight: 400;
+  font-size: clamp(22px, 2.6vw, 28px);
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+}
+.liora-d4 {
+  font-family: var(--liora-font-display);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+}
+
+/* The one italic word that carries the feeling. Ration it — one per view. */
+.liora-soul {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.liora-quote {
+  font-family: var(--liora-font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(22px, 2.8vw, 32px);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--accent-emphasis);
+}
+
+.liora-body-l {
+  font-family: var(--liora-font-ui);
+  font-size: 18px;
+  line-height: 1.65;
+  max-width: 54ch;
+}
+.liora-body {
+  font-family: var(--liora-font-ui);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 60ch;
+}
+.liora-body-s {
+  font-family: var(--liora-font-ui);
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 62ch;
+  color: var(--content-secondary);
+}
+
+/* Labels, counts, timestamps, IDs — anything the eye reads as data. */
+.liora-meta {
+  font-family: var(--liora-font-mono);
+  font-size: 12px;
+  letter-spacing: var(--liora-ls-meta);
+  color: var(--content-secondary);
+}
+.liora-eyebrow {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  letter-spacing: var(--liora-ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--content-secondary);
+}
+
+/* App-only sizes. The site never needed these; a dense tool does. */
+.liora-ui-md {
+  font-family: var(--liora-font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.liora-ui-sm {
+  font-family: var(--liora-font-ui);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.liora-ui-xs {
+  font-family: var(--liora-font-ui);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5 · BASE PATTERNS
+   ───────────────────────────────────────────────────────────── */
+.liora-wrap {
+  width: 100%;
+  max-width: var(--liora-maxw);
+  margin-inline: auto;
+  padding-inline: var(--liora-pad);
+}
+
+/* The signature separator. Prefer this over a card with a shadow. */
+.liora-hairline {
+  border: 0;
+  border-top: var(--liora-hairline) solid var(--border-default);
+}
+
+*:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
