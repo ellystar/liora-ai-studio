@@ -219,31 +219,28 @@ rollback;
 
 Sonuç 0'dan büyükse sızıntı canlıda aktif.
 
-**Önerilen düzeltme — uygulanmadı, karar sizin.**
+**Düzeltme — uygulanmadı, komutlar `bekleyen-duzeltmeler.sql` dosyasında.**
 
-En küçük müdahale, hatalı politikayı preset'lerle sınırlamak:
+Doğru hamle politikayı **silmek**:
 
 ```sql
 drop policy backgrounds_select_active on public.backgrounds;
-
-create policy backgrounds_select_active on public.backgrounds
-  for select to authenticated
-  using (is_active and owner_id is null);
 ```
 
-Neden bu biçim:
+Daraltılmış ikinci bir politika yazmak işe yaramaz: permissive politikalar
+`OR` ile birleştiği için daraltma hiçbir şeyi gizleyemez, yalnızca eklenen
+politika kadar genişletir. Geriye kalan `backgrounds_select_visible`
+(`TO authenticated`) hem preset'leri hem kullanıcının kendi kayıtlarını zaten
+kapsıyor, dolayısıyla uygulama tarafında hiçbir değişiklik gerekmiyor.
 
-- `owner_id is null` koşulu politikayı yalnızca preset'lere bağlıyor,
-  kullanıcı kayıtları `backgrounds_select_visible`'ın kapsamında kalıyor.
-- `to authenticated`, anon erişimini tamamen kesiyor. Uygulamada arkaplan
-  yalnızca oturum arkasındaki stüdyo sayfalarında okunuyor, yani anon
-  erişimine ihtiyaç yok.
-- `is_active` korunuyor; politikayı tamamen silmek, admin'in pasife aldığı
-  preset'lerin yeniden görünmesine yol açardı.
+Pasif preset'lerin durumu bu düzeltmeyle **değişmiyor**:
+`backgrounds_select_visible`'da `is_active` kontrolü olmadığı için
+`is_active = false` olan preset'ler oturum açmış kullanıcılara görünmeye
+devam edecek — düzeltmeden önce de böyleydi. Bunların gizlenmesi ayrı bir
+karar.
 
-Uygulama tarafında değişiklik gerekmiyor. Geriye dönük bir temizlik
-gerekip gerekmediği ayrı bir soru: bugüne kadar kaç arkaplanın okunduğunu
-bilmiyoruz, loglara bakmak gerekir.
+Geriye dönük temizlik gerekip gerekmediği ayrı bir soru: bugüne kadar kaç
+okuma olduğunu bilmiyoruz, loglara bakmak gerekir.
 
 ### Bulgu 2 — `models.owner_user_id` ölü kolon
 
