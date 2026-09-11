@@ -152,9 +152,20 @@ Deno.serve(async (req) => {
 
     if (!model?.base64 || clothing.length === 0 || poses.length === 0) return json({ error: 'missing_input' }, 400)
 
+    // Sistem ve fiyat. Taksonomi istemciden GELEBILIR, fiyat GELMEZ: fiyat her
+    // zaman veritabanindan okunur. Bu motor iki sistemi birden besliyor;
+    // bugunku arayuz system alani gondermiyor, o yuzden varsayilan
+    // ghost_to_campaign (mevcut davranisla ayni fiyat).
+    const systemId = body.system === 'rebuild_shoot' ? 'rebuild_shoot' : 'ghost_to_campaign'
+    const { data: sys } = await admin
+      .from('systems').select('unit, price, is_active').eq('id', systemId).single()
+    if (!sys?.is_active) return json({ error: 'system_unavailable' }, 503)
+    const framePrice = sys.price as number
+    const required = framePrice * poses.length
+
     const { data: profile } = await admin.from('profiles').select('credits').eq('id', user.id).single()
     const balance = profile?.credits ?? 0
-    if (balance < poses.length) return json({ error: 'insufficient_credits', balance, required: poses.length }, 402)
+    if (balance < required) return json({ error: 'insufficient_credits', balance, required }, 402)
 
     const effectiveQuality = hasDetail ? '2K' : quality
     const imageConfig = { aspectRatio: ratio, imageSize: effectiveQuality }
@@ -213,10 +224,11 @@ Deno.serve(async (req) => {
     const httpErrorAny = settled.some((s) => s.httpError)
     const successCount = images.length
 
-    if (successCount > 0) await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: successCount, p_tool: 'ecom_studio' })
+    const charged = framePrice * successCount
+    if (successCount > 0) await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: charged, p_tool: 'ecom_studio' })
     const { data: genRow } = await admin.from('generations').insert({
-      user_id: user.id, tool: 'ecom_studio', status: successCount === 0 ? 'failed' : 'success',
-      credits_charged: successCount, image_count: successCount,
+      user_id: user.id, tool: 'ecom_studio', system: systemId, status: successCount === 0 ? 'failed' : 'success',
+      credits_charged: charged, image_count: successCount,
       params: { poses: poses.map((p) => p.id), ratio, quality: effectiveQuality, tuck: tuck ?? null, side, hasBgRef: !!backgroundRef, stylingNotes, modelId },
     }).select('id').single()
 

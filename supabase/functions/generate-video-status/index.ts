@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
         // 3) Uretim kaydi. Kullanici zaten odedi ve video hazir; burasi
         //    basarisiz olsa da istegi dusurmuyoruz, ama artik sessiz de kalmiyor.
         const { error: genErr } = await admin.from('generations').insert({
-          user_id: user.id, tool: 'ai_video', status: 'success',
+          user_id: user.id, tool: 'ai_video', system: 'product_video', status: 'success',
           credits_charged: jobRow.credits_cost, image_count: 1,
           params: { resolution: jobRow.resolution, duration: jobRow.duration },
         })
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       // Is zaten basarisiz; iki yazma da basarisiz olsa cevabi degistirmiyoruz,
       // ama ikisi de artik loga dusuyor.
       const { error: genErr } = await admin.from('generations').insert({
-        user_id: user.id, tool: 'ai_video', status: 'failed',
+        user_id: user.id, tool: 'ai_video', system: 'product_video', status: 'failed',
         credits_charged: 0, image_count: 0,
         params: { resolution: jobRow.resolution, duration: jobRow.duration },
       })

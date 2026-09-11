@@ -9,16 +9,12 @@ const corsHeaders = {
 const KLING_BASE = Deno.env.get('KLING_API_BASE_URL') ?? 'https://api-singapore.klingai.com'
 const KLING_KEY = Deno.env.get('KLING_API_KEY')!
 const MODEL = Deno.env.get('KLING_MODEL_NAME') ?? 'kling-v2-5-turbo'
+const SYSTEM = 'product_video'
 
 function json(obj: unknown, status = 200) {
   return new Response(JSON.stringify(obj), {
     status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
-}
-function costFor(res: string, dur: number): number {
-  if (res === '720p') return dur === 5 ? 3 : 4
-  if (res === '1080p') return dur === 5 ? 4 : 5
-  return 0
 }
 
 Deno.serve(async (req) => {
@@ -46,8 +42,12 @@ Deno.serve(async (req) => {
         (duration !== 5 && duration !== 10)) {
       return json({ error: 'missing_input' }, 400)
     }
-    const cost = costFor(resolution, duration)
-    if (!cost) return json({ error: 'invalid_input' }, 400)
+    // Fiyat veritabanindan. product_video 'job' birimli: kare sayisindan
+    // bagimsiz tek sabit fiyat, cozunurluk/sure tablosu kaldirildi.
+    const { data: sys } = await admin
+      .from('systems').select('unit, price, is_active').eq('id', SYSTEM).single()
+    if (!sys?.is_active) return json({ error: 'system_unavailable' }, 503)
+    const cost = sys.price as number
 
     const { data: profile } = await admin.from('profiles').select('credits').eq('id', user.id).single()
     if (!profile || profile.credits < cost) return json({ error: 'insufficient_credits' }, 402)

@@ -136,10 +136,16 @@ Deno.serve(async (req) => {
     if (!result.image) return json({ error: 'model_busy' }, 503)
 
     // krediyi dus + kaydet
-    await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1 })
-    const { data: genRow } = await admin.from('generations').insert({
-      user_id: user.id, tool: 'edit_photo', credits_used: 1,
+    await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: 'edit_photo' })
+    // NOT: burada eskiden 'credits_used' yaziliyordu — generations tablosunda
+    // boyle bir kolon yok, dolayisiyla insert sessizce dusuyor ve edit_photo
+    // uretimleri hic kaydedilmiyordu. Dogru kolon credits_charged.
+    // system bilerek yazilmiyor: edit_photo bir sistemin parcasi degil.
+    const { data: genRow, error: genErr } = await admin.from('generations').insert({
+      user_id: user.id, tool: 'edit_photo', status: 'success',
+      credits_charged: 1, image_count: 1,
     }).select('id').single()
+    if (genErr) console.error('generations insert failed', user.id, genErr)
 
     const outputImages = [result.image]
 

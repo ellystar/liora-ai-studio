@@ -88,9 +88,15 @@ Deno.serve(async (req) => {
     const modelId: string | null = body.modelId ?? null
     if (!photo?.base64) return json({ error: 'missing_input' }, 400)
 
+    // Fiyat veritabanindan; istemciden gelen hicbir fiyat kabul edilmiyor.
+    const { data: sys } = await admin
+      .from('systems').select('unit, price, is_active').eq('id', 'flat_to_form').single()
+    if (!sys?.is_active) return json({ error: 'system_unavailable' }, 503)
+    const cost = sys.price as number
+
     const { data: profile } = await admin.from('profiles').select('credits').eq('id', user.id).single()
     const balance = profile?.credits ?? 0
-    if (balance < 1) return json({ error: 'insufficient_credits', balance, required: 1 }, 402)
+    if (balance < cost) return json({ error: 'insufficient_credits', balance, required: cost }, 402)
 
     const text =
       `You are given a flat-lay / flat product photo of a clothing item. Render it as a professional e-commerce ` +
@@ -105,9 +111,9 @@ Deno.serve(async (req) => {
 
     const r = await generateImage(parts, imageConfig)
     if (r.image) {
-      await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: 'flat_to_ghost' })
+      await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: cost, p_tool: 'flat_to_ghost' })
       const { data: genRow } = await admin.from('generations').insert({
-        user_id: user.id, tool: 'flat_to_ghost', status: 'success', credits_charged: 1, image_count: 1,
+        user_id: user.id, tool: 'flat_to_ghost', system: 'flat_to_form', status: 'success', credits_charged: cost, image_count: 1,
         params: { ratio: ratio ?? null, modelId },
       }).select('id').single()
 
@@ -147,7 +153,7 @@ Deno.serve(async (req) => {
 
       return json({ images, creditsCharged: 1, savedImages })
     }
-    await admin.from('generations').insert({ user_id: user.id, tool: 'flat_to_ghost', status: 'failed', credits_charged: 0, image_count: 0, params: { ratio: ratio ?? null } })
+    await admin.from('generations').insert({ user_id: user.id, tool: 'flat_to_ghost', system: 'flat_to_form', status: 'failed', credits_charged: 0, image_count: 0, params: { ratio: ratio ?? null } })
     if (r.blocked) return json({ error: 'content_blocked' }, 422)
     if (r.httpError) return json({ error: 'model_busy' }, 503)
     return json({ error: 'generation_failed' }, 500)

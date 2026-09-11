@@ -32,6 +32,7 @@ function json(obj: unknown, status = 200) {
 }
 
 const TOOL = 'style_transfer'
+const SYSTEM = 'many_markets'
 
 async function decodeImageSource(src: string): Promise<{ mime: string; bytes: Uint8Array } | null> {
   const dataUrlMatch = src.match(/^data:([^;]+);base64,(.+)$/s)
@@ -183,9 +184,16 @@ Deno.serve(async (req) => {
       return json({ error: 'missing_input' }, 400)
     }
 
+    // Fiyat veritabanindan. Bugun tek kare uretiliyor, yani 1 kare x 1 kredi =
+    // mevcut davranisla ayni; kare sayisi artinca fiyat kendiliginden olceklenir.
+    const { data: sys } = await admin
+      .from('systems').select('unit, price, is_active').eq('id', SYSTEM).single()
+    if (!sys?.is_active) return json({ error: 'system_unavailable' }, 503)
+    const framePrice = sys.price as number
+
     const { data: profile } = await admin.from('profiles').select('credits').eq('id', user.id).single()
     const balance = profile?.credits ?? 0
-    if (balance < 1) return json({ error: 'insufficient_credits', balance, required: 1 }, 402)
+    if (balance < framePrice) return json({ error: 'insufficient_credits', balance, required: framePrice }, 402)
 
     const imageConfig = { aspectRatio: ratio, imageSize: quality }
 
@@ -253,7 +261,7 @@ Deno.serve(async (req) => {
 
     if (!result.image) {
       await admin.from('generations').insert({
-        user_id: user.id, tool: TOOL, status: 'failed',
+        user_id: user.id, tool: TOOL, system: SYSTEM, status: 'failed',
         credits_charged: 0, image_count: 0,
         params: { modelMode, ratio, quality, productCount: products.length },
       })
@@ -264,10 +272,11 @@ Deno.serve(async (req) => {
 
     const images = [result.image]
 
-    await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: TOOL })
+    await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: charged, p_tool: TOOL })
+    const charged = framePrice * images.length
     const { data: genRow, error: genErr } = await admin.from('generations').insert({
-      user_id: user.id, tool: TOOL, status: 'success',
-      credits_charged: 1, image_count: images.length,
+      user_id: user.id, tool: TOOL, system: SYSTEM, status: 'success',
+      credits_charged: charged, image_count: images.length,
       params: { modelMode, ratio, quality, productCount: products.length, modelId },
     }).select('id').single()
 
