@@ -1,0 +1,101 @@
+table_name,column_name,data_type,is_nullable,column_default
+assets,id,uuid,NO,gen_random_uuid()
+assets,user_id,uuid,NO,null
+assets,name,text,YES,null
+assets,category,text,YES,null
+assets,image_path,text,NO,null
+assets,image_url,text,YES,null
+assets,created_at,timestamp with time zone,NO,now()
+backgrounds,id,uuid,NO,gen_random_uuid()
+backgrounds,name,text,NO,null
+backgrounds,thumbnail_url,text,NO,null
+backgrounds,prompt,text,NO,null
+backgrounds,is_active,boolean,NO,true
+backgrounds,created_at,timestamp with time zone,NO,now()
+backgrounds,owner_id,uuid,YES,null
+backgrounds,image_path,text,YES,null
+backgrounds,source,text,NO,'preset'::text
+credit_transactions,id,uuid,NO,gen_random_uuid()
+credit_transactions,user_id,uuid,NO,null
+credit_transactions,amount,integer,NO,null
+credit_transactions,type,text,NO,null
+credit_transactions,tool,text,YES,null
+credit_transactions,description,text,YES,null
+credit_transactions,created_at,timestamp with time zone,NO,now()
+downloads,id,uuid,NO,gen_random_uuid()
+downloads,user_id,uuid,NO,null
+downloads,generation_image_id,uuid,NO,null
+downloads,downloaded_at,timestamp with time zone,NO,now()
+generation_images,id,uuid,NO,gen_random_uuid()
+generation_images,generation_id,uuid,NO,null
+generation_images,user_id,uuid,NO,null
+generation_images,tool,text,NO,null
+generation_images,model_id,uuid,YES,null
+generation_images,storage_path,text,NO,null
+generation_images,created_at,timestamp with time zone,NO,now()
+generation_images,expires_at,timestamp with time zone,NO,(now() + '7 days'::interval)
+generation_images,deleted_at,timestamp with time zone,YES,null
+generations,id,uuid,NO,gen_random_uuid()
+generations,user_id,uuid,NO,null
+generations,tool,text,NO,null
+generations,status,text,NO,'pending'::text
+generations,credits_charged,integer,NO,0
+generations,image_count,integer,NO,0
+generations,params,jsonb,YES,null
+generations,error,text,YES,null
+generations,created_at,timestamp with time zone,NO,now()
+model_favorites,user_id,uuid,NO,null
+model_favorites,model_id,uuid,NO,null
+model_favorites,created_at,timestamp with time zone,NO,now()
+models,id,uuid,NO,gen_random_uuid()
+models,name,text,NO,null
+models,gender,text,YES,null
+models,image_url,text,NO,null
+models,scope,text,NO,'general'::text
+models,owner_user_id,uuid,YES,null
+models,is_active,boolean,NO,true
+models,created_at,timestamp with time zone,NO,now()
+models,owner_id,uuid,YES,null
+models,source,text,NO,'admin'::text
+models,image_path,text,YES,null
+pose_favorites,user_id,uuid,NO,null
+pose_favorites,pose_id,uuid,NO,null
+pose_favorites,created_at,timestamp with time zone,NO,now()
+poses,id,uuid,NO,gen_random_uuid()
+poses,name,text,NO,null
+poses,thumbnail_url,text,NO,null
+poses,prompt,text,NO,null
+poses,is_active,boolean,NO,true
+poses,created_at,timestamp with time zone,NO,now()
+poses,shot_type,text,YES,null
+poses,category,text,NO,'general'::text
+poses,direction,text,YES,null
+profiles,id,uuid,NO,null
+profiles,email,text,YES,null
+profiles,full_name,text,YES,null
+profiles,credits,integer,NO,0
+profiles,role,text,NO,'user'::text
+profiles,preferred_language,text,NO,'tr'::text
+profiles,created_at,timestamp with time zone,NO,now()
+profiles,updated_at,timestamp with time zone,NO,now()
+style_categories,id,uuid,NO,gen_random_uuid()
+style_categories,name,text,NO,null
+style_categories,sort,integer,NO,0
+style_categories,created_at,timestamp with time zone,NO,now()
+styles,id,uuid,NO,gen_random_uuid()
+styles,name,text,YES,null
+styles,category_id,uuid,YES,null
+styles,image_path,text,NO,null
+styles,owner_id,uuid,YES,null
+styles,source,text,NO,'admin'::text
+styles,created_at,timestamp with time zone,NO,now()
+video_jobs,id,uuid,NO,gen_random_uuid()
+video_jobs,user_id,uuid,NO,null
+video_jobs,status,text,NO,'pending'::text
+video_jobs,provider_task_id,text,YES,null
+video_jobs,prompt,text,YES,null
+video_jobs,resolution,text,NO,null
+video_jobs,duration,integer,NO,null
+video_jobs,credits_cost,integer,NO,null
+video_jobs,credits_charged,boolean,NO,false
+video_jobs,error_code,text,YES,null
