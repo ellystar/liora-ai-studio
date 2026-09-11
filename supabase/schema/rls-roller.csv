@@ -1,0 +1,35 @@
+tablename,policyname,cmd,permissive,roles
+assets,assets_delete_own,DELETE,PERMISSIVE,{authenticated}
+assets,assets_insert_own,INSERT,PERMISSIVE,{authenticated}
+assets,assets_select_own,SELECT,PERMISSIVE,{authenticated}
+backgrounds,backgrounds_admin_all,ALL,PERMISSIVE,{authenticated}
+backgrounds,backgrounds_user_delete_own,DELETE,PERMISSIVE,{authenticated}
+backgrounds,backgrounds_user_insert_own,INSERT,PERMISSIVE,{authenticated}
+backgrounds,backgrounds_select_active,SELECT,PERMISSIVE,{public}
+backgrounds,backgrounds_select_visible,SELECT,PERMISSIVE,{authenticated}
+credit_transactions,credit_tx_select_own,SELECT,PERMISSIVE,{public}
+downloads,users insert own downloads,INSERT,PERMISSIVE,{public}
+downloads,users read own downloads,SELECT,PERMISSIVE,{public}
+generation_images,users read own active images,SELECT,PERMISSIVE,{public}
+generations,generations_select_own,SELECT,PERMISSIVE,{public}
+model_favorites,model_fav_delete_own,DELETE,PERMISSIVE,{authenticated}
+model_favorites,model_fav_insert_own,INSERT,PERMISSIVE,{authenticated}
+model_favorites,model_fav_select_own,SELECT,PERMISSIVE,{authenticated}
+models,models_admin_all,ALL,PERMISSIVE,{public}
+models,models_user_delete_own,DELETE,PERMISSIVE,{authenticated}
+models,models_user_insert_own,INSERT,PERMISSIVE,{authenticated}
+models,models_select_visible,SELECT,PERMISSIVE,{public}
+pose_favorites,pose_fav_delete_own,DELETE,PERMISSIVE,{authenticated}
+pose_favorites,pose_fav_insert_own,INSERT,PERMISSIVE,{authenticated}
+pose_favorites,pose_fav_select_own,SELECT,PERMISSIVE,{authenticated}
+poses,poses_admin_all,ALL,PERMISSIVE,{public}
+poses,poses_select_active,SELECT,PERMISSIVE,{public}
+profiles,profiles_admin_select,SELECT,PERMISSIVE,{public}
+profiles,profiles_select_own,SELECT,PERMISSIVE,{public}
+style_categories,style_categories_admin_all,ALL,PERMISSIVE,{authenticated}
+style_categories,style_categories_select_all,SELECT,PERMISSIVE,{authenticated}
+styles,styles_admin_all,ALL,PERMISSIVE,{authenticated}
+styles,styles_user_delete_own,DELETE,PERMISSIVE,{authenticated}
+styles,styles_user_insert_own,INSERT,PERMISSIVE,{authenticated}
+styles,styles_select_visible,SELECT,PERMISSIVE,{authenticated}
+video_jobs,video_jobs_select_own,SELECT,PERMISSIVE,{authenticated}

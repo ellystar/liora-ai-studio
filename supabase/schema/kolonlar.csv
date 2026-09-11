@@ -1,0 +1,103 @@
+table_name,columns
+assets,"id uuid NOT NULL default gen_random_uuid()
+user_id uuid NOT NULL
+name text
+category text
+image_path text NOT NULL
+image_url text
+created_at timestamp with time zone NOT NULL default now()"
+backgrounds,"id uuid NOT NULL default gen_random_uuid()
+name text NOT NULL
+thumbnail_url text NOT NULL
+prompt text NOT NULL
+is_active boolean NOT NULL default true
+created_at timestamp with time zone NOT NULL default now()
+owner_id uuid
+image_path text
+source text NOT NULL default 'preset'::text"
+credit_transactions,"id uuid NOT NULL default gen_random_uuid()
+user_id uuid NOT NULL
+amount integer NOT NULL
+type text NOT NULL
+tool text
+description text
+created_at timestamp with time zone NOT NULL default now()"
+downloads,"id uuid NOT NULL default gen_random_uuid()
+user_id uuid NOT NULL
+generation_image_id uuid NOT NULL
+downloaded_at timestamp with time zone NOT NULL default now()"
+generation_images,"id uuid NOT NULL default gen_random_uuid()
+generation_id uuid NOT NULL
+user_id uuid NOT NULL
+tool text NOT NULL
+model_id uuid
+storage_path text NOT NULL
+created_at timestamp with time zone NOT NULL default now()
+expires_at timestamp with time zone NOT NULL default (now() + '7 days'::interval)
+deleted_at timestamp with time zone"
+generations,"id uuid NOT NULL default gen_random_uuid()
+user_id uuid NOT NULL
+tool text NOT NULL
+status text NOT NULL default 'pending'::text
+credits_charged integer NOT NULL default 0
+image_count integer NOT NULL default 0
+params jsonb
+error text
+created_at timestamp with time zone NOT NULL default now()"
+model_favorites,"user_id uuid NOT NULL
+model_id uuid NOT NULL
+created_at timestamp with time zone NOT NULL default now()"
+models,"id uuid NOT NULL default gen_random_uuid()
+name text NOT NULL
+gender text
+image_url text NOT NULL
+scope text NOT NULL default 'general'::text
+owner_user_id uuid
+is_active boolean NOT NULL default true
+created_at timestamp with time zone NOT NULL default now()
+owner_id uuid
+source text NOT NULL default 'admin'::text
+image_path text"
+pose_favorites,"user_id uuid NOT NULL
+pose_id uuid NOT NULL
+created_at timestamp with time zone NOT NULL default now()"
+poses,"id uuid NOT NULL default gen_random_uuid()
+name text NOT NULL
+thumbnail_url text NOT NULL
+prompt text NOT NULL
+is_active boolean NOT NULL default true
+created_at timestamp with time zone NOT NULL default now()
+shot_type text
+category text NOT NULL default 'general'::text
+direction text"
+profiles,"id uuid NOT NULL
+email text
+full_name text
+credits integer NOT NULL default 0
+role text NOT NULL default 'user'::text
+preferred_language text NOT NULL default 'tr'::text
+created_at timestamp with time zone NOT NULL default now()
+updated_at timestamp with time zone NOT NULL default now()"
+style_categories,"id uuid NOT NULL default gen_random_uuid()
+name text NOT NULL
+sort integer NOT NULL default 0
+created_at timestamp with time zone NOT NULL default now()"
+styles,"id uuid NOT NULL default gen_random_uuid()
+name text
+category_id uuid
+image_path text NOT NULL
+owner_id uuid
+source text NOT NULL default 'admin'::text
+created_at timestamp with time zone NOT NULL default now()"
+video_jobs,"id uuid NOT NULL default gen_random_uuid()
+user_id uuid NOT NULL
+status text NOT NULL default 'pending'::text
+provider_task_id text
+prompt text
+resolution text NOT NULL
+duration integer NOT NULL
+credits_cost integer NOT NULL
+credits_charged boolean NOT NULL default false
+error_code text
+created_at timestamp with time zone NOT NULL default now()
+updated_at timestamp with time zone NOT NULL default now()"
