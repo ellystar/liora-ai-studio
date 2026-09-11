@@ -32,8 +32,13 @@ Deno.serve(async (req) => {
     const { jobId } = await req.json()
     if (!jobId) return json({ error: 'missing_input' }, 400)
 
-    const { data: jobRow } = await admin
+    const { data: jobRow, error: jobReadErr } = await admin
       .from('video_jobs').select('*').eq('id', jobId).eq('user_id', user.id).single()
+    // PGRST116 = kayit yok; digerleri gercek veritabani hatasi ve 404 demek yaniltici olur
+    if (jobReadErr && jobReadErr.code !== 'PGRST116') {
+      console.error('video_jobs read failed', jobId, jobReadErr)
+      return json({ error: 'server_error', detail: 'job_read_failed' }, 500)
+    }
     if (!jobRow) return json({ error: 'not_found' }, 404)
     if (jobRow.status === 'succeeded') return json({ status: 'succeeded' })
     if (jobRow.status === 'failed') return json({ status: 'failed' })
@@ -48,31 +53,55 @@ Deno.serve(async (req) => {
       const url = kData?.data?.task_result?.videos?.[0]?.url as string | undefined
       if (!url) return json({ status: 'processing' })
       if (!jobRow.credits_charged) {
-        await admin.rpc('deduct_credits', {
+        // 1) Krediyi dus. Basarisizsa isi ucretlendirilmis isaretleme, yoksa
+        //    video bedava verilmis olur.
+        const { error: deductErr } = await admin.rpc('deduct_credits', {
           p_user_id: user.id, p_amount: jobRow.credits_cost, p_tool: 'ai_video',
         })
-        await admin.from('generations').insert({
+        if (deductErr) {
+          console.error('deduct_credits failed', jobRow.id, deductErr)
+          return json({ error: 'credit_charge_failed', detail: deductErr.message }, 402)
+        }
+
+        // 2) Isi hemen ucretlendirilmis olarak kapat. Bu satir idempotency
+        //    bekcisi: yazilamazsa bir sonraki yoklama krediyi IKINCI kez duser.
+        //    Bu yuzden uretim kaydindan once geliyor.
+        const { error: jobErr } = await admin.from('video_jobs').update({
+          status: 'succeeded', credits_charged: true, updated_at: new Date().toISOString(),
+        }).eq('id', jobRow.id)
+        if (jobErr) {
+          console.error('video_jobs not marked charged', jobRow.id, jobErr)
+          return json({ error: 'server_error', detail: 'job_not_marked_charged' }, 500)
+        }
+
+        // 3) Uretim kaydi. Kullanici zaten odedi ve video hazir; burasi
+        //    basarisiz olsa da istegi dusurmuyoruz, ama artik sessiz de kalmiyor.
+        const { error: genErr } = await admin.from('generations').insert({
           user_id: user.id, tool: 'ai_video', status: 'success',
           credits_charged: jobRow.credits_cost, image_count: 1,
           params: { resolution: jobRow.resolution, duration: jobRow.duration },
         })
-        await admin.from('video_jobs').update({
-          status: 'succeeded', credits_charged: true, updated_at: new Date().toISOString(),
-        }).eq('id', jobRow.id)
+        if (genErr) console.error('generations insert failed (success)', jobRow.id, genErr)
       }
       return json({ status: 'succeeded', url })
     }
 
     if (st === 'failed') {
-      await admin.from('generations').insert({
+      // Is zaten basarisiz; iki yazma da basarisiz olsa cevabi degistirmiyoruz,
+      // ama ikisi de artik loga dusuyor.
+      const { error: genErr } = await admin.from('generations').insert({
         user_id: user.id, tool: 'ai_video', status: 'failed',
         credits_charged: 0, image_count: 0,
         params: { resolution: jobRow.resolution, duration: jobRow.duration },
       })
-      await admin.from('video_jobs').update({
+      if (genErr) console.error('generations insert failed (failure)', jobRow.id, genErr)
+
+      const { error: jobErr } = await admin.from('video_jobs').update({
         status: 'failed', error_code: kData?.data?.task_status_msg ?? 'failed',
         updated_at: new Date().toISOString(),
       }).eq('id', jobRow.id)
+      if (jobErr) console.error('video_jobs not marked failed', jobRow.id, jobErr)
+
       return json({ status: 'failed' })
     }
 
