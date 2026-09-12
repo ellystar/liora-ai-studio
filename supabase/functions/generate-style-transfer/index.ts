@@ -33,6 +33,7 @@ function json(obj: unknown, status = 200) {
 
 const TOOL = 'style_transfer'
 const SYSTEM = 'many_markets'
+const MAX_FRAMES = 6
 
 async function decodeImageSource(src: string): Promise<{ mime: string; bytes: Uint8Array } | null> {
   const dataUrlMatch = src.match(/^data:([^;]+);base64,(.+)$/s)
@@ -168,18 +169,40 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey)
 
     const body = await req.json()
-    const style = body.style as ImgInput
+    const style = body.style as ImgInput | undefined
     const products: ImgInput[] = body.products ?? []
-    const modelMode: string = body.modelMode ?? 'keep'   // 'keep' | 'product' | 'own' | 'ai'
+    const modelMode: string = body.modelMode ?? 'keep'   // 'keep' | 'product' | 'own' | 'ai' | 'cast_swap'
     const modelImg = body.model as ImgInput | undefined
     const notes: string = (body.notes ?? '').toString().trim()
     const ratio: string = body.ratio ?? '2:3'
     const quality = body.quality === '2k' ? '2K' : '1K'
     const modelId: string | null = body.modelId ?? null
 
-    if (!style?.base64 || products.length === 0) return json({ error: 'missing_input' }, 400)
+    const isCastSwap = modelMode === 'cast_swap'
 
-    const useModelImg = (modelMode === 'own' || modelMode === 'ai') && !!modelImg?.base64
+    // Dizi ekseni moddan bagimsiz: tek istek birden fazla kare tasir, hepsi
+    // paralel kosar, basarili kare sayisi kadar kredi duser. Her kare KENDI
+    // stil referansidir — altinci kare de birincisi gibi kendi sahnesini korur.
+    // Eski istemciler frames gondermiyor; o zaman style tek elemanli dizi olur.
+    const rawFrames = Array.isArray(body.frames) ? (body.frames as ImgInput[]) : []
+    const frames: ImgInput[] = (rawFrames.length > 0 ? rawFrames : style ? [style] : [])
+      .filter((f) => !!f?.base64)
+
+    if (frames.length === 0) return json({ error: 'missing_input' }, 400)
+    if (frames.length > MAX_FRAMES) {
+      return json({ error: 'too_many_frames', max: MAX_FRAMES, got: frames.length }, 400)
+    }
+
+    // cast_swap'te urun gorseli yok — kiyafet karenin kendisinden geliyor —
+    // ama cast (manken) gorseli sart. Diger modlarda eski kurallar aynen gecerli.
+    if (isCastSwap) {
+      if (!modelImg?.base64) return json({ error: 'missing_input', detail: 'cast_required' }, 400)
+    } else if (products.length === 0) {
+      return json({ error: 'missing_input' }, 400)
+    }
+
+    const useModelImg =
+      (modelMode === 'own' || modelMode === 'ai' || isCastSwap) && !!modelImg?.base64
     if ((modelMode === 'own' || modelMode === 'ai') && !useModelImg) {
       return json({ error: 'missing_input' }, 400)
     }
@@ -201,12 +224,15 @@ Deno.serve(async (req) => {
       return json({ error: 'server_error', detail: 'balance_lookup_failed' }, 500)
     }
     const balance = profile?.credits ?? 0
-    if (balance < framePrice) return json({ error: 'insufficient_credits', balance, required: framePrice }, 402)
+    const required = framePrice * frames.length
+    if (balance < required) return json({ error: 'insufficient_credits', balance, required }, 402)
 
     const imageConfig = { aspectRatio: ratio, imageSize: quality }
 
     // --- 4 manken modu ---
-    const modelText =
+    const modelText = isCastSwap
+      ? `PERSON — THIS IS THE ONLY THING THAT CHANGES: Replace the person in the reference frame with the person shown in the CAST image (their face, facial features, hair, skin tone and body type). The new person must stand in the reference person's place and hold their EXACT pose, stance, limb positions, hand positions, head angle and gaze direction, occupying the same position and scale in the frame. Do not alter their proportions to a different body type than the cast image shows, and do not change anything else in the photograph. `
+      :
       modelMode === 'product'
         ? `PERSON: The PRODUCT image(s) show the item worn by a person. KEEP THAT PERSON from the product image — their face, hair, skin tone and body. Place them into the style reference's scene, adopting its pose, camera angle, framing, lighting and background EXACTLY. Do NOT use the person from the style reference. `
         : useModelImg
@@ -214,7 +240,9 @@ Deno.serve(async (req) => {
         : `PERSON: Keep the SAME person from the style reference — same body, pose, stance, hands, hair and framing. Do NOT replace the person. `
 
     // --- moda gore "ne degisir" ---
-    const changeText =
+    const changeText = isCastSwap
+      ? `CHANGE ONLY: the PERSON. The GARMENTS worn in the reference frame must be preserved EXACTLY — the same design, cut, silhouette, fit, colour, fabric, texture, pattern, prints, logos, buttons, seams and how they drape. Re-render them on the new person's body with realistic drape and shadows, but do NOT restyle, recolour, resize, simplify or redraw any part of the clothing. Nothing else in the photograph changes. `
+      :
       modelMode === 'keep'
         ? `CHANGE ONLY: the merchandise (the garments/items worn). Everything else — including the person — stays exactly as in the reference. `
         : `CHANGE: (a) the PERSON, and (b) the merchandise (the garments/items worn). Everything else about the photograph stays exactly as in the reference. `
@@ -225,9 +253,16 @@ Deno.serve(async (req) => {
         ? ``
         : `RELIGHTING (critical): The new person must be RE-LIT to match the style reference's lighting exactly — the same light direction, intensity, softness, color temperature and shadows must fall on their face, skin, hair and body. Their face and skin must look naturally photographed on this set, with correct facial shadows, correct contact shadows on the ground/surface, and the same color grading as the reference. The person must NOT look pasted, cut out, flat, or lit differently from the scene. Blend them into the scene photorealistically. `
 
-    const orderText = useModelImg
+    const orderText = isCastSwap
+      ? `IMAGE ORDER: image 1 is the REFERENCE FRAME (the photograph being re-cast); image 2 is the CAST (the new person). There are no further images. `
+      : useModelImg
       ? `IMAGE ORDER: image 1 is the STYLE REFERENCE; image 2 is the MODEL; the remaining images are the PRODUCT items. `
       : `IMAGE ORDER: image 1 is the STYLE REFERENCE; the remaining images are the PRODUCT items. `
+
+    // cast_swap'te ayri bir urun gorseli yok: kiyafet referans karenin icinde.
+    const productText = isCastSwap
+      ? `There are NO separate product images in this task — the garments already exist in the reference frame and are the source of truth for themselves. `
+      : `Reproduce each product faithfully — exact design, cut, silhouette, color, fabric, pattern, prints and logos as shown in its image. Do not redesign, restyle or re-imagine the products; fit them naturally on the body with realistic drape and shadows consistent with the reference lighting. `
 
     const notesText = notes ? `Additional notes: ${notes}. ` : ''
 
@@ -243,7 +278,7 @@ Deno.serve(async (req) => {
       `(5) BACKGROUND and ENVIRONMENT: identical setting, props, objects, textures and colors. ` +
 
       changeText +
-      `Reproduce each product faithfully — exact design, cut, silhouette, color, fabric, pattern, prints and logos as shown in its image. Do not redesign, restyle or re-imagine the products; fit them naturally on the body with realistic drape and shadows consistent with the reference lighting. ` +
+      productText +
 
       modelText +
       relightText +
@@ -253,33 +288,37 @@ Deno.serve(async (req) => {
       `FINAL CHECK before output: pose, camera distance, camera angle, crop, composition, background and lighting must match the STYLE REFERENCE EXACTLY — as if the same photo were re-shot on the same set, with the same lighting rig and the same camera position. ` +
       `Commercial catalogue photograph: modest, tasteful and professional. Photorealistic, sharp, studio-grade quality; the person and the garments are naturally integrated into the scene's light.`
 
-    // PARTS: tek text + gorseller (stil -> [manken] -> urunler)
-    const parts: any[] = [
-      { text },
-      { inline_data: { mime_type: style.mimeType, data: style.base64 } },
-    ]
-    if (useModelImg && modelImg) {
-      parts.push({ inline_data: { mime_type: modelImg.mimeType, data: modelImg.base64 } })
-    }
-    for (const p of products) {
-      parts.push({ inline_data: { mime_type: p.mimeType, data: p.base64 } })
+    // Her kare KENDI stil referansiyla ayri bir cagri; hepsi paralel kosuyor.
+    // Tek kare gonderildiginde bu dongu tam olarak eski davranisi uretiyor.
+    async function forFrame(frame: ImgInput) {
+      const parts: any[] = [
+        { text },
+        { inline_data: { mime_type: frame.mimeType, data: frame.base64 } },
+      ]
+      if (useModelImg && modelImg) {
+        parts.push({ inline_data: { mime_type: modelImg.mimeType, data: modelImg.base64 } })
+      }
+      for (const p of products) {
+        parts.push({ inline_data: { mime_type: p.mimeType, data: p.base64 } })
+      }
+      return generateImage(parts, imageConfig)
     }
 
-    const result = await generateImage(parts, imageConfig)
+    const settled = await Promise.all(frames.map(forFrame))
+    const images = settled.filter((r) => r.image).map((r) => r.image as string)
 
-    if (!result.image) {
+    // Kismi basari kabul: 6 kareden 4'u gelirse 4 teslim edilir, 4 kredi duser.
+    if (images.length === 0) {
       const { error: failGenErr } = await admin.from('generations').insert({
         user_id: user.id, tool: TOOL, system: SYSTEM, status: 'failed',
         credits_charged: 0, image_count: 0,
-        params: { modelMode, ratio, quality, productCount: products.length },
+        params: { modelMode, ratio, quality, productCount: products.length, frameCount: frames.length },
       })
       if (failGenErr) console.error('generations insert failed (failure)', user.id, failGenErr)
-      if (result.blocked) return json({ error: 'content_blocked' }, 422)
-      if (result.httpError) return json({ error: 'model_busy' }, 503)
+      if (settled.some((r) => r.blocked)) return json({ error: 'content_blocked' }, 422)
+      if (settled.some((r) => r.httpError)) return json({ error: 'model_busy' }, 503)
       return json({ error: 'generation_failed' }, 500)
     }
-
-    const images = [result.image]
 
     const charged = framePrice * images.length
 
@@ -293,7 +332,7 @@ Deno.serve(async (req) => {
     const { data: genRow, error: genErr } = await admin.from('generations').insert({
       user_id: user.id, tool: TOOL, system: SYSTEM, status: 'success',
       credits_charged: charged, image_count: images.length,
-      params: { modelMode, ratio, quality, productCount: products.length, modelId },
+      params: { modelMode, ratio, quality, productCount: products.length, frameCount: frames.length, modelId },
     }).select('id').single()
 
     if (genErr || !genRow?.id) {
@@ -304,7 +343,7 @@ Deno.serve(async (req) => {
       ? await saveGenerationImages(admin, user.id, genRow.id, images, modelId)
       : []
 
-    return json({ images, creditsCharged: 1, savedImages })
+    return json({ images, creditsCharged: charged, savedImages })
   } catch (e) {
     console.error(e)
     return json({ error: 'server_error', detail: String(e) }, 500)
