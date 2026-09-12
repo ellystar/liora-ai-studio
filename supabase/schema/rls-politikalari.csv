@@ -1,0 +1,35 @@
+tablename,policyname,cmd,qual,with_check
+assets,assets_delete_own,DELETE,(auth.uid() = user_id),null
+assets,assets_insert_own,INSERT,null,(auth.uid() = user_id)
+assets,assets_select_own,SELECT,(auth.uid() = user_id),null
+backgrounds,backgrounds_admin_all,ALL,is_admin(),is_admin()
+backgrounds,backgrounds_select_active,SELECT,is_active,null
+backgrounds,backgrounds_select_visible,SELECT,((owner_id IS NULL) OR (owner_id = auth.uid()) OR is_admin()),null
+backgrounds,backgrounds_user_delete_own,DELETE,(owner_id = auth.uid()),null
+backgrounds,backgrounds_user_insert_own,INSERT,null,((owner_id = auth.uid()) AND (source = 'user'::text))
+credit_transactions,credit_tx_select_own,SELECT,(auth.uid() = user_id),null
+downloads,users insert own downloads,INSERT,null,(auth.uid() = user_id)
+downloads,users read own downloads,SELECT,(auth.uid() = user_id),null
+generation_images,users read own active images,SELECT,((auth.uid() = user_id) AND (deleted_at IS NULL)),null
+generations,generations_select_own,SELECT,(auth.uid() = user_id),null
+model_favorites,model_fav_delete_own,DELETE,(auth.uid() = user_id),null
+model_favorites,model_fav_insert_own,INSERT,null,(auth.uid() = user_id)
+model_favorites,model_fav_select_own,SELECT,(auth.uid() = user_id),null
+models,models_admin_all,ALL,is_admin(),is_admin()
+models,models_select_visible,SELECT,((owner_id IS NULL) OR (owner_id = auth.uid()) OR is_admin()),null
+models,models_user_delete_own,DELETE,((owner_id = auth.uid()) AND (source = 'user'::text)),null
+models,models_user_insert_own,INSERT,null,((owner_id = auth.uid()) AND (source = 'user'::text))
+pose_favorites,pose_fav_delete_own,DELETE,(auth.uid() = user_id),null
+pose_favorites,pose_fav_insert_own,INSERT,null,(auth.uid() = user_id)
+pose_favorites,pose_fav_select_own,SELECT,(auth.uid() = user_id),null
+poses,poses_admin_all,ALL,is_admin(),is_admin()
+poses,poses_select_active,SELECT,is_active,null
+profiles,profiles_admin_select,SELECT,is_admin(),null
+profiles,profiles_select_own,SELECT,(auth.uid() = id),null
+style_categories,style_categories_admin_all,ALL,is_admin(),is_admin()
+style_categories,style_categories_select_all,SELECT,true,null
+styles,styles_admin_all,ALL,is_admin(),is_admin()
+styles,styles_select_visible,SELECT,((owner_id IS NULL) OR (owner_id = auth.uid()) OR is_admin()),null
+styles,styles_user_delete_own,DELETE,(owner_id = auth.uid()),null
+styles,styles_user_insert_own,INSERT,null,((owner_id = auth.uid()) AND (source = 'user'::text))
+video_jobs,video_jobs_select_own,SELECT,(auth.uid() = user_id),null

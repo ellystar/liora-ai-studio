@@ -1,3 +1,7 @@
+@import "tailwindcss";
+@import "../liora-design-system/liora-tokens.css";
+
+/* ── Neue Haas Display — lisanslı UI ailesi, self-hosted ───────────────── */
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Thin.woff2") format("woff2");font-weight:100;font-style:normal;font-display:swap}
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Light.woff2") format("woff2");font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Roman.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
@@ -5,34 +9,82 @@
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
 @font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Black.woff2") format("woff2");font-weight:900;font-style:normal;font-display:swap}
 
-@import "tailwindcss";
-
+/* ── DS font hook'ları ─────────────────────────────────────────────────────
+   liora-tokens.css aileleri var(--font-display / --font-ui / --font-mono)
+   üzerinden override edilebilir tanımlıyor. Buraya yazılan stack'ler yeni
+   değer değil: login.css, legal.css, site-footer.css, checkout-modal.css ve
+   request-access-modal.css dosyalarında birebir aynı stack zaten kullanılıyor.
+   Tek fark, DS'in varsayılanında olmayan "Hanken Grotesk" ara halkasının
+   korunması.
+   ──────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --ui: "Neue Haas Display", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-ui: "Neue Haas Display", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, Menlo, monospace;
 }
 
+/* ── DS rolleri → Tailwind yardımcı sınıfları ──────────────────────────────
+   Burada tek bir yeni değer üretilmiyor; her satır liora-tokens.css'teki bir
+   semantik rolü işaret ediyor. "inline" olması şart: roller
+   <html data-theme="dark"> ile yeniden tanımlandığı için yardımcı sınıflar
+   değeri kopyalamak yerine değişkeni izlemeli.
+   ──────────────────────────────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-surface-page: var(--surface-page);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-scrim-review: var(--scrim-review);
+  --color-track: var(--track);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+
+  --color-content-primary: var(--content-primary);
+  --color-content-secondary: var(--content-secondary);
+  --color-content-muted: var(--content-muted);
+  --color-content-inverse: var(--content-inverse);
+  --color-content-disabled: var(--content-disabled);
+  --color-content-label: var(--content-label);
+
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-emphasis: var(--accent-emphasis);
+
+  --color-state-danger: var(--state-danger);
+  --color-state-danger-surface: var(--state-danger-surface);
+  --color-state-success: var(--state-success);
+  --color-state-success-surface: var(--state-success-surface);
+  --color-state-warning: var(--state-warning);
+  --color-state-info: var(--state-info);
+  --color-state-info-surface: var(--state-info-surface);
+
+  --color-action-primary: var(--action-primary-bg);
+  --color-action-primary-fg: var(--action-primary-fg);
+  --color-action-primary-hover: var(--action-primary-bg-hover);
+
+  /* DS: "near-square, editorial" — 2px. Pill yalnızca avatar ve sayaçlarda. */
+  --radius-liora: var(--liora-radius);
+  --radius-pill: var(--liora-radius-pill);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Uygulamadaki her sayfa kabı (.atelier sarmalayıcı, .login-page,
+     .legal-page) zaten ink zemininde. Body'yi de aynı zemine oturtuyoruz ki
+     overscroll bandında beyaz şerit kalmasın ve zemin işletim sisteminin
+     tema tercihine göre değişmesin. */
+  background: var(--liora-ink);
+  color: var(--liora-on-dark);
+
+  /* Faz B · Bulgu 1'in düzeltmesi.
+     .atelier kapsamı dışında kalan 10 ekran (8 stüdyo + assets + admin) UI
+     fontunu bu satırdan miras alıyor. Eskiden Arial'di — panel markanın
+     fontuyla hiç çalışmıyordu. */
+  font-family: var(--font-ui);
 }
 
+/* ── batch-studio slayt geçişleri (page.tsx:844) ───────────────────────── */
 @keyframes batchSlideNext {
   from {
     opacity: 0;

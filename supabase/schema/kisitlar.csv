@@ -1,0 +1,46 @@
+table_name,constraints
+assets,"assets_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+assets_pkey :: PRIMARY KEY (id)"
+backgrounds,"backgrounds_owner_id_fkey :: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
+backgrounds_pkey :: PRIMARY KEY (id)"
+credit_transactions,"credit_transactions_type_check :: CHECK ((type = ANY (ARRAY['topup'::text, 'usage'::text, 'refund'::text])))
+credit_transactions_pkey :: PRIMARY KEY (id)
+credit_transactions_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+downloads,"downloads_pkey :: PRIMARY KEY (id)
+downloads_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES auth.users(id)
+downloads_generation_image_id_fkey :: FOREIGN KEY (generation_image_id) REFERENCES generation_images(id)"
+generation_images,"generation_images_generation_id_fkey :: FOREIGN KEY (generation_id) REFERENCES generations(id)
+generation_images_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES auth.users(id)
+generation_images_pkey :: PRIMARY KEY (id)"
+generations,"generations_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
+generations_pkey :: PRIMARY KEY (id)
+generations_status_check :: CHECK ((status = ANY (ARRAY['pending'::text, 'success'::text, 'failed'::text])))
+generations_tool_check :: CHECK ((tool = ANY (ARRAY['ecom_studio'::text, 'pose_generator'::text, 'flat_to_ghost'::text, 'edit_photo'::text, 'style_transfer'::text])))"
+model_favorites,"model_favorites_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
+model_favorites_pkey :: PRIMARY KEY (user_id, model_id)
+model_favorites_model_id_fkey :: FOREIGN KEY (model_id) REFERENCES models(id) ON DELETE CASCADE"
+models,"models_scope_check :: CHECK ((scope = ANY (ARRAY['general'::text, 'own'::text])))
+models_gender_check :: CHECK ((gender = ANY (ARRAY['female'::text, 'male'::text, 'unisex'::text])))
+models_pkey :: PRIMARY KEY (id)
+models_owner_user_id_fkey :: FOREIGN KEY (owner_user_id) REFERENCES profiles(id) ON DELETE CASCADE
+models_gender_chk :: CHECK (((gender IS NULL) OR (gender = ANY (ARRAY['female'::text, 'male'::text]))))
+models_source_chk :: CHECK ((source = ANY (ARRAY['admin'::text, 'user'::text])))
+models_owner_id_fkey :: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+pose_favorites,"pose_favorites_pose_id_fkey :: FOREIGN KEY (pose_id) REFERENCES poses(id) ON DELETE CASCADE
+pose_favorites_pkey :: PRIMARY KEY (user_id, pose_id)
+pose_favorites_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+poses,"poses_shot_type_chk :: CHECK (((shot_type IS NULL) OR (shot_type = ANY (ARRAY['full_body'::text, 'medium_shot'::text, 'close_up'::text]))))
+poses_pkey :: PRIMARY KEY (id)
+poses_direction_check :: CHECK ((direction = ANY (ARRAY['front'::text, 'back'::text])))
+poses_category_chk :: CHECK ((category = ANY (ARRAY['general'::text, 'shoe'::text])))"
+profiles,"profiles_role_check :: CHECK ((role = ANY (ARRAY['user'::text, 'admin'::text])))
+profiles_credits_check :: CHECK ((credits >= 0))
+profiles_preferred_language_check :: CHECK ((preferred_language = ANY (ARRAY['tr'::text, 'en'::text])))
+profiles_pkey :: PRIMARY KEY (id)
+profiles_id_fkey :: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+style_categories,style_categories_pkey :: PRIMARY KEY (id)
+styles,"styles_category_id_fkey :: FOREIGN KEY (category_id) REFERENCES style_categories(id) ON DELETE SET NULL
+styles_owner_id_fkey :: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
+styles_pkey :: PRIMARY KEY (id)"
+video_jobs,"video_jobs_pkey :: PRIMARY KEY (id)
+video_jobs_user_id_fkey :: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"

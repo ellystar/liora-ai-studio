@@ -1,12 +1,29 @@
+/* Bu dosya artık kendi renklerini tanımlamıyor; DS token'larını uygulamanın
+   "atelier" takma adlarına bağlıyor. Kaynak: liora-design-system/liora-tokens.css */
 .atelier {
-  --atelier-bg: #100e0b;
-  --atelier-text: #ede8df;
-  --atelier-text-2: #a39d92;
-  --atelier-muted: #8f8a80;
-  --atelier-line: #26231e;
-  --atelier-display: "Newsreader", Georgia, "Times New Roman", serif;
-  --atelier-ui: "Neue Haas Display", "Hanken Grotesk", var(--font-geist-sans), -apple-system, sans-serif;
-  --atelier-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* ── DS ile birebir eşleşenler ───────────────────────────────────────── */
+  --atelier-bg: var(--liora-ink); /* #100e0b */
+  --atelier-ease: var(--liora-ease); /* cubic-bezier(.22, 1, .36, 1) */
+  --atelier-display: var(--liora-font-display); /* Newsreader, Georgia, "Times New Roman", serif */
+
+  /* Eşdeğer: ilk iki aile aynı, yalnızca hiç ulaşılmayan fallback halkası
+     değişti (var(--font-geist-sans) çıktı, BlinkMacSystemFont/"Segoe UI" girdi). */
+  --atelier-ui: var(--liora-font-ui);
+
+  /* ── Faz A kararıyla DS'e hizalananlar ───────────────────────────────────
+     Eski hex'ler DS'ten sürüklenmişti (#ede8df, #a39d92, #26231e); semantik
+     rollere bağlandı. Roller <html data-theme="dark"> ile koyu değerlere
+     çözülüyor.
+     ──────────────────────────────────────────────────────────────────────── */
+  --atelier-text: var(--content-primary); /* → --liora-on-dark     #efe8da */
+  --atelier-text-2: var(--content-secondary); /* → --liora-on-dark-mut #a99c86 */
+  --atelier-line: var(--border-subtle); /* → rgba(239,232,218,.1) */
+
+  /* Eskiden #8f8a80 idi; soğuk gri olduğu için DS'in "never cool grey"
+     kuralına aykırıydı. DS'e --content-label rolü eklendi
+     (koyu temada --liora-on-dark-dim #978c78). */
+  --atelier-muted: var(--content-label);
+
   font-family: var(--atelier-ui);
   color: var(--atelier-text);
 }
@@ -319,6 +336,20 @@
   text-decoration: underline;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   TUZAK — aşağıdaki dört seçici .atelier KAPSAMININ DIŞINDA render ediliyor.
+
+   shoots-page.tsx'te seçim çubuğu ve lightbox <main className="atelier ...">
+   kapanışından SONRA, onun kardeşi olarak basılıyor. Dolayısıyla bu kuralların
+   içinde var(--atelier-*) KULLANMAYIN: değişkenler .atelier üzerinde tanımlı,
+   burada tanımsız kalır ve CSS o bildirimin tamamını geçersiz sayar — renk
+   sessizce miras alınır, hata da vermez.
+
+   Token gerekiyorsa doğrudan DS rollerini kullanın (--content-primary,
+   --border-subtle, --scrim-review ...); onlar :root üzerinde tanımlı.
+   Etkilenenler: .shoots-btn-ghost, .shoots-btn-primary, .shoots-lightbox,
+   .shoots-selection-bar
+   ───────────────────────────────────────────────────────────────────────── */
 .shoots-btn-ghost {
   color: #8f8a80;
   transition: color 150ms var(--atelier-ease);

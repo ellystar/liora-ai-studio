@@ -9,13 +9,11 @@ import { useDropzone } from '@/lib/hooks/use-dropzone'
 
 type FrameImage = { file: File; previewUrl: string }
 type Status = 'idle' | 'loading' | 'done'
-type Duration = 5 | 10
-type Resolution = '720p' | '1080p'
-
-function videoCost(duration: Duration, resolution: Resolution): number {
-  if (resolution === '720p') return duration === 5 ? 3 : 4
-  return duration === 5 ? 4 : 5
-}
+// 180° ürün videosu tek bir formatta üretiliyor: Kling'de son kare (image_tail)
+// yalnızca pro/1080p modunda destekleniyor, süre de 5 sn'de sabitlendi.
+// Seçenek kalmadığı için seçiciler kaldırıldı.
+const RESOLUTION = '1080p'
+const DURATION = 5
 
 function FrameUpload({
   label,
@@ -80,14 +78,25 @@ export default function VideoStudioPage() {
   const [firstFrame, setFirstFrame] = useState<FrameImage | null>(null)
   const [lastFrame, setLastFrame] = useState<FrameImage | null>(null)
   const [prompt, setPrompt] = useState('')
-  const [duration, setDuration] = useState<Duration>(5)
-  const [resolution, setResolution] = useState<Resolution>('720p')
   const [status, setStatus] = useState<Status>('idle')
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lightbox, setLightbox] = useState(false)
+  const [cost, setCost] = useState<number | null>(null)
 
-  const cost = videoCost(duration, resolution)
+  // Fiyat tek kaynaktan okunuyor: systems tablosu. Burada sabit bir sayı
+  // tutmuyoruz ki sunucuyla arayüz bir daha ayrışmasın — 720p'de 3 gösterip
+  // 4 tahsil etme hatası tam olarak böyle doğmuştu.
+  useEffect(() => {
+    createClient()
+      .from('systems')
+      .select('price')
+      .eq('id', 'product_video')
+      .single()
+      .then(({ data }) => {
+        if (data) setCost((data as { price: number }).price)
+      })
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -114,11 +123,6 @@ export default function VideoStudioPage() {
     const file = files[0]
     if (!file) return
     setLastFrame({ file, previewUrl: URL.createObjectURL(file) })
-  }
-
-  function handleResolutionChange(next: Resolution) {
-    setResolution(next)
-    if (next === '720p') setLastFrame(null)
   }
 
   function submitErrorMessage(code: string) {
@@ -190,18 +194,15 @@ export default function VideoStudioPage() {
     try {
       const supabase = createClient()
       const first = await fileToScaledBase64(firstFrame.file)
-      const last =
-        resolution === '1080p' && lastFrame
-          ? await fileToScaledBase64(lastFrame.file)
-          : undefined
+      const last = lastFrame ? await fileToScaledBase64(lastFrame.file) : undefined
 
       const { data, error: submitError } = await supabase.functions.invoke('generate-video-submit', {
         body: {
           firstFrame: first,
           lastFrame: last ?? undefined,
           prompt,
-          resolution,
-          duration,
+          resolution: RESOLUTION,
+          duration: DURATION,
         },
       })
 
@@ -252,7 +253,7 @@ export default function VideoStudioPage() {
         <aside className="flex min-h-0 w-[340px] shrink-0 flex-col gap-3 border-r border-[#242424] px-5 py-5">
           <p className="text-xs text-neutral-500">{t('tool.video.title')}</p>
 
-          <div className={resolution === '1080p' ? 'grid grid-cols-2 gap-2.5' : ''}>
+          <div className="grid grid-cols-2 gap-2.5">
             <FrameUpload
               label={t('video.firstFrame')}
               frame={firstFrame}
@@ -260,15 +261,13 @@ export default function VideoStudioPage() {
               onClear={() => setFirstFrame(null)}
               inputId="video-first-frame"
             />
-            {resolution === '1080p' && (
-              <FrameUpload
-                label={t('video.lastFrame')}
-                frame={lastFrame}
-                onSelect={selectLastFrame}
-                onClear={() => setLastFrame(null)}
-                inputId="video-last-frame"
-              />
-            )}
+            <FrameUpload
+              label={t('video.lastFrame')}
+              frame={lastFrame}
+              onSelect={selectLastFrame}
+              onClear={() => setLastFrame(null)}
+              inputId="video-last-frame"
+            />
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col">
@@ -283,39 +282,6 @@ export default function VideoStudioPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="mb-1 text-[11px] text-neutral-400">{t('video.duration')}</p>
-              <div className="flex gap-1.5">
-                {([5, 10] as const).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setDuration(d)}
-                    className={`flex-1 rounded-lg py-1.5 text-xs transition ${duration === d ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
-                  >
-                    {d}s
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="mb-1 text-[11px] text-neutral-400">{t('video.quality')}</p>
-              <div className="flex gap-1.5">
-                {(['720p', '1080p'] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => handleResolutionChange(r)}
-                    className={`flex-1 rounded-lg py-1.5 text-xs transition ${resolution === r ? 'bg-white text-[#0a0a0a]' : 'border border-[#2a2a2a] text-neutral-300 hover:bg-[#161616]'}`}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {error && <p className="text-xs text-red-400">{error}</p>}
 
           <button
@@ -324,7 +290,8 @@ export default function VideoStudioPage() {
             disabled={!firstFrame}
             className="mt-auto w-full rounded-lg bg-white py-2 text-sm font-medium text-[#0a0a0a] transition hover:bg-neutral-200 disabled:opacity-40"
           >
-            {t('video.generateBase')} ({cost} {t('nav.credits')})
+            {t('video.generateBase')}
+            {cost !== null ? ` (${cost} ${t('nav.credits')})` : ''}
           </button>
         </aside>
 

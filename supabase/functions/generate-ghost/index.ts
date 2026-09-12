@@ -88,9 +88,23 @@ Deno.serve(async (req) => {
     const modelId: string | null = body.modelId ?? null
     if (!photo?.base64) return json({ error: 'missing_input' }, 400)
 
-    const { data: profile } = await admin.from('profiles').select('credits').eq('id', user.id).single()
+    // Fiyat veritabanindan; istemciden gelen hicbir fiyat kabul edilmiyor.
+    const { data: sys, error: sysErr } = await admin
+      .from('systems').select('unit, price, is_active').eq('id', 'flat_to_form').single()
+    if (sysErr) {
+      console.error('systems read failed', sysErr)
+      return json({ error: 'server_error', detail: 'price_lookup_failed' }, 500)
+    }
+    if (!sys?.is_active) return json({ error: 'system_unavailable' }, 503)
+    const cost = sys.price as number
+
+    const { data: profile, error: profileErr } = await admin.from('profiles').select('credits').eq('id', user.id).single()
+    if (profileErr) {
+      console.error('profiles read failed', user.id, profileErr)
+      return json({ error: 'server_error', detail: 'balance_lookup_failed' }, 500)
+    }
     const balance = profile?.credits ?? 0
-    if (balance < 1) return json({ error: 'insufficient_credits', balance, required: 1 }, 402)
+    if (balance < cost) return json({ error: 'insufficient_credits', balance, required: cost }, 402)
 
     const text =
       `You are given a flat-lay / flat product photo of a clothing item. Render it as a professional e-commerce ` +
@@ -105,11 +119,17 @@ Deno.serve(async (req) => {
 
     const r = await generateImage(parts, imageConfig)
     if (r.image) {
-      await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: 'flat_to_ghost' })
-      const { data: genRow } = await admin.from('generations').insert({
-        user_id: user.id, tool: 'flat_to_ghost', status: 'success', credits_charged: 1, image_count: 1,
+      // Kredi dusmezse gorsel teslim edilmez.
+      const { error: deductErr } = await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: cost, p_tool: 'flat_to_ghost' })
+      if (deductErr) {
+        console.error('deduct_credits failed', user.id, deductErr)
+        return json({ error: 'credit_charge_failed' }, 402)
+      }
+      const { data: genRow, error: genErr } = await admin.from('generations').insert({
+        user_id: user.id, tool: 'flat_to_ghost', system: 'flat_to_form', status: 'success', credits_charged: cost, image_count: 1,
         params: { ratio: ratio ?? null, modelId },
       }).select('id').single()
+      if (genErr) console.error('generations insert failed', user.id, genErr)
 
       const images = [r.image]
 
@@ -147,7 +167,8 @@ Deno.serve(async (req) => {
 
       return json({ images, creditsCharged: 1, savedImages })
     }
-    await admin.from('generations').insert({ user_id: user.id, tool: 'flat_to_ghost', status: 'failed', credits_charged: 0, image_count: 0, params: { ratio: ratio ?? null } })
+    const { error: failGenErr } = await admin.from('generations').insert({ user_id: user.id, tool: 'flat_to_ghost', system: 'flat_to_form', status: 'failed', credits_charged: 0, image_count: 0, params: { ratio: ratio ?? null } })
+    if (failGenErr) console.error('generations insert failed (failure)', user.id, failGenErr)
     if (r.blocked) return json({ error: 'content_blocked' }, 422)
     if (r.httpError) return json({ error: 'model_busy' }, 503)
     return json({ error: 'generation_failed' }, 500)

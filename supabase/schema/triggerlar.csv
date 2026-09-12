@@ -1,0 +1,2 @@
+table_name,trigger_name,action_timing,event_manipulation,action_statement
+profiles,profiles_set_updated_at,BEFORE,UPDATE,EXECUTE FUNCTION set_updated_at()
