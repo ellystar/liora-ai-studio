@@ -113,8 +113,12 @@ Deno.serve(async (req) => {
     }
 
     // bakiye on-kontrol
-    const { data: profile } = await admin
+    const { data: profile, error: profileErr } = await admin
       .from('profiles').select('credits').eq('id', user.id).single()
+    if (profileErr) {
+      console.error('profiles read failed', user.id, profileErr)
+      return json({ error: 'server_error', detail: 'balance_lookup_failed' }, 500)
+    }
     if (!profile || profile.credits < 1) {
       return json({ error: 'insufficient_credits' }, 402)
     }
@@ -136,7 +140,12 @@ Deno.serve(async (req) => {
     if (!result.image) return json({ error: 'model_busy' }, 503)
 
     // krediyi dus + kaydet
-    await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: 'edit_photo' })
+    // Kredi dusmezse gorsel teslim edilmez.
+    const { error: deductErr } = await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: 1, p_tool: 'edit_photo' })
+    if (deductErr) {
+      console.error('deduct_credits failed', user.id, deductErr)
+      return json({ error: 'credit_charge_failed' }, 402)
+    }
     // NOT: burada eskiden 'credits_used' yaziliyordu — generations tablosunda
     // boyle bir kolon yok, dolayisiyla insert sessizce dusuyor ve edit_photo
     // uretimleri hic kaydedilmiyordu. Dogru kolon credits_charged.

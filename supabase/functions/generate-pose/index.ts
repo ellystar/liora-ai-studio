@@ -120,7 +120,11 @@ Deno.serve(async (req) => {
       ? `Rotate the SAME person, outfit, lighting and background so the model is now seen from BEHIND (back turned to camera), showing the BACK of the outfit. Keep identity, hair, garments, colors, scene and lighting IDENTICAL to the reference photo — only the viewpoint changes to the back. ${isBackHero ? (anyBackMissing ? 'For garments without a dedicated back reference, infer a plausible clean back consistent with the front. ' : 'Use the provided BACK-VIEW garment reference image(s) faithfully for the back design, seams and prints. ') : ''}`
       : ''
 
-    const { data: profile } = await admin.from('profiles').select('credits').eq('id', user.id).single()
+    const { data: profile, error: profileErr } = await admin.from('profiles').select('credits').eq('id', user.id).single()
+    if (profileErr) {
+      console.error('profiles read failed', user.id, profileErr)
+      return json({ error: 'server_error', detail: 'balance_lookup_failed' }, 500)
+    }
     const balance = profile?.credits ?? 0
     if (balance < poses.length) return json({ error: 'insufficient_credits', balance, required: poses.length }, 402)
 
@@ -151,11 +155,19 @@ Deno.serve(async (req) => {
     const settled = await Promise.all(poses.map(forPose))
     const images = settled.filter((s) => s.image).map((s) => s.image as string)
     const successCount = images.length
-    if (successCount > 0) await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: successCount, p_tool: 'pose_generator' })
-    const { data: genRow } = await admin.from('generations').insert({
+    // Kredi dusmezse gorseller teslim edilmez.
+    if (successCount > 0) {
+      const { error: deductErr } = await admin.rpc('deduct_credits', { p_user_id: user.id, p_amount: successCount, p_tool: 'pose_generator' })
+      if (deductErr) {
+        console.error('deduct_credits failed', user.id, deductErr)
+        return json({ error: 'credit_charge_failed' }, 402)
+      }
+    }
+    const { data: genRow, error: genErr } = await admin.from('generations').insert({
       user_id: user.id, tool: 'pose_generator', status: successCount === 0 ? 'failed' : 'success',
       credits_charged: successCount, image_count: successCount, params: { poses: poses.map((p) => p.id), side, modelId },
     }).select('id').single()
+    if (genErr) console.error('generations insert failed', user.id, genErr)
 
     // Üretilen görselleri kalıcı depoya kaydet (hata olursa akışı bozma)
     const savedImages: { id: string; storage_path: string }[] = []

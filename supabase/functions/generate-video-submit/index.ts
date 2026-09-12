@@ -44,12 +44,20 @@ Deno.serve(async (req) => {
     }
     // Fiyat veritabanindan. product_video 'job' birimli: kare sayisindan
     // bagimsiz tek sabit fiyat, cozunurluk/sure tablosu kaldirildi.
-    const { data: sys } = await admin
+    const { data: sys, error: sysErr } = await admin
       .from('systems').select('unit, price, is_active').eq('id', SYSTEM).single()
+    if (sysErr) {
+      console.error('systems read failed', sysErr)
+      return json({ error: 'server_error', detail: 'price_lookup_failed' }, 500)
+    }
     if (!sys?.is_active) return json({ error: 'system_unavailable' }, 503)
     const cost = sys.price as number
 
-    const { data: profile } = await admin.from('profiles').select('credits').eq('id', user.id).single()
+    const { data: profile, error: profileErr } = await admin.from('profiles').select('credits').eq('id', user.id).single()
+    if (profileErr) {
+      console.error('profiles read failed', user.id, profileErr)
+      return json({ error: 'server_error', detail: 'balance_lookup_failed' }, 500)
+    }
     if (!profile || profile.credits < cost) return json({ error: 'insufficient_credits' }, 402)
 
     const mode = resolution === '1080p' ? 'pro' : 'std'
