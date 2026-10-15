@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Clock, X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
 import { createClient } from '@/lib/supabase/client'
+import { downloadImage } from '@/lib/image/download'
 import {
   SHOOTS_PAGE_SIZE,
-  downloadShootImage,
-  downloadShootsZip,
+  buildShootsZip,
   fetchShootImages,
   fetchShootModels,
   fetchShootStats,
@@ -162,11 +162,13 @@ export function ShootsPage() {
     if (!userId) return
     setDownloading(true)
     try {
-      await downloadShootImage(img.signedUrl, shootImageFilename(img, indexInFlat))
-      await recordDownload(userId, img.id)
-      setStats((s) => ({ ...s, totalDownloads: s.totalDownloads + 1 }))
-    } catch (e) {
-      console.error(e)
+      const started = await downloadImage({
+        bucket: 'outputs',
+        storagePath: img.storage_path,
+        fileName: shootImageFilename(img, indexInFlat),
+        onLogged: () => recordDownload(userId, img.id),
+      })
+      if (started) setStats((s) => ({ ...s, totalDownloads: s.totalDownloads + 1 }))
     } finally {
       setDownloading(false)
     }
@@ -178,17 +180,29 @@ export function ShootsPage() {
     try {
       const toDownload = flatFiltered.filter((img) => selected.has(img.id))
       const today = new Date().toISOString().slice(0, 10)
+      const onLogged = () => Promise.all(toDownload.map((img) => recordDownload(userId, img.id)))
 
+      let started: boolean
       if (toDownload.length === 1) {
         const idx = flatFiltered.findIndex((img) => img.id === toDownload[0].id)
-        await downloadShootImage(toDownload[0].signedUrl, shootImageFilename(toDownload[0], idx))
+        started = await downloadImage({
+          bucket: 'outputs',
+          storagePath: toDownload[0].storage_path,
+          fileName: shootImageFilename(toDownload[0], idx),
+          onLogged,
+        })
       } else {
-        await downloadShootsZip(toDownload, `liora-cekimler-${today}.zip`)
+        started = await downloadImage({
+          blob: await buildShootsZip(toDownload),
+          fileName: `liora-cekimler-${today}.zip`,
+          onLogged,
+        })
       }
 
-      await Promise.all(toDownload.map((img) => recordDownload(userId, img.id)))
-      setStats((s) => ({ ...s, totalDownloads: s.totalDownloads + toDownload.length }))
-      clearSelection()
+      if (started) {
+        setStats((s) => ({ ...s, totalDownloads: s.totalDownloads + toDownload.length }))
+        clearSelection()
+      }
     } catch (e) {
       console.error(e)
     } finally {
