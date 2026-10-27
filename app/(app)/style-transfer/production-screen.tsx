@@ -9,7 +9,7 @@ import type { Asset } from '@/lib/assets/assets'
 import { createClient } from '@/lib/supabase/client'
 import { STYLES_BUCKET } from '@/lib/admin/styles'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
-import { downloadAsJpg } from '@/lib/image/download'
+import { downloadImage } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { filterModels, listFavoriteModelIds, type ModelFilter } from '@/lib/models/favorites'
 import { ratios, qualities, type Quality, type Ratio } from '@/lib/ecom/mock-data'
@@ -518,7 +518,7 @@ export function StyleTransferProduction({
                   </button>
                   <button
                     type="button"
-                    onClick={() => downloadAsJpg(resultImage, 'liora-style-transfer')}
+                    onClick={() => downloadImage({ url: resultImage, asJpg: true, fileName: 'liora-style-transfer' })}
                     className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-[#0a0a0a]"
                   >
                     {t('video.download')}

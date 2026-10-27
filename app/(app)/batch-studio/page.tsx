@@ -11,7 +11,7 @@ import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { AssetPicker } from '@/components/asset-picker'
 import type { Asset } from '@/lib/assets/assets'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
-import { downloadAsJpg, imageToJpegBlob } from '@/lib/image/download'
+import { downloadImage, imageToJpegBlob } from '@/lib/image/download'
 import { filterPoses, listFavoritePoseIds, toggleFavoritePose, type PoseFilter } from '@/lib/poses/favorites'
 import { filterModels, listFavoriteModelIds, toggleFavoriteModel, type ModelFilter } from '@/lib/models/favorites'
 import { UserModelUpload } from '@/components/user-model-upload'
@@ -560,15 +560,7 @@ export default function BatchStudioPage() {
           zip.file(`urun-${job.productIndex + 1}-${safePose}.jpg`, blob)
         })
       )
-      const blob = await zip.generateAsync({ type: 'blob' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'liora-batch.zip'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
+      await downloadImage({ blob: await zip.generateAsync({ type: 'blob' }), fileName: 'liora-batch.zip' })
     } finally {
       setZipBusy(false)
     }
@@ -1560,10 +1552,11 @@ export default function BatchStudioPage() {
           <button
             type="button"
             onClick={() =>
-              downloadAsJpg(
-                lightboxJob.image!,
-                `urun-${lightboxJob.productIndex + 1}-${lightboxJob.poseName}`
-              )
+              downloadImage({
+                url: lightboxJob.image!,
+                asJpg: true,
+                fileName: `urun-${lightboxJob.productIndex + 1}-${lightboxJob.poseName}`,
+              })
             }
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]"
           >

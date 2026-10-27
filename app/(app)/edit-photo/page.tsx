@@ -6,7 +6,7 @@ import { ArrowUp, Download, Paperclip, SlidersHorizontal, X } from 'lucide-react
 import { useI18n } from '@/lib/i18n/language-provider'
 import { createClient } from '@/lib/supabase/client'
 import { fileToScaledBase64, urlToScaledBase64 } from '@/lib/image/scale'
-import { downloadAsJpg } from '@/lib/image/download'
+import { downloadImage } from '@/lib/image/download'
 import { useDropzone } from '@/lib/hooks/use-dropzone'
 import { AssetPicker } from '@/components/asset-picker'
 import { saveAsset, type Asset } from '@/lib/assets/assets'
@@ -393,7 +393,7 @@ export default function EditPhotoPage() {
           <img src={lightbox} alt="" className="max-h-[75vh] w-auto rounded-xl" />
           <button
             type="button"
-            onClick={() => downloadAsJpg(lightbox, 'liora-edit-1')}
+            onClick={() => downloadImage({ url: lightbox, asJpg: true, fileName: 'liora-edit-1' })}
             className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-[#0a0a0a]"
           >
             <Download className="h-4 w-4" />

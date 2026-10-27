@@ -148,25 +148,7 @@ export function groupShootImages(images: ShootImage[]): { generationId: string; 
   return order.map((generationId) => ({ generationId, images: map.get(generationId)! }))
 }
 
-function triggerBlobDownload(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
-}
-
-export async function downloadShootImage(url: string, filename: string): Promise<void> {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error('download fetch failed')
-  const blob = await res.blob()
-  triggerBlobDownload(blob, filename.endsWith('.png') ? filename : `${filename}.png`)
-}
-
-export async function downloadShootsZip(images: ShootImage[], zipFilename: string): Promise<void> {
+export async function buildShootsZip(images: ShootImage[]): Promise<Blob> {
   const JSZip = (await import('jszip')).default
   const zip = new JSZip()
 
@@ -174,16 +156,15 @@ export async function downloadShootsZip(images: ShootImage[], zipFilename: strin
     const img = images[i]
     const res = await fetch(img.signedUrl)
     if (!res.ok) continue
-    const blob = await res.blob()
-    const date = new Date(img.created_at).toISOString().slice(0, 10)
-    zip.file(`liora-${img.tool}-${date}-${i + 1}.png`, blob)
+    zip.file(shootImageFilename(img, i), await res.blob())
   }
 
-  const zipBlob = await zip.generateAsync({ type: 'blob' })
-  triggerBlobDownload(zipBlob, zipFilename.endsWith('.zip') ? zipFilename : `${zipFilename}.zip`)
+  return zip.generateAsync({ type: 'blob' })
 }
 
+// Uzanti Storage'daki dosyadan gelir (edge function'lar mime'a gore jpg/png yaziyor)
 export function shootImageFilename(img: ShootImage, index: number): string {
   const date = new Date(img.created_at).toISOString().slice(0, 10)
-  return `liora-${img.tool}-${date}-${index + 1}.png`
+  const ext = img.storage_path.split('.').pop()?.toLowerCase() || 'png'
+  return `liora-${img.tool}-${date}-${index + 1}.${ext}`
 }

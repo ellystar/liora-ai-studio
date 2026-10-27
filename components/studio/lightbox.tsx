@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { X, ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { useI18n } from '@/lib/i18n/language-provider'
-import { downloadAsJpg } from '@/lib/image/download'
+import { downloadImage } from '@/lib/image/download'
 
 /**
  * Sonuç görselinin tam ekran incelemesi. İndirme her stüdyoda ortak;
@@ -67,7 +67,9 @@ export function Lightbox({
 
       <button
         type="button"
-        onClick={() => downloadAsJpg(images[index], `${downloadBaseName}-${index + 1}`)}
+        onClick={() =>
+          downloadImage({ url: images[index], asJpg: true, fileName: `${downloadBaseName}-${index + 1}` })
+        }
         className="mt-6 inline-flex items-center gap-2 rounded-liora bg-action-primary px-5 py-2.5 text-sm font-medium text-action-primary-fg transition hover:bg-action-primary-hover"
       >
         <Download className="h-4 w-4" />
