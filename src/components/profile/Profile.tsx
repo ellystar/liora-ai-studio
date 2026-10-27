@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ROLE_META, flowBySlug, type L } from "@/lib/data";
 import { GOOGLE } from "@/lib/account";
 import { AGES, FOR, JOBS, KID_AGES, TALK, TIERS, TOOLS, VERTICALS, WHERE, WHO, WHY, answerOf, listOf, styleNames, suggestCast, suggestSetting } from "@/lib/brand";
+import { ledgerLabel, readLedger, type LedgerRow } from "@/lib/live";
 import { NOTICE_KINDS, displayName, fmtDate, initials, useAtelier } from "@/lib/store";
 import { Field, UsernameField, authCss, useUsername } from "../auth/AuthShell";
 import { Masthead } from "../chrome/Masthead";
@@ -256,8 +257,25 @@ function Plan() {
   const paid = s.role !== "explorer";
   const returning = s.session === "returning";
 
+  /* live: the ledger is the server's credit_transactions, the person's own rows */
+  const liveId = s.live?.id;
+  const [ledger, setLedger] = useState<{ id: string; rows: LedgerRow[] } | null>(null);
+  useEffect(() => {
+    if (!liveId) return;
+    let gone = false;
+    readLedger()
+      .then((rows) => !gone && setLedger({ id: liveId, rows }))
+      .catch((e) => console.error("ledger read failed", e));
+    return () => {
+      gone = true;
+    };
+  }, [liveId]);
+
   type Row = { at: string; label: string; amount: number };
-  const rows: Row[] = [
+  const liveRows: Row[] | null = liveId
+    ? (ledger?.id === liveId ? ledger.rows : []).map((r) => ({ at: r.at, label: t(ledgerLabel(r)), amount: r.amount }))
+    : null;
+  const rows: Row[] = liveRows ?? [
     ...s.jobs
       .filter((j) => j.status === "done")
       .map((j) => {

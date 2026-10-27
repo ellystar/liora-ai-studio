@@ -25,6 +25,8 @@ import {
   type FlowSlug,
 } from "./data";
 import { normalizeProfile, type BrandProfile } from "./brand";
+import { readAccount } from "./live";
+import { createClient, hasBackend } from "./supabase/client";
 
 /* ─────────────────────────────────────────────────────────────
    One client store for the whole prototype, persisted to
@@ -110,6 +112,7 @@ export interface State {
   favorites: string[]; // "cast:ada", "pose:front" — the favourites filters
   poses: { id: string; name: string; img: string }[]; // poses described and kept (Partner)
   themes: { id: string; name: L; img: string }[]; // settings described and kept (Partner)
+  live: { id: string; email: string } | null; // signed in to the live backend: the balance is the server's
 }
 
 /* wf-12 · 02: mail is on by default only where the user may have left the panel */
@@ -195,6 +198,7 @@ function initialState(session: Session = "returning", lang: Lang = "en"): State 
     favorites: returning ? ["cast:ada", "pose:threeQuarter"] : [],
     poses: [],
     themes: [],
+    live: null,
     profile: returning ? { for: "own", rack: ["outer", "knit"], who: ["women"], ages: ["25-35", "35-50"], tier: "premium", style: ["catalog", "light"], where: ["site", "social"] } : null,
   };
 }
@@ -230,6 +234,8 @@ function reducer(state: State, a: Action): State {
     case "removeJob":
       return { ...state, jobs: state.jobs.filter((j) => j.id !== a.id) };
     case "spend":
+      /* signed in live, the balance is the server's: a demo run never touches it */
+      if (state.live) return state;
       return { ...state, credits: Math.max(0, state.credits - a.amount) };
     case "notify":
       return { ...state, notices: [a.notice, ...state.notices] };
@@ -268,9 +274,10 @@ function reducer(state: State, a: Action): State {
         href: `/jobs/${job.id}`,
         at: Date.now(),
       };
+      const spent = job.cost !== undefined ? Math.round((job.cost * ok) / job.planned.length) : ok * (job.creditPerFrame ?? 1);
       return {
         ...state,
-        credits: Math.max(0, state.credits - (job.cost !== undefined ? Math.round((job.cost * ok) / job.planned.length) : ok * (job.creditPerFrame ?? 1))),
+        credits: state.live ? state.credits : Math.max(0, state.credits - spent),
         jobs: state.jobs.map((j) => (j.id === job.id ? done : j)),
         notices: [notice, ...state.notices.filter((n) => n.id !== notice.id)],
       };
@@ -297,7 +304,8 @@ function load(): State {
     if (raw) {
       const saved = JSON.parse(raw) as Partial<State>;
       /* answers saved in an older shape are read in today's */
-      return { ...initialState(), ...saved, profile: saved.profile ? normalizeProfile(saved.profile) : (saved.profile ?? null) };
+      /* `live` is never trusted from storage: the session check below sets it */
+      return { ...initialState(), ...saved, live: null, profile: saved.profile ? normalizeProfile(saved.profile) : (saved.profile ?? null) };
     }
   } catch {
     /* private mode or blocked storage: run on defaults */
@@ -322,6 +330,53 @@ export function AtelierProvider({ children }: { children: ReactNode }) {
     }
     document.documentElement.lang = s.lang;
   }, [s, ready]);
+
+  /* Live session: who is signed in and their balance come from the backend.
+     Checked on mount, on every sign-in or sign-out, and when the tab comes
+     back into view, so the balance follows what the MVP spends too. */
+  useEffect(() => {
+    if (!ready || !hasBackend) return;
+    let gone = false;
+    const sync = async () => {
+      try {
+        const account = await readAccount();
+        if (gone) return;
+        if (!account) {
+          dispatch({ type: "set", patch: { live: null } });
+          return;
+        }
+        dispatch({
+          type: "set",
+          patch: {
+            live: { id: account.id, email: account.email },
+            credits: account.credits,
+            name: account.name,
+            username: account.email.split("@")[0],
+            provider: "email",
+            session: "returning",
+            onboarded: true,
+            guest: false,
+          },
+        });
+      } catch (e) {
+        console.error("live account read failed", e);
+      }
+    };
+    void sync();
+    const {
+      data: { subscription },
+    } = createClient().auth.onAuthStateChange((event) => {
+      /* deferred: calling the auth client inside its own callback can deadlock */
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") setTimeout(() => void sync(), 0);
+    });
+    const onFocus = () => void sync();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      gone = true;
+      subscription.unsubscribe();
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [ready]);
 
   /* Background ticker: a production keeps running when its screen is
      closed (W-F-14) and lands as a notification when it ends (W-F-15). */

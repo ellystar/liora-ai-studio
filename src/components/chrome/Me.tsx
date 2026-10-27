@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ROLE_META } from "@/lib/data";
 import { displayName, initials, useAtelier } from "@/lib/store";
+import { createClient } from "@/lib/supabase/client";
 import css from "./Me.module.css";
 
 /* Who you are, and the rooms that are not on screen. The same in every
@@ -62,7 +63,8 @@ export function Me({ compact = false }: { compact?: boolean }) {
               </button>
             ))}
           </div>
-          <Link href="/signin" className={css.out}>
+          {/* live: ends the real session; the store hears it and drops `live` */}
+          <Link href="/signin" className={css.out} onClick={() => s.live && void createClient().auth.signOut()}>
             {t({ en: "Sign out", tr: "Çıkış yap" })}
           </Link>
         </div>

@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { MIN_PASSWORD, inboxFor, openedWithGoogle, validEmail } from "@/lib/account";
+import type { L } from "@/lib/data";
 import { useAtelier } from "@/lib/store";
+import { createClient, hasBackend } from "@/lib/supabase/client";
 import { ArrowLeft } from "../icons";
 import { AuthShell, Field, GoogleButton, Or, Submit, SwitchLine, authCss as css } from "./AuthShell";
 
@@ -20,22 +22,49 @@ function useEnter() {
 }
 
 /* wf-01 · 06 — Giriş yap (A-F-08/06/11). Username or email: someone who
-   forgets the name still remembers the address (the wireframe's open note). */
+   forgets the name still remembers the address (the wireframe's open note).
+   With the live backend the account is real: email and password, as in the
+   MVP. Usernames and Google arrive with Aşama 4 (Kimlik). */
 export function SignIn() {
   const { t } = useAtelier();
   const enter = useEnter();
+  const router = useRouter();
   const [who, setWho] = useState("");
   const [pw, setPw] = useState("");
   const [tried, setTried] = useState(false);
   const [google, setGoogle] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<L | null>(null);
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setTried(true);
-    if (who.trim() && pw) enter();
+    setFailed(null);
+    if (!who.trim() || !pw) return;
+    if (!hasBackend) return enter();
+    if (!who.includes("@")) {
+      setFailed({ en: "Sign in with your email for now.", tr: "Şimdilik e-postanla giriş yap." });
+      return;
+    }
+    setBusy(true);
+    const { error } = await createClient().auth.signInWithPassword({ email: who.trim(), password: pw });
+    setBusy(false);
+    if (error) {
+      setFailed(
+        error.status === 400
+          ? { en: "The email or password is wrong.", tr: "E-posta ya da şifre yanlış." }
+          : { en: "Couldn't sign in. Try again.", tr: "Giriş yapılamadı. Tekrar dene." },
+      );
+      return;
+    }
+    router.push("/");
   };
 
   const withGoogle = () => {
+    if (hasBackend) {
+      setFailed({ en: "Google sign-in isn't open yet.", tr: "Google ile giriş henüz açık değil." });
+      return;
+    }
     setGoogle(true);
     setTimeout(enter, 900);
   };
@@ -63,9 +92,15 @@ export function SignIn() {
           value={pw}
           onChange={(e) => setPw(e.target.value)}
           autoComplete="current-password"
-          say={tried && !pw ? { tone: "error", text: t({ en: "Enter your password.", tr: "Şifreni gir." }) } : null}
+          say={
+            tried && !pw
+              ? { tone: "error", text: t({ en: "Enter your password.", tr: "Şifreni gir." }) }
+              : failed
+                ? { tone: "error", text: t(failed) }
+                : null
+          }
         />
-        <Submit>{t({ en: "Sign in", tr: "Giriş yap" })}</Submit>
+        <Submit disabled={busy}>{busy ? t({ en: "Signing in…", tr: "Giriş yapılıyor…" }) : t({ en: "Sign in", tr: "Giriş yap" })}</Submit>
       </form>
       <SwitchLine q={{ en: "No account yet?", tr: "Hesabın yok mu?" }} a={{ en: "Create one", tr: "Hesap oluştur" }} href="/signup" />
     </AuthShell>
