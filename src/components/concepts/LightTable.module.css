@@ -1,0 +1,641 @@
+.a {
+  --panel-w: 480px;
+  height: calc(100vh - var(--chrome-h));
+  height: calc(100dvh - var(--chrome-h));
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═════════ the thread ═════════ */
+.thread {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 64px;
+  margin: 0;
+  padding: 0 28px;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+  background: var(--work);
+}
+.station {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.station:first-child {
+  flex: none;
+}
+.station button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.station button:not(:disabled):hover .stLabel {
+  color: var(--text);
+}
+.station button:disabled {
+  cursor: default;
+}
+.stitch {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  margin: 0 18px;
+  background: repeating-linear-gradient(to right, var(--line-2) 0 6px, transparent 6px 11px);
+}
+.stitch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 0;
+  background: repeating-linear-gradient(to right, var(--gold) 0 6px, transparent 6px 11px);
+  transition: width 600ms var(--liora-ease);
+}
+.done .stitch::after,
+.now .stitch::after {
+  width: 100%;
+}
+.now .stitch::after {
+  width: 50%;
+}
+.sewing .stitch::after {
+  transition-delay: calc(var(--i) * 220ms);
+}
+.sewing .done .stitch::after,
+.sewing .now .stitch::after {
+  width: 100%;
+  filter: drop-shadow(0 0 4px rgba(176, 122, 46, 0.6));
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-3);
+  transition: all var(--liora-dur-base) var(--liora-ease);
+}
+.done .dot {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.now .dot {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(176, 122, 46, 0.2);
+}
+.stLabel {
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.done .stLabel {
+  color: var(--text-2);
+}
+.now .stLabel {
+  color: var(--text);
+}
+.stThumb {
+  width: 22px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 1px;
+  box-shadow: 0 0 0 1px var(--line-2);
+}
+.round {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+.wide {
+  width: 36px;
+  height: 26px;
+}
+
+/* ═════════ body ═════════ */
+.body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr var(--panel-w);
+}
+
+/* ═════════ the table ═════════ */
+.table {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(85% 75% at 42% 38%, #251f18 0%, #16120e 55%, #0b0a08 100%);
+}
+.table > :not(.mat) {
+  transition:
+    opacity 900ms var(--liora-ease),
+    filter 900ms var(--liora-ease);
+}
+.dim > :not(.mat) {
+  opacity: 0.16;
+  filter: blur(1.5px);
+}
+/* a tailor's cutting mat, barely there */
+.mat {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(239, 232, 218, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(239, 232, 218, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(75% 70% at 45% 45%, #000 20%, transparent 100%);
+  mask-image: radial-gradient(75% 70% at 45% 45%, #000 20%, transparent 100%);
+}
+.plateHead {
+  position: absolute;
+  z-index: 4;
+  top: 20px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* a print on the table: paper border, a caption, a real shadow */
+.print {
+  position: absolute;
+  margin: 0;
+  padding: 7px 7px 30px;
+  background: var(--paper);
+  box-shadow:
+    0 22px 40px -20px rgba(0, 0, 0, 0.85),
+    0 2px 5px rgba(0, 0, 0, 0.35);
+  transition: transform 600ms var(--liora-ease);
+}
+.print img {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  animation: land 450ms var(--liora-ease) both;
+}
+@keyframes land {
+  from {
+    opacity: 0;
+    filter: brightness(1.4) saturate(0.4);
+  }
+}
+.print figcaption {
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 12px;
+  color: #2c251d;
+}
+.print figcaption :global(*):first-child {
+  color: #7a6c58;
+}
+.print figcaption em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 11px;
+  color: #8a5d20;
+}
+.empty {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 1.5px dashed var(--line-2);
+}
+.slot {
+  height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.slot b {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: 26px;
+  color: var(--text-2);
+}
+
+.pSetting {
+  left: 6%;
+  top: 12%;
+  width: 53%;
+  transform: rotate(-0.8deg);
+}
+.pSetting img {
+  aspect-ratio: 4 / 3;
+}
+.pSetting.empty {
+  aspect-ratio: 4 / 3.4;
+  transform: none;
+}
+.pCast {
+  z-index: 2;
+  left: 55%;
+  top: 9%;
+  width: 23%;
+  transform: rotate(1.6deg);
+}
+.pCast img {
+  aspect-ratio: 3 / 4;
+}
+.pCast.empty {
+  aspect-ratio: 3 / 4.3;
+  transform: none;
+}
+.pProduct {
+  position: absolute;
+  z-index: 3;
+  left: 13%;
+  top: 56%;
+  width: 16%;
+  transform: rotate(-2.5deg);
+}
+.pProduct .print {
+  position: relative;
+}
+.pProduct .print img {
+  aspect-ratio: 3 / 4;
+}
+.pProduct .behind1,
+.pProduct .behind2 {
+  position: absolute;
+  inset: 0;
+}
+.behind1 {
+  transform: translate(10px, -8px) rotate(4deg);
+}
+.behind2 {
+  transform: translate(20px, -14px) rotate(8deg);
+}
+.pProduct:hover .behind1 {
+  transform: translate(26px, -12px) rotate(7deg);
+}
+.pProduct:hover .behind2 {
+  transform: translate(50px, -18px) rotate(13deg);
+}
+.frames {
+  position: absolute;
+  z-index: 3;
+  right: 6%;
+  bottom: 13%;
+  display: flex;
+  gap: 14px;
+}
+.frames span {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.frames i {
+  width: 44px;
+  aspect-ratio: 3 / 4;
+  border: 1px dashed var(--line-3);
+}
+
+/* ═════════ developing ═════════ */
+.develop {
+  position: absolute;
+  z-index: 6;
+  inset: 0 var(--panel-w) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 2.4vw, 34px);
+  padding: 64px 40px;
+  pointer-events: none;
+}
+.out {
+  width: min(26%, 240px);
+  margin: 0;
+  display: grid;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(14px) rotate(var(--r, 0deg));
+  transition:
+    opacity 600ms var(--liora-ease),
+    transform 800ms var(--liora-ease);
+}
+.out:nth-child(1) {
+  --r: -1deg;
+}
+.out:nth-child(3) {
+  --r: 1.2deg;
+}
+.outIn {
+  opacity: 1;
+  transform: rotate(var(--r, 0deg));
+}
+.outImg {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  padding: 7px;
+  background: var(--paper);
+  overflow: hidden;
+  box-shadow:
+    0 30px 60px -24px rgba(0, 0, 0, 0.9),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.outImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+.outIn .outImg img {
+  animation: develop 1500ms var(--liora-ease) 150ms forwards;
+}
+@keyframes develop {
+  0% {
+    opacity: 0;
+    filter: brightness(1.3) saturate(0.3) blur(8px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+  }
+}
+.out figcaption {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+/* ═════════ the decision panel ═════════ */
+.panel {
+  position: relative;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--line);
+  background: var(--work);
+}
+.head {
+  padding: 28px 32px 18px;
+}
+.stepNo {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.stepNo :global(*):first-child {
+  color: var(--gold-text);
+  margin-right: 4px;
+}
+.q {
+  margin: 10px 0 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: 42px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+.help {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.tabs {
+  display: flex;
+  gap: 24px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 0;
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+.tabOn {
+  color: var(--text) !important;
+}
+.tabOn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--gold);
+}
+.tabOn :global(*) {
+  color: var(--text-3);
+}
+.upsell {
+  margin: 14px 32px 0;
+  padding: 10px 14px;
+  border-left: 2px solid var(--gold);
+  background: rgba(176, 122, 46, 0.1);
+  font-size: 13.5px;
+}
+.upsell button {
+  margin-left: 10px;
+  color: var(--gold-text);
+  border-bottom: 1px solid currentColor;
+}
+.grid {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-content: start;
+  gap: 22px 14px;
+  padding: 20px 32px 24px;
+  scrollbar-width: thin;
+}
+.gridWide {
+  grid-template-columns: repeat(2, 1fr);
+}
+.card {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  min-width: 0;
+}
+.cardImg {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+  background: var(--raised);
+  outline: 1px solid transparent;
+  outline-offset: 3px;
+  transition: outline-color var(--liora-dur-base) var(--liora-ease);
+}
+.landscape {
+  aspect-ratio: 4 / 3;
+}
+.cardImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter var(--liora-dur-slow) var(--liora-ease);
+}
+.card:hover .cardImg {
+  outline-color: var(--line-3);
+}
+.sel .cardImg,
+.sel:hover .cardImg {
+  outline-color: var(--gold);
+}
+.check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--liora-ink);
+}
+.lockedCard img {
+  filter: grayscale(0.8) brightness(0.45);
+}
+.lockChip {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  color: var(--text);
+  background: rgba(10, 8, 6, 0.8);
+  border: 1px solid var(--line-2);
+}
+.cardName {
+  margin-top: 8px;
+  font-family: var(--liora-font-display);
+  font-size: 18px;
+  line-height: 1.2;
+}
+.cardNote {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.lockedLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 32px 18px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.opts {
+  display: grid;
+  gap: 24px;
+  padding: 10px 32px;
+}
+.opt {
+  display: grid;
+  gap: 10px;
+}
+.optLabel {
+  font-size: 13px;
+  color: var(--text-3);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chips button {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius);
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition: all var(--liora-dur-fast) var(--liora-ease);
+}
+.chips button:hover {
+  border-color: var(--line-3);
+  color: var(--text);
+}
+.chips .chipOn {
+  border-color: var(--gold);
+  color: var(--text);
+  background: rgba(176, 122, 46, 0.1);
+}
+.cost {
+  display: grid;
+  gap: 4px;
+  margin: auto 32px 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  background: var(--raised);
+}
+.costBig {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: 34px;
+  line-height: 1.1;
+}
+.costSub {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.progress {
+  display: grid;
+  gap: 10px;
+  margin: 28px 0 0;
+  color: var(--text-2);
+}
+.track {
+  display: block;
+  height: 2px;
+  background: var(--line);
+}
+.track span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+  transition: width 600ms var(--liora-ease);
+}
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: auto;
+  padding: 18px 32px 22px;
+  border-top: 1px solid var(--line);
+}
+.cost + .foot {
+  margin-top: 0;
+}
+.footCost {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outIn .outImg img {
+    animation: none;
+    opacity: 1;
+  }
+}

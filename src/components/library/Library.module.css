@@ -1,0 +1,395 @@
+/* Library — people stand (3:4), places lie (4:3); words only for state. */
+.page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--liora-ink);
+  color: var(--text);
+}
+.wrap {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 120px 44px 96px;
+}
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+  animation: rise 700ms var(--liora-ease) both;
+}
+.head h1,
+.title {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(40px, 4.4vw, 60px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.tabs {
+  display: flex;
+  gap: 24px;
+}
+.tabs button {
+  position: relative;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text-3);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.tabs button span {
+  margin-left: 4px;
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+}
+.tabs button:hover,
+.tabs button[aria-selected="true"] {
+  color: var(--text);
+}
+.tabs button[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--liora-gold);
+}
+
+.section {
+  margin-top: 44px;
+}
+.section > header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.section h2 {
+  margin: 0;
+  font-family: var(--liora-font-ui);
+  font-weight: 400;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.section > header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* ═════════ cards ═════════ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 30px 18px;
+}
+.grid.wide {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  animation: rise 600ms var(--liora-ease) calc(var(--i, 0) * 45ms) both;
+}
+.cover {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #1a1713;
+}
+.wide .cover {
+  aspect-ratio: 4 / 3;
+}
+.cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    opacity 600ms var(--liora-ease),
+    transform 1000ms var(--liora-ease),
+    filter 500ms var(--liora-ease);
+}
+/* the same person in a shoot, on hover — a crossfade, never a zoom */
+.cover .pose {
+  opacity: 0;
+}
+.card:hover .cover .pose {
+  opacity: 1;
+}
+.wide .card:hover .cover img {
+  transform: scale(1.03);
+}
+.card[data-locked] .cover img {
+  filter: brightness(0.45) saturate(0.4);
+}
+.card[data-pending] .cover img {
+  filter: brightness(0.6) saturate(0.5);
+}
+.name {
+  font-family: var(--liora-font-display);
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.card[data-pending] .meta {
+  color: var(--gold-text);
+}
+.go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--liora-dur-base) var(--liora-ease);
+}
+.card:hover .go {
+  opacity: 1;
+  color: var(--gold-text);
+}
+.new {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-2);
+  border: 1px dashed var(--line-2);
+  border-radius: 3px;
+  transition:
+    border-color var(--liora-dur-base) var(--liora-ease),
+    color var(--liora-dur-base) var(--liora-ease);
+}
+.newWide {
+  aspect-ratio: 4 / 3;
+}
+.new span {
+  font-family: var(--liora-font-ui);
+  font-weight: 300;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.new em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.new:hover {
+  color: var(--text);
+  border-color: rgba(214, 159, 82, 0.6);
+}
+
+.locked {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.locked img {
+  flex: none;
+  width: 72px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 3px;
+  filter: brightness(0.7);
+}
+.locked img[data-wide] {
+  width: 112px;
+  aspect-ratio: 4 / 3;
+}
+.locked span {
+  display: grid;
+  gap: 4px;
+}
+.locked em {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-style: normal;
+  font-size: 12px;
+  color: var(--gold-text);
+}
+.locked a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding-bottom: 2px;
+  color: var(--text);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.6);
+}
+
+/* ═════════ a cast's page ═════════ */
+.detailHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 28px;
+  animation: rise 600ms var(--liora-ease) both;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.back:hover {
+  color: var(--text);
+}
+.line {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--text-3);
+}
+.status {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--gold-text);
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: none;
+}
+.confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--liora-ink);
+  background: var(--liora-bone);
+  border-radius: var(--liora-radius);
+  transition: background var(--liora-dur-base) var(--liora-ease);
+}
+.primary:hover {
+  background: #fff;
+}
+.quiet {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.quiet:hover {
+  color: var(--text);
+}
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  padding-bottom: 2px;
+  font-size: 13.5px;
+  color: var(--text);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.6);
+}
+.rename {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.rename input {
+  width: min(420px, 60vw);
+  padding: 0 0 4px;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(40px, 4.4vw, 60px);
+  line-height: 1;
+  color: var(--text);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--gold-text);
+}
+.rename input:focus {
+  outline: none;
+}
+.rename .textLink {
+  margin: 0;
+}
+.set {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, calc((100dvh - 300px) * 0.75)));
+  gap: 16px;
+}
+.setFrame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #1a1713;
+  animation: rise 700ms var(--liora-ease) both;
+}
+.setFrame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@media (max-width: 760px) {
+  .wrap {
+    padding: 96px 16px 64px;
+  }
+  .head,
+  .detailHead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid.wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .set {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .head,
+  .card,
+  .detailHead,
+  .setFrame {
+    animation: none;
+  }
+}

@@ -1,0 +1,453 @@
+/* Salon — an issue on ink. Print rules: small mono running heads and
+   folios, hairlines, generous margins; the images carry everything else. */
+.salon {
+  --pad: clamp(24px, 4vw, 64px);
+  --cap-h: 30px;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--liora-ink);
+  color: var(--text);
+}
+
+/* running heads, folios and captions share one voice */
+.runhead,
+.folio,
+.heroCap,
+.cellCap,
+.spine,
+.cap,
+.colLabel {
+  font-family: var(--liora-font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ═════════ the spread ═════════ */
+.spread {
+  --h: clamp(480px, calc(100dvh - 230px), 760px);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(28px, 3.2vw, 56px);
+  padding: 104px var(--pad) 0;
+}
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.runhead {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  color: var(--text-3);
+}
+.runhead span:first-child {
+  color: var(--text-2);
+}
+.end {
+  text-align: right;
+}
+.hero {
+  position: relative;
+  display: block;
+  height: var(--h);
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+  animation: rise 900ms var(--liora-ease) both;
+}
+.hero img,
+.cellImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 1200ms var(--liora-ease),
+    filter 400ms var(--liora-ease);
+}
+.hero:hover img,
+.cell:hover .cellImg img {
+  transform: scale(1.015);
+}
+.heroCap {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  color: rgba(255, 255, 255, 0.86);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+.folio {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  color: var(--text-3);
+}
+.toRegister {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.toRegister:hover {
+  color: var(--gold-text);
+}
+.four {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 16px;
+}
+.cell {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  animation: rise 900ms var(--liora-ease) calc(160ms + var(--i) * 70ms) both;
+}
+.cellImg {
+  display: block;
+  height: calc((var(--h) - 16px - 2 * var(--cap-h)) / 2);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+}
+.cellCap {
+  height: calc(var(--cap-h) - 8px);
+  color: var(--text-3);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.cell:hover .cellCap,
+.cell:focus-visible .cellCap {
+  color: var(--gold-text);
+}
+.spine {
+  align-self: center;
+  writing-mode: vertical-rl;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.hero:focus-visible,
+.cell:focus-visible,
+.frame:focus-visible {
+  outline: 2px solid var(--liora-gold);
+  outline-offset: 4px;
+}
+
+/* ═════════ the register ═════════ */
+.register {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 140px var(--pad) 0;
+  scroll-margin-top: 24px;
+}
+.registerTop {
+  padding-top: 112px;
+}
+.regHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line-2);
+}
+.regTitle,
+.brandHead h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(30px, 2.6vw, 40px);
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+.brandHead h2 {
+  font-size: clamp(40px, 4vw, 64px);
+  font-style: italic;
+}
+.brandHead p {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.count {
+  font-family: var(--liora-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.ext {
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+}
+
+/* filters: a label, a value, a quiet list */
+.picks {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.pick {
+  position: relative;
+}
+.pickBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.pickLabel {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.pickBtn svg {
+  color: var(--text-3);
+}
+.pickBtn.set span:nth-child(2) {
+  color: var(--gold-text);
+}
+.pickList {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  background: #1a1712;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--elevation-3);
+  animation: fade 200ms var(--liora-ease) both;
+}
+.pickList button {
+  width: 100%;
+  padding: 9px 16px;
+  text-align: left;
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition:
+    background var(--liora-dur-fast) var(--liora-ease),
+    color var(--liora-dur-fast) var(--liora-ease);
+}
+.pickList button:hover {
+  background: rgba(239, 232, 218, 0.04);
+  color: var(--text);
+}
+.pickList [aria-selected="true"] button {
+  color: var(--gold-text);
+}
+.clear {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  color: var(--text-2);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 56px 32px;
+  margin: 0;
+  padding: 44px 0 0;
+  list-style: none;
+}
+.grid li {
+  animation: rise 700ms var(--liora-ease) calc(var(--i) * 40ms) both;
+}
+.frame {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+.shot {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+}
+.shot img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: #17140f;
+}
+/* hover: the frame's foot line turns gold — the same mark as the dashboard */
+.shot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--liora-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 500ms var(--liora-ease);
+}
+.frame:hover .shot::after,
+.frame:focus-visible .shot::after {
+  transform: scaleX(1);
+}
+.cap {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--text-2);
+}
+.capNo {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.frame:hover .capNo,
+.frame:focus-visible .capNo {
+  color: var(--gold-text);
+}
+/* who shared it — under the brand, revealed in place */
+.capBy {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--text-3);
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity 300ms var(--liora-ease),
+    transform 300ms var(--liora-ease);
+}
+.frame:hover .capBy,
+.frame:focus-visible .capBy {
+  opacity: 1;
+  transform: none;
+}
+.empty {
+  padding: 80px 0;
+  color: var(--text-3);
+}
+
+/* ═════════ colophon ═════════ */
+.colophon {
+  max-width: 1280px;
+  margin: 140px auto 0;
+  padding: 26px var(--pad) 72px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr auto;
+  gap: 48px;
+  border-top: 1px solid var(--line);
+}
+.colLabel {
+  margin: 0 0 14px;
+  color: var(--text-3);
+}
+.index {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 220px));
+  gap: 2px 40px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.index button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.index button:hover,
+.index button.on {
+  color: var(--gold-text);
+}
+.colNote {
+  max-width: 34ch;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.colEnd {
+  text-align: right;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .spine {
+    display: none;
+  }
+}
+@media (max-width: 860px) {
+  .spread {
+    --h: auto;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero {
+    width: 100%;
+    height: auto;
+  }
+  .four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cellImg {
+    width: 100%;
+    height: auto;
+  }
+  .regHead {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .picks {
+    flex-wrap: wrap;
+    gap: 6px 22px;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 36px 16px;
+  }
+  .colophon {
+    grid-template-columns: 1fr;
+  }
+  .colEnd {
+    text-align: left;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .cell,
+  .grid li {
+    animation: none;
+  }
+}

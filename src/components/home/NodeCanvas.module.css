@@ -1,0 +1,244 @@
+/* Minimal node canvas: flat warm-grey cards, no headers or meta lists,
+   glowing port bars where cables meet, long soft cables on the dot grid. */
+.canvas {
+  --card: #1c1915;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(140px, 15vw, 240px);
+  padding-bottom: 40px;
+  text-align: left;
+}
+
+/* ── cables ── */
+.wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.wires path {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.lead,
+.tail {
+  animation: fade 900ms var(--liora-ease) both;
+}
+.lead {
+  animation-delay: 150ms;
+}
+.tail {
+  animation-delay: 700ms;
+}
+.wire {
+  stroke: rgba(239, 232, 218, 0.34);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 900ms var(--liora-ease) calc(320ms + var(--i) * 120ms) forwards;
+  transition:
+    stroke 300ms var(--liora-ease),
+    opacity 300ms var(--liora-ease);
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+.wires path.off {
+  opacity: 0.4;
+}
+.wires path.lit {
+  stroke: var(--gold-text);
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(214, 159, 82, 0.6));
+}
+.wires path.dim {
+  opacity: 0.25;
+}
+
+/* ── port bars: a sliver of light where a cable meets a card ── */
+.bar {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: 2px;
+  height: 42%;
+  max-height: 120px;
+  translate: 0 -50%;
+  background: linear-gradient(to bottom, transparent, rgba(239, 232, 218, 0.95) 50%, transparent);
+  box-shadow: 0 0 10px rgba(239, 232, 218, 0.35);
+  border-radius: 2px;
+  transition:
+    background 300ms var(--liora-ease),
+    box-shadow 300ms var(--liora-ease);
+}
+.left {
+  left: -1px;
+}
+.right {
+  right: -1px;
+}
+
+/* ── the input ── */
+.input {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: clamp(200px, 17vw, 250px);
+  margin: 0;
+  padding: 14px 14px 16px;
+  background: var(--card);
+  border-radius: var(--liora-radius);
+  animation: fromLeft 700ms var(--liora-ease) both;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+}
+@keyframes fromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+.input img {
+  display: block;
+  width: 100%;
+  max-height: 46vh;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 1px;
+}
+.inputLabel {
+  margin: 14px 2px 0;
+  font-family: var(--liora-font-display);
+  font-size: 21px;
+  line-height: 1.1;
+}
+
+/* ── flow nodes ── */
+.flows {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.2vh, 22px);
+}
+.flow {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: clamp(310px, 26vw, 380px);
+  background: var(--card);
+  border-radius: var(--liora-radius);
+  animation: rise 700ms var(--liora-ease) calc(420ms + var(--i) * 110ms) both;
+  transition: background 300ms var(--liora-ease);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+a.flow:hover,
+.flowLit {
+  background: #221e19;
+}
+a.flow:focus-visible {
+  outline: 2px solid var(--liora-gold);
+  outline-offset: 3px;
+}
+.flowLit .bar {
+  background: linear-gradient(to bottom, transparent, var(--gold-text) 50%, transparent);
+  box-shadow: 0 0 12px rgba(214, 159, 82, 0.6);
+}
+/* the result, flush to the card's edge, full height */
+.flowImg {
+  flex: none;
+  display: block;
+  width: clamp(104px, 9vw, 132px);
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--liora-radius) 0 0 var(--liora-radius);
+  transition: filter 400ms var(--liora-ease);
+}
+.flowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 20px 14px;
+}
+.flowHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.flowName {
+  font-family: var(--liora-font-display);
+  font-size: clamp(19px, 1.6vw, 23px);
+  line-height: 1.15;
+  color: var(--text);
+}
+.flowLine {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-2);
+}
+.flowOff .flowLine {
+  color: var(--text-3);
+}
+.flowFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.credit {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+.arrow {
+  color: var(--text-3);
+  transition:
+    color 300ms var(--liora-ease),
+    transform 300ms var(--liora-ease);
+}
+a.flow:hover .arrow,
+.flowLit .arrow {
+  color: var(--gold-text);
+  transform: translateX(4px);
+}
+.flowOff {
+  cursor: default;
+}
+.flowOff .flowImg {
+  filter: grayscale(0.7) brightness(0.55);
+}
+.flowOff .flowName {
+  color: var(--text-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wire {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

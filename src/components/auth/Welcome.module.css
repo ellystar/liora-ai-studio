@@ -1,0 +1,879 @@
+/* After sign-up — the dashboard's linen and voices, so the first question
+   and the dashboard read as one room. Text stays ≥ 4.5:1 over the scrim. */
+.welcome {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: var(--liora-ink);
+  color: var(--text);
+}
+
+/* ═════════ ground ═════════ */
+.ground {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+.silk {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter 900ms var(--liora-ease);
+}
+[data-step="question"] .silk {
+  filter: brightness(0.42);
+}
+[data-asking] .silk {
+  filter: brightness(0.34);
+}
+[data-step="question"][data-peek] .silk {
+  filter: brightness(0.3);
+}
+.scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(50% 42% at 50% 44%, rgba(10, 8, 6, 0.62), rgba(10, 8, 6, 0) 100%),
+    linear-gradient(to bottom, rgba(10, 8, 6, 0.55) 0%, rgba(10, 8, 6, 0) 18%, rgba(10, 8, 6, 0) 55%, rgba(10, 8, 6, 0.8) 100%);
+}
+
+/* ═════════ chrome ═════════ */
+.top {
+  position: absolute;
+  z-index: 10;
+  inset: 0 0 auto 0;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 44px;
+}
+.mark {
+  font-family: var(--liora-font-display);
+  font-size: 20px;
+  letter-spacing: 0.34em;
+}
+.skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 3px;
+  font-size: 14px;
+  color: var(--text-2);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.5);
+  animation: fade 600ms var(--liora-ease) 400ms both;
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.skip:hover {
+  color: var(--text);
+}
+.skip svg {
+  transition: transform var(--liora-dur-base) var(--liora-ease);
+}
+.skip:hover svg {
+  transform: translateX(3px);
+}
+
+/* ═════════ opened: a line, not a pause ═════════ */
+.opened {
+  position: relative;
+  z-index: 5;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 76px 24px 120px;
+  text-align: center;
+}
+.handle {
+  margin: 0 0 22px;
+  font-family: var(--liora-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.8);
+  animation: rise 700ms var(--liora-ease) both;
+}
+.opened h1 {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(52px, min(6.4vw, 11vh), 96px);
+  line-height: 1;
+  letter-spacing: -0.026em;
+  text-shadow: 0 2px 48px rgba(0, 0, 0, 0.5);
+  animation: rise 900ms var(--liora-ease) 80ms both;
+}
+.line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 12px;
+  margin: 26px 0 0;
+  font-size: 15px;
+  color: var(--text-2);
+  animation: rise 900ms var(--liora-ease) 220ms both;
+}
+.line span + span::before {
+  content: "·";
+  margin-right: 12px;
+  color: var(--text-3);
+}
+/* what came across from before the account */
+.carried {
+  margin: 18px 0 0;
+  font-size: 15px;
+  color: var(--text);
+  animation: rise 900ms var(--liora-ease) 300ms both;
+}
+.go {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  margin-top: 44px;
+  padding: 0 30px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--liora-ink);
+  background: var(--liora-bone);
+  border-radius: var(--liora-radius);
+  animation: rise 900ms var(--liora-ease) 360ms both;
+  transition: background 250ms var(--liora-ease);
+}
+.go svg {
+  transition: transform 250ms var(--liora-ease);
+}
+.go:hover {
+  background: #fff;
+}
+.go:hover svg {
+  transform: translateX(4px);
+}
+.go:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(200, 151, 90, 0.45);
+}
+
+/* ═════════ the one question ═════════ */
+.ask {
+  position: relative;
+  z-index: 5;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 96px 44px 56px;
+  text-align: center;
+}
+.question {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(48px, min(6vw, 9vh), 88px);
+  line-height: 1;
+  letter-spacing: -0.026em;
+  text-shadow: 0 2px 48px rgba(0, 0, 0, 0.5);
+  animation: rise 900ms var(--liora-ease) both;
+}
+.lede {
+  margin: 16px 0 0;
+  font-size: 15px;
+  color: var(--text-2);
+  animation: rise 900ms var(--liora-ease) 120ms both;
+}
+.answers {
+  width: min(1180px, 100%);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 1.7vw, 26px);
+  margin-top: clamp(28px, 5vh, 52px);
+}
+.cell {
+  min-width: 0;
+  animation: rise 900ms var(--liora-ease) calc(240ms + var(--i) * 90ms) both;
+}
+.answer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+.answer:focus-visible {
+  outline: none;
+}
+.answer:focus-visible .frame {
+  outline: 2px solid var(--liora-gold);
+  outline-offset: 3px;
+}
+.frame {
+  position: relative;
+  width: 100%;
+  height: clamp(180px, 36vh, 360px);
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+  background: var(--liora-ink-2);
+}
+.frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.84) saturate(0.92);
+  transition:
+    filter 600ms var(--liora-ease),
+    transform 1200ms var(--liora-ease);
+}
+/* hover: the picture wakes and a gold line is drawn under it — a mark, not a preview */
+.frame::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--liora-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 500ms var(--liora-ease);
+}
+.on .frame img {
+  filter: none;
+  transform: scale(1.03);
+}
+.on .frame::after {
+  transform: scaleX(1);
+}
+[data-peek] .answer:not(.on) .frame img {
+  filter: brightness(0.5) saturate(0.7);
+}
+.idx,
+.label,
+.sub,
+.door {
+  transition:
+    opacity 400ms var(--liora-ease),
+    color var(--liora-dur-base) var(--liora-ease);
+}
+[data-peek] .answer:not(.on) .idx,
+[data-peek] .answer:not(.on) .label,
+[data-peek] .answer:not(.on) .sub,
+[data-peek] .answer:not(.on) .door {
+  opacity: 0.4;
+}
+.idx {
+  margin-top: 18px;
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--gold-text);
+}
+.label {
+  margin-top: 6px;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(24px, 2.1vw, 34px);
+  line-height: 1.05;
+  letter-spacing: -0.018em;
+}
+.sub {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+/* where the answer leads — said before the click */
+.door {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.door svg {
+  transition: transform var(--liora-dur-base) var(--liora-ease);
+}
+.on .door {
+  color: var(--gold-text);
+}
+.on .door svg {
+  transform: translateX(3px);
+}
+
+/* ═════════ the brand questions ═════════ */
+/* where you are: the canvas bar's short dashes, gold for now */
+.progress {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.progress li {
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(239, 232, 218, 0.2);
+  transition: background var(--liora-dur-base) var(--liora-ease);
+}
+.progress li[data-done] {
+  background: rgba(239, 232, 218, 0.6);
+}
+.progress li[data-now] {
+  background: var(--gold-text);
+}
+.brand {
+  padding-top: 112px;
+}
+.brand .question {
+  font-size: clamp(40px, min(5.2vw, 8.4vh), 76px);
+}
+.body {
+  width: min(1060px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: clamp(28px, 5vh, 52px);
+}
+
+/* answers as words: the name is the button; chosen = a gold line drawn under it */
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 40px;
+  max-width: 980px;
+}
+.word {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 2px 12px;
+  color: var(--text-2);
+  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.7);
+  animation: rise 700ms var(--liora-ease) calc(160ms + var(--i) * 45ms) both;
+  transition: color var(--liora-dur-base) var(--liora-ease);
+}
+.word::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--gold-text);
+  box-shadow: 0 0 10px rgba(214, 159, 82, 0.55);
+  transform: scaleX(0);
+  transition: transform 450ms var(--liora-ease);
+}
+.word:hover,
+.word[aria-pressed="true"] {
+  color: var(--text);
+}
+.word[aria-pressed="true"]::after {
+  transform: scaleX(1);
+}
+.word:focus-visible {
+  outline: 1px solid var(--gold-text);
+  outline-offset: 4px;
+}
+.wordName {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(26px, 2.5vw, 38px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.wordSub {
+  font-size: 13px;
+  color: var(--text-3);
+}
+.words[data-small] {
+  gap: 10px 30px;
+}
+.words[data-small] .wordName {
+  font-size: clamp(21px, 1.8vw, 26px);
+}
+.more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 34px;
+}
+.rowLabel {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+/* what the answer changes — one line, said once */
+.echo {
+  min-height: 24px;
+  margin: 30px 0 -6px;
+  font-size: 15px;
+  color: var(--text);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.8);
+}
+.echo span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  animation: rise 500ms var(--liora-ease) both;
+}
+.echo span::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-text);
+  box-shadow: 0 0 8px rgba(214, 159, 82, 0.7);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  margin-top: clamp(28px, 5vh, 46px);
+}
+.back,
+.pass {
+  font-size: 14px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.pass {
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line-2);
+}
+.back:hover,
+.pass:hover {
+  color: var(--text);
+}
+.next {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 24px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--liora-ink);
+  background: var(--liora-bone);
+  border-radius: var(--liora-radius);
+  transition:
+    background 250ms var(--liora-ease),
+    opacity 250ms var(--liora-ease);
+}
+.next:hover:not(:disabled) {
+  background: #fff;
+}
+.next:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.next:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(200, 151, 90, 0.45);
+}
+
+/* the name: written on a line, like a label being sewn in */
+.names {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.brandField,
+.siteField {
+  width: 100%;
+  padding: 6px 0 12px;
+  text-align: center;
+  color: var(--text);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(239, 232, 218, 0.28);
+  border-radius: 0;
+  transition: border-color var(--liora-dur-base) var(--liora-ease);
+}
+.brandField {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(32px, 3.4vw, 48px);
+  letter-spacing: -0.015em;
+}
+.siteField {
+  width: min(360px, 100%);
+  padding: 8px 0;
+  font: inherit;
+  font-size: 15px;
+}
+.brandField::placeholder,
+.siteField::placeholder {
+  color: rgba(239, 232, 218, 0.28);
+}
+.brandField:focus,
+.siteField:focus {
+  outline: none;
+  border-bottom-color: var(--gold-text);
+}
+
+/* reading the site: what was found, one line at a time */
+.reading {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.reading li {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(24px, 2.3vw, 34px);
+  line-height: 1.15;
+  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.7);
+  animation: rise 700ms var(--liora-ease) calc(500ms + var(--i) * 650ms) both;
+}
+.readBar {
+  position: relative;
+  display: block;
+  width: 180px;
+  height: 1px;
+  margin-top: 40px;
+  overflow: hidden;
+  background: rgba(239, 232, 218, 0.15);
+}
+.readBar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--gold-text);
+  transform-origin: left;
+  animation: fill 3s linear both;
+}
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* style: answered in pictures */
+.styles {
+  width: min(1180px, 100%);
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 22px clamp(10px, 1.1vw, 16px);
+}
+/* a contact strip: portraits, so the clothes are seen whole */
+.styles .frame {
+  height: auto;
+  aspect-ratio: 3 / 4;
+  max-height: 30vh;
+}
+.styles .frame img {
+  object-position: 50% 20%;
+}
+.styles .label {
+  margin-top: 10px;
+  font-size: clamp(19px, 1.5vw, 24px);
+}
+.styles .answer:not(.on) .label {
+  color: var(--text-2);
+}
+.styles:has(.on) .answer:not(.on) .frame img {
+  filter: brightness(0.55) saturate(0.75);
+}
+.styles .answer:not(.on):hover .frame img {
+  filter: none;
+}
+
+/* a quiet side door under the answers */
+.aside {
+  margin-top: 26px;
+  padding-bottom: 2px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+  animation: rise 700ms var(--liora-ease) 500ms both;
+}
+.aside:hover {
+  color: var(--text);
+}
+.styleSub {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-3);
+}
+/* an answer with a line to read waits; the way on lights up instead */
+.next[data-glow] {
+  box-shadow:
+    0 0 0 1px rgba(214, 159, 82, 0.7),
+    0 0 22px rgba(214, 159, 82, 0.45);
+}
+/* sample sets: where it leads, before what it is */
+.door[data-lead] {
+  margin: 14px 0 2px;
+  font-size: 13.5px;
+  color: var(--gold-text);
+}
+
+/* ═════════ ready: what the answers set up ═════════ */
+.ready {
+  position: relative;
+  z-index: 5;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 96px 24px 56px;
+  text-align: center;
+}
+.readyTitle {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(44px, min(5.4vw, 9vh), 80px);
+  line-height: 1;
+  letter-spacing: -0.026em;
+  text-shadow: 0 2px 48px rgba(0, 0, 0, 0.5);
+  animation: rise 900ms var(--liora-ease) 80ms both;
+}
+.ready .lede {
+  animation-delay: 200ms;
+}
+.kit {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  margin-top: clamp(30px, 5vh, 52px);
+}
+.kitNode {
+  display: flex;
+  align-items: stretch;
+  animation: rise 800ms var(--liora-ease) calc(300ms + var(--i) * 160ms) both;
+}
+/* the dashboard's cable: drawn in, then lit once everything is connected */
+.wire {
+  position: relative;
+  align-self: center;
+  width: clamp(44px, 6vw, 96px);
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(239, 232, 218, 0.34);
+  transform-origin: left;
+  animation: draw 700ms var(--liora-ease) calc(700ms + var(--i) * 220ms) both;
+}
+.wire::after,
+.bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  animation: lit 700ms var(--liora-ease) 1900ms forwards;
+}
+.wire::after {
+  background: var(--gold-text);
+  box-shadow: 0 0 10px rgba(214, 159, 82, 0.6);
+}
+@keyframes draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes drawDown {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes lit {
+  to {
+    opacity: 1;
+  }
+}
+.kitCard {
+  position: relative;
+  width: clamp(176px, 15vw, 220px);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 12px 15px;
+  text-align: left;
+  background: #1c1915;
+  border-radius: var(--liora-radius);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+}
+.bar {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  width: 2px;
+  height: 42%;
+  max-height: 120px;
+  translate: 0 -50%;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, transparent, rgba(239, 232, 218, 0.95) 50%, transparent);
+  box-shadow: 0 0 10px rgba(239, 232, 218, 0.35);
+}
+.bar::after {
+  background: linear-gradient(to bottom, transparent, var(--gold-text) 50%, transparent);
+  box-shadow: 0 0 12px rgba(214, 159, 82, 0.6);
+}
+.barL {
+  left: -1px;
+}
+.barR {
+  right: -1px;
+}
+.kitNode:first-child .barL,
+.kitNode:last-child .barR {
+  display: none;
+}
+.kitPic {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 1px;
+  background: #15120f;
+}
+.kitPic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* the frame itself: its ratio, and white when the marketplace wants it */
+.ratioBox {
+  width: 62%;
+  display: grid;
+  place-items: center;
+  font-family: var(--liora-font-mono);
+  font-size: 13px;
+  color: var(--text-2);
+  border: 1px solid rgba(239, 232, 218, 0.38);
+}
+.ratioBox[data-white] {
+  color: var(--liora-ink);
+  background: var(--liora-bone);
+  border-color: transparent;
+}
+.kitLabel {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.kitValue {
+  margin-top: 3px;
+  font-family: var(--liora-font-display);
+  font-size: 21px;
+  line-height: 1.15;
+  color: var(--text);
+}
+.kitSub {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text-2);
+}
+.readyLine {
+  margin: clamp(26px, 4vh, 40px) 0 0;
+  font-size: 14px;
+  color: var(--text-2);
+  animation: rise 900ms var(--liora-ease) 900ms both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .top {
+    padding: 0 16px;
+    height: 64px;
+  }
+  .progress {
+    display: none;
+  }
+  .brand {
+    justify-content: flex-start;
+    padding: 92px 16px 40px;
+  }
+  .words {
+    gap: 8px 26px;
+  }
+  .styles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .kit {
+    flex-direction: column;
+  }
+  .kitNode {
+    flex-direction: column;
+  }
+  .wire {
+    width: 2px;
+    height: 28px;
+    transform-origin: top;
+    animation-name: drawDown;
+  }
+  .bar {
+    display: none;
+  }
+  .ask {
+    justify-content: flex-start;
+    padding: 92px 16px 40px;
+  }
+  .answers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 14px;
+  }
+  .frame {
+    height: auto;
+    aspect-ratio: 3 / 4;
+  }
+  .label {
+    font-size: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .handle,
+  .opened h1,
+  .line,
+  .go,
+  .question,
+  .lede,
+  .cell,
+  .skip {
+    animation: none;
+  }
+  .frame img {
+    transition: filter 600ms var(--liora-ease);
+  }
+  .on .frame img {
+    transform: none;
+  }
+}

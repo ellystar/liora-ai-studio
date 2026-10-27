@@ -1,0 +1,386 @@
+/* The viewer — a spread. Left page: colophon + the brand's strip on a
+   slightly lifted ink. Right page: the plate, never cropped on desktop. */
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  background: #0b0907;
+  animation: fade 300ms var(--liora-ease) both;
+}
+
+/* ═════════ left page ═════════ */
+.leaf {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(250px, 330px) 1fr;
+  background: #16130f;
+}
+.back {
+  position: absolute;
+  z-index: 2;
+  top: 26px;
+  left: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.back:hover {
+  color: var(--text);
+}
+.back:focus-visible,
+.strip button:focus-visible,
+.make:focus-visible,
+.alt:focus-visible,
+.flag:focus-visible {
+  outline: 2px solid var(--liora-gold);
+  outline-offset: 3px;
+}
+
+.colophon {
+  align-self: end;
+  padding: 0 0 40px 40px;
+  animation: rise 600ms var(--liora-ease) 120ms both;
+}
+.brand {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(34px, 2.8vw, 44px);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+}
+.by {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.badge {
+  padding: 2px 8px 1px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.shared {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* the facts, ruled like a register's last page */
+.facts {
+  margin: 28px 0 0;
+  border-bottom: 1px solid var(--line);
+}
+.facts div {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  align-items: center;
+  min-height: 38px;
+  border-top: 1px solid var(--line);
+}
+.facts dt {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.facts dd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text);
+  min-width: 0;
+}
+.castImg {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+  filter: grayscale(0.4);
+}
+.quiet {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.num {
+  font-family: var(--liora-font-mono);
+  font-size: 12px !important;
+  letter-spacing: 0.06em;
+}
+.ext {
+  color: var(--text-2) !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acts {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  margin-top: 28px;
+}
+/* the one move: the DS primary — bone on ink, warming to oxblood-lift */
+.make {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: var(--liora-radius);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-fg);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background var(--liora-dur-base) var(--liora-ease),
+    color var(--liora-dur-base) var(--liora-ease);
+}
+.make:hover {
+  background: var(--action-primary-bg-hover);
+  color: var(--action-primary-fg-hover);
+}
+.make svg {
+  transition: transform var(--liora-dur-base) var(--liora-ease);
+}
+.make:hover svg {
+  transform: translateX(4px);
+}
+.makeLocked {
+  justify-content: flex-start;
+  gap: 10px;
+  background: transparent;
+  color: var(--text-2);
+  border: 1px dashed var(--line-2);
+  cursor: default;
+}
+.makeLocked:hover {
+  background: transparent;
+}
+.alt {
+  font-size: 13.5px;
+  color: var(--text-2);
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--line-2);
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.alt:hover {
+  color: var(--gold-text);
+  border-color: rgba(214, 159, 82, 0.6);
+}
+.flag {
+  margin-top: 30px;
+  font-size: 12px;
+  color: var(--text-3);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.flag:hover {
+  color: var(--text-2);
+}
+
+/* the strip: the brand's frames, (A)–(D) */
+.strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: safe center;
+  gap: 18px;
+  margin: 0;
+  padding: 80px 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.strip li {
+  animation: rise 600ms var(--liora-ease) calc(80ms + var(--i) * 60ms) both;
+}
+.strip button {
+  display: block;
+  width: clamp(92px, 8.4vw, 132px);
+  opacity: 0.42;
+  transition: opacity 300ms var(--liora-ease);
+}
+.strip button:hover {
+  opacity: 0.8;
+}
+.strip button.now {
+  opacity: 1;
+}
+.strip img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 1px;
+}
+.stripCap {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px -14px 0;
+  font-family: var(--liora-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.now .stripCap {
+  color: var(--gold-text);
+}
+
+/* ═════════ right page: the plate ═════════ */
+.plate {
+  position: relative;
+  flex: none;
+  height: 100%;
+  aspect-ratio: 3 / 4;
+  max-width: 60vw;
+  margin: 0;
+  overflow: hidden;
+  background: #0b0907;
+}
+/* the next frame develops over the last one, never over black */
+.plateImg,
+.plateUnder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.plateImg {
+  opacity: 0;
+  filter: brightness(1.18) blur(3px);
+  transition:
+    opacity 420ms var(--liora-ease),
+    filter 640ms var(--liora-ease);
+}
+.plateImg.in {
+  opacity: 1;
+  filter: none;
+}
+.type {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #fff;
+  text-shadow: 0 1px 22px rgba(0, 0, 0, 0.55);
+  /* a low shade so the corner captions hold on pale floors */
+  background: linear-gradient(to top, rgba(8, 6, 4, 0.42), rgba(8, 6, 4, 0) 22%);
+  transition: opacity 400ms var(--liora-ease);
+}
+/* hovering the plate clears the type: judge the image on its own */
+.plate:hover .type {
+  opacity: 0;
+}
+.line {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 56%;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+.line em {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(30px, 2.8vw, 46px);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.line i {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+.line span,
+.corner {
+  font-family: var(--liora-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.corner {
+  position: absolute;
+  left: 4.5%;
+  right: 4.5%;
+  bottom: 3.6%;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .viewer {
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    overflow-y: auto;
+  }
+  .plate {
+    width: 100%;
+    height: auto;
+    max-width: none;
+  }
+  .leaf {
+    grid-template-columns: 1fr;
+  }
+  .back {
+    position: fixed;
+    top: 14px;
+    left: 16px;
+    padding: 8px 12px;
+    background: rgba(11, 9, 7, 0.7);
+    color: #fff;
+  }
+  .strip {
+    order: -1;
+    flex-direction: row;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding: 20px 24px;
+  }
+  .colophon {
+    padding: 0 24px 48px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plateImg {
+    transition: none;
+  }
+  .colophon,
+  .strip li {
+    animation: none;
+  }
+}

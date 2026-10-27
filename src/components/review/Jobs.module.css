@@ -1,0 +1,242 @@
+/* Jobs — covers carry the page; a name and one state line under each. */
+.page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--liora-ink);
+  color: var(--text);
+}
+.wrap {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 120px 44px 96px;
+}
+.head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 36px;
+  animation: rise 700ms var(--liora-ease) both;
+}
+.head h1 {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(40px, 4.4vw, 60px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.tabs {
+  display: flex;
+  gap: 24px;
+}
+.tabs button {
+  position: relative;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text-3);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.tabs button span {
+  margin-left: 4px;
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+.tabs button:hover,
+.tabs button[aria-selected="true"] {
+  color: var(--text);
+}
+.tabs button[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--liora-gold);
+}
+
+.leaving {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 32px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: #e0a2a2;
+}
+.leaving a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-bottom: 2px;
+  color: var(--text);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.6);
+}
+.leaving a:hover {
+  color: var(--gold-text);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 36px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.grid li {
+  animation: rise 700ms var(--liora-ease) calc(var(--i) * 60ms) both;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cover {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #1a1713;
+}
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 1000ms var(--liora-ease),
+    filter 500ms var(--liora-ease);
+}
+.card:hover .cover img {
+  transform: scale(1.03);
+}
+.card[data-status="draft"] .cover img {
+  filter: brightness(0.55) saturate(0.6);
+}
+.card[data-status="running"] .cover img {
+  filter: brightness(0.7);
+}
+.card[data-status="draft"]:hover .cover img,
+.card[data-status="running"]:hover .cover img {
+  filter: none;
+}
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgba(239, 232, 218, 0.15);
+}
+.progress i {
+  display: block;
+  height: 100%;
+  background: var(--liora-gold);
+  animation: grow 2.4s var(--liora-ease) infinite alternate;
+}
+@keyframes grow {
+  to {
+    filter: brightness(1.4);
+  }
+}
+.title {
+  font-family: var(--liora-font-display);
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.state {
+  color: var(--text-2);
+}
+.card[data-status="running"] .state {
+  color: var(--gold-text);
+}
+.card[data-leaving] .state {
+  color: #e0a2a2;
+}
+
+.empty {
+  padding: 80px 0;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.empty p {
+  font-family: var(--liora-font-display);
+  margin: 0 0 16px;
+  font-weight: 300;
+  font-size: 26px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.empty a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(214, 159, 82, 0.6);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@media (max-width: 760px) {
+  .wrap {
+    padding: 96px 16px 64px;
+  }
+  .head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .tabs {
+    gap: 18px;
+    overflow-x: auto;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .head,
+  .grid li {
+    animation: none;
+  }
+}
+
+/* the free plan's mark — the same as in the file that downloads */
+.wm {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(-30deg, transparent 0 46px, rgba(239, 232, 218, 0.07) 46px 47px);
+}
+.wm::after {
+  content: "LIORA";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  font-family: var(--liora-font-display);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: rgba(239, 232, 218, 0.45);
+}

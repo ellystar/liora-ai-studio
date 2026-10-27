@@ -40,10 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# raw AI generations (PNG originals, ~60 MB)
+/.raw/
+
 # agent / editor
 .claude/
-
-# Kök dizindeki fonts/ klasörü: public/fonts altında aynı altı Neue Haas
-# kesiti zaten var ve @font-face onlara bağlı. Baştaki eğik çizgi önemli —
-# public/fonts'u kapsamaz.
-/fonts/

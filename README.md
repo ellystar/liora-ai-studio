@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Liora Atelier · v2
 
-## Getting Started
+Bu dal (`v2`) Liora Atelier'in yeni arayüzü. Canlı MVP (atelier.lioralabs.io) `main` dalından yayınlanır; bu dal
+geçiş gününe kadar `main`'e birleştirilmez. Geçiş tek bir PR ile olur.
 
-First, run the development server:
+Ayrıntılı plan, kurallar ve ekran → backend eşlemesi:
+[Liora Atelier v2 — Backend Eşleme Sözleşmesi](https://claude.ai/artifact/2DXFxhkfj446VyRqqBHU9r).
+
+## Kurallar
+
+- **Canlı müşteri hiçbir değişikliği geçişten önce görmez.** Supabase projesi (veritabanı, fonksiyonlar, Auth ayarları)
+  MVP ile ortaktır ve dala göre ayrılmaz.
+- **Veritabanına yalnızca ekleme.** Yeni tablo ve sütunlar migration dosyasıyla eklenir; mevcut tablo, kısıt ve kurallara
+  dokunulmaz.
+- **Canlı edge function'lar değiştirilmez.** v2'nin ihtiyacı olan her fonksiyon `-v2` adıyla yeni bir fonksiyon olarak
+  eklenir ve daima adıyla dağıtılır:
+  `npx supabase functions deploy <ad>-v2 --project-ref teemolajohctzejbwbrj`.
+  Adsız `functions deploy` bütün fonksiyonları birden dağıtır.
+- **Kredi ve fiyatlar** geçişe kadar `systems` tablosundaki değerlerde sabit kalır. v2 akış adlarını kendi metninden
+  gösterir; `systems.name` sütununa dokunmaz.
+- **Kalite** her fonksiyona küçük harfle gider (`quality: '2k'`); sunucu Gemini'ye `'2K'` olarak çevirir.
+
+## Çalıştırma
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Arayüz şu an taklit veriyle çalışır (`src/lib/data.ts`, `src/lib/store.tsx`) ve Supabase'e hiç istek atmaz. Gerçek veri
+Aşama 1'den itibaren, okuma ekranlarından başlayarak bağlanır.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Ekranın sol kenarındaki **Mockup** sekmesi demo kontrollerini açar: ilk oturum / dönen kullanıcı, rol, kredi, dil
+(EN/TR). Durum tarayıcıda `localStorage`'da tutulur.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Yapı
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/` — arayüz: Next.js 16 App Router, CSS Modules
+- `public/` — görseller (Higgsfield ile üretildi; ham PNG'ler repo dışında)
+- `docs/` — kanvas davranış notları ve panel ekran kontrolleri
+- `supabase/` — MVP'nin edge function'ları ve şema dökümü; Deno kodu, Next derlemesine girmez
+- `design-ref/`, `liora-design-system/` — MVP'den kalan tasarım referansları

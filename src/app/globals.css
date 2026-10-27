@@ -1,0 +1,301 @@
+@import "tailwindcss";
+@import "../styles/liora-tokens.css";
+
+/* ─────────────────────────────────────────────────────────────
+   Tailwind ↔ Liora semantic roles.
+   Same approach as production Faz B: utilities resolve to roles,
+   never to primitives, so the theme stays an attribute on <html>.
+   ───────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-surface: var(--surface-page);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-content: var(--content-primary);
+  --color-content-secondary: var(--content-secondary);
+  --color-content-muted: var(--content-muted);
+  --color-content-label: var(--content-label);
+  --color-line: var(--border-default);
+  --color-line-subtle: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-accent: var(--accent-primary);
+  --color-emphasis: var(--accent-emphasis);
+  --color-success: var(--state-success);
+  --color-warning: var(--state-warning);
+  --color-danger: var(--state-danger);
+  --font-display: var(--liora-font-display);
+  --font-ui: var(--liora-font-ui);
+  --font-mono: var(--liora-font-mono);
+  --ease-liora: var(--liora-ease);
+}
+
+/* ── Neue Haas Display — Liora's licensed UI family, self-hosted ──────────
+   Same files and the same @font-face rules as the production app
+   (liora-ai-studio/app/globals.css), so type renders identically. */
+@font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Thin.woff2") format("woff2");font-weight:100;font-style:normal;font-display:swap}
+@font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Light.woff2") format("woff2");font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Roman.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Medium.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Bold.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"Neue Haas Display";src:url("/fonts/NeueHaasDisplay-Black.woff2") format("woff2");font-weight:900;font-style:normal;font-display:swap}
+
+/* The production stack, verbatim. Newsreader and Spline Sans Mono come
+   from next/font in layout.tsx and set --font-display / --font-mono. */
+:root {
+  --font-ui: "Neue Haas Display", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --topbar-h: 72px;
+  /* Deeper than the page: the plane an image is judged on. */
+  --surface-review: #070605;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--surface-page);
+  color: var(--content-primary);
+}
+
+body {
+  font-family: var(--liora-font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent-primary);
+  color: var(--liora-ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Shared primitives for the prototype. Kept here, not in a
+   component library, so the vocabulary stays visible in one place.
+   ───────────────────────────────────────────────────────────── */
+
+/* The ink plane's voices, shared by the v2 pages (dashboard, Salon).
+   Text stays ≥ 4.5:1 on ink. */
+.ink {
+  --text: var(--liora-on-dark);
+  --text-2: #b3a791;
+  --text-3: var(--liora-on-dark-dim);
+  --gold-text: #d69f52;
+  --line: rgba(239, 232, 218, 0.1);
+  --line-2: rgba(239, 232, 218, 0.2);
+}
+
+/* Mono label, the voice of data: counts, steps, captions. */
+.meta {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--content-label);
+}
+.meta-sm {
+  font-family: var(--liora-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--content-label);
+}
+.meta-num {
+  font-family: var(--liora-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.display {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  letter-spacing: -0.018em;
+}
+.soul {
+  font-style: italic;
+  font-weight: 300;
+}
+
+/* Buttons — primary warms to oxblood-lift, the brand's one interaction. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: var(--control-height-lg);
+  padding: 0 22px;
+  border-radius: var(--liora-radius);
+  font-family: var(--liora-font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  transition:
+    background var(--liora-dur-base) var(--liora-ease),
+    color var(--liora-dur-base) var(--liora-ease),
+    border-color var(--liora-dur-base) var(--liora-ease),
+    opacity var(--liora-dur-fast) var(--liora-ease);
+  white-space: nowrap;
+}
+.btn .ar {
+  transition: transform var(--liora-dur-base) var(--liora-ease);
+}
+.btn:hover .ar {
+  transform: translateX(4px);
+}
+.btn-primary {
+  background: var(--action-primary-bg);
+  color: var(--action-primary-fg);
+  border-color: var(--action-primary-bg);
+}
+.btn-primary:hover {
+  background: var(--action-primary-bg-hover);
+  border-color: var(--action-primary-bg-hover);
+  color: var(--action-primary-fg-hover);
+}
+.btn-secondary {
+  color: var(--action-secondary-fg);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover {
+  border-color: var(--action-secondary-border);
+}
+.btn-ghost {
+  height: auto;
+  padding: 0;
+  color: var(--action-ghost-fg);
+  font-weight: 400;
+}
+.btn-ghost:hover {
+  color: var(--content-primary);
+}
+.btn-sm {
+  height: var(--control-height-sm);
+  padding: 0 14px;
+  font-size: 13px;
+}
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+/* Text link with the gold hairline, as on the site. */
+.link {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--content-primary);
+  border-bottom: 1px solid var(--content-link);
+  padding-bottom: 4px;
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.link:hover {
+  color: var(--content-link);
+}
+
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Film grain — the same device as the sign-in page. */
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.rise {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: rise 900ms var(--liora-ease) forwards;
+}
+@keyframes rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fade-in {
+  animation: fadeIn var(--liora-dur-slow) var(--liora-ease) both;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* View transitions (concept D: the split and the risen system morph into
+   each other). One curve for the whole brand; slow tempo, as for a panel. */
+::view-transition-group(*) {
+  animation-duration: 560ms;
+  animation-timing-function: var(--liora-ease);
+}
+/* cards stretch with their box (a flat plane hides it); words never scale —
+   the old line leaves quickly and the new one arrives once the box has settled */
+::view-transition-old(.vt-card),
+::view-transition-new(.vt-card) {
+  block-size: 100%;
+  object-fit: fill;
+}
+::view-transition-old(.vt-text),
+::view-transition-new(.vt-text) {
+  inline-size: auto;
+}
+::view-transition-old(.vt-text) {
+  animation: vt-out 160ms var(--liora-ease) both;
+}
+::view-transition-new(.vt-text) {
+  animation: vt-in 240ms var(--liora-ease) 320ms both;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

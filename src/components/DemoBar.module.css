@@ -1,0 +1,72 @@
+.wrap {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  z-index: 100;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+}
+.tab {
+  /* vertical-lr rotated 180° reads bottom-to-top; the element's left edge
+     ends up visually on the right, hence the mirrored radius and border */
+  writing-mode: vertical-lr;
+  rotate: 180deg;
+  padding: 16px 7px;
+  font-family: var(--liora-font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--content-label);
+  background: rgba(8, 7, 5, 0.86);
+  border: 1px solid rgba(239, 232, 218, 0.14);
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.tab:hover,
+[data-open="true"] .tab {
+  color: var(--accent-primary);
+}
+.panel {
+  display: grid;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(8, 7, 5, 0.94);
+  border: 1px solid rgba(239, 232, 218, 0.14);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--elevation-3);
+}
+.group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.key {
+  width: 76px;
+  font-family: var(--liora-font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--content-muted);
+}
+.panel button {
+  font-family: var(--liora-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--content-label);
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: color var(--liora-dur-fast) var(--liora-ease), border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.panel button:hover {
+  color: var(--content-primary);
+}
+.on {
+  color: var(--content-primary) !important;
+  border-color: var(--accent-primary) !important;
+}

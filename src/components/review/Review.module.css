@@ -1,0 +1,761 @@
+/* The result and a frame's detail — the review ink: deeper than the page,
+   frames large, words few. Hairlines, no boxes; gold only for a mark. */
+.page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--surface-review);
+  color: var(--text);
+}
+
+/* ═════════ head ═════════ */
+/* header, notes and frames share one width: as wide as the frames can be */
+.body {
+  --gap: 18px;
+  --fw: calc((100dvh - 290px) * 0.75); /* one frame's width when the screen's height decides */
+  width: min(100% - 88px, 1400px, max(760px, calc(var(--fw) * var(--n) + var(--gap) * (var(--n) - 1))));
+  margin: 0 auto;
+}
+.top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 104px 0 26px;
+  animation: rise 600ms var(--liora-ease) both;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--text-3);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.back:hover {
+  color: var(--text);
+}
+.title {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(36px, 3.8vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.line {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--text-3);
+}
+.soon {
+  color: #e0a2a2;
+}
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: none;
+}
+.making {
+  font-size: 14px;
+  color: var(--gold-text);
+}
+.primary,
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--liora-ink);
+  background: var(--liora-bone);
+  border-radius: var(--liora-radius);
+  transition: background var(--liora-dur-base) var(--liora-ease);
+}
+.primary:hover,
+.primaryBtn:hover {
+  background: #fff;
+}
+.quiet {
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.quiet:hover {
+  color: var(--text);
+}
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--text);
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius);
+  transition: border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.secondaryBtn:hover:not(:disabled) {
+  border-color: rgba(239, 232, 218, 0.45);
+}
+.secondaryBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ghostBtn {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.ghostBtn:hover {
+  color: var(--text);
+}
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 2px;
+  font-size: 13.5px;
+  color: var(--text);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.6);
+}
+.textLink:hover {
+  color: var(--gold-text);
+}
+.note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.note a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.6);
+}
+.num {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-text);
+}
+.label {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* ═════════ the frames: as large as the screen allows ═════════ */
+.frames {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, var(--fw)));
+  gap: var(--gap);
+  margin-top: 16px;
+  padding-bottom: 56px;
+}
+.frame {
+  margin: 0;
+  min-width: 0;
+  animation: rise 700ms var(--liora-ease) both;
+}
+.shot {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #15120e;
+}
+button.shot {
+  cursor: zoom-in;
+}
+.shot img,
+.shot .seam {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.shot:hover img {
+  filter: brightness(1.04);
+}
+.waiting {
+  position: absolute;
+  inset: 0;
+  background: #1d1915;
+  animation: pulse-flat 1.6s ease-in-out infinite;
+}
+@keyframes develop {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+.version {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 8px;
+  font-family: var(--liora-font-mono);
+  font-size: 10.5px;
+  color: var(--text);
+  background: rgba(16, 14, 11, 0.7);
+  border-radius: var(--liora-radius-pill);
+}
+/* free plan: the mark is part of the file, shown here as it will download */
+.wm {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(-30deg, transparent 0 90px, rgba(239, 232, 218, 0.07) 90px 91px);
+}
+.wm::after {
+  content: "LIORA";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  font-family: var(--liora-font-display);
+  font-size: 22px;
+  letter-spacing: 0.4em;
+  color: rgba(239, 232, 218, 0.35);
+}
+.failed {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line-2);
+  background: none;
+}
+.failBody {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.failBody p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.cap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 40px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.rate {
+  display: flex;
+  gap: 2px;
+}
+.rate button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  border-radius: 50%;
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    background var(--liora-dur-fast) var(--liora-ease);
+}
+.rate button:hover {
+  color: var(--text);
+  background: rgba(239, 232, 218, 0.06);
+}
+.rate .on {
+  color: var(--gold-text);
+}
+.rate .onNeg {
+  color: #e0a2a2;
+}
+/* a turn: front → three-quarter → back, on a loop */
+.spin {
+  position: absolute;
+  inset: 0;
+}
+.spin img {
+  opacity: 0;
+  animation: turn 4.2s linear infinite;
+  animation-delay: calc(var(--k) * 1.4s);
+}
+@keyframes turn {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  33% {
+    opacity: 1;
+  }
+  41%,
+  100% {
+    opacity: 0;
+  }
+}
+.missing {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 180px 44px;
+}
+.missing .textLink {
+  margin-top: 24px;
+}
+
+/* ═════════ a frame's detail ═════════ */
+.detail {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  background: #050403;
+}
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 28px 26px;
+}
+.stageTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 34px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.compare {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--text-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius-pill);
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.compare:hover,
+.compare.on {
+  color: var(--text);
+  border-color: rgba(214, 159, 82, 0.7);
+}
+.imageWrap {
+  position: relative;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+.bigImg,
+.bigSeam {
+  position: relative;
+  height: calc(100vh - 96px);
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
+}
+.bigImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: filter var(--liora-dur-slow) var(--liora-ease);
+}
+.working {
+  filter: brightness(0.45) saturate(0.6);
+  animation: breathe 1400ms var(--liora-ease) infinite;
+}
+@keyframes breathe {
+  50% {
+    filter: brightness(0.6) saturate(0.7);
+  }
+}
+.suggestTag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--liora-ink);
+  background: var(--liora-bone);
+  border-radius: var(--liora-radius-pill);
+}
+.navBtn {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+  background: rgba(16, 14, 11, 0.6);
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.navBtn:hover {
+  color: var(--text);
+  border-color: rgba(239, 232, 218, 0.5);
+}
+.prev {
+  left: 4px;
+}
+.next {
+  right: 4px;
+}
+
+.side {
+  position: relative;
+  overflow-y: auto;
+  padding: 26px 28px 48px;
+  background: #0e0c09;
+  border-left: 1px solid var(--line);
+}
+.close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.close:hover {
+  color: var(--text);
+  border-color: var(--line-2);
+}
+.sideBlock {
+  display: grid;
+  gap: 14px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sideBlock:first-of-type {
+  padding-top: 6px;
+}
+.sideBlock:last-child {
+  border-bottom: 0;
+}
+.sideTitle {
+  font-family: var(--liora-font-display);
+  margin: 0;
+  font-weight: 300;
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+.metaList {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 8px 12px;
+  margin: 0;
+}
+.metaList dt {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.metaList dd {
+  margin: 0;
+  font-size: 13.5px;
+}
+.expiry {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.expiry.soon {
+  color: #e0a2a2;
+}
+.reviewNote {
+  margin: 0;
+  padding-left: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+  border-left: 1px solid var(--gold-text);
+}
+.verdict {
+  display: flex;
+  gap: 8px;
+}
+.verdict button,
+.chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius-pill);
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.verdict button {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 13.5px;
+}
+.verdict button:hover,
+.chips button:hover {
+  color: var(--text);
+  border-color: rgba(239, 232, 218, 0.45);
+}
+.verdict .on {
+  color: var(--gold-text);
+  border-color: rgba(214, 159, 82, 0.7);
+}
+.verdict .onNeg {
+  color: #e0a2a2;
+  border-color: rgba(224, 162, 162, 0.6);
+}
+.reasons {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.small {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chips button {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+.chips .on {
+  color: var(--text);
+  border-color: rgba(214, 159, 82, 0.7);
+}
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--text);
+  background: rgba(8, 7, 5, 0.5);
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius);
+}
+.input:focus {
+  outline: none;
+  border-color: var(--gold-text);
+}
+.input::placeholder {
+  color: var(--text-3);
+}
+.side .primaryBtn {
+  width: 100%;
+  height: 44px;
+}
+.actionList {
+  display: grid;
+}
+.actionList > button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  font-size: 14.5px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.actionList > button:hover,
+.actionList > button.on {
+  color: var(--gold-text);
+}
+.actionList > button span {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.chat {
+  display: grid;
+  gap: 12px;
+  padding: 16px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.chatLine {
+  margin: 0;
+  font-size: 13.5px;
+}
+.chatLine span {
+  margin-right: 8px;
+  color: var(--text-3);
+}
+.chatInput {
+  display: flex;
+  gap: 8px;
+}
+.suggestRow {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.suggestRow img {
+  width: 72px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 3px;
+  outline: 1px solid var(--gold-text);
+  outline-offset: 2px;
+}
+.suggestRow div {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.rowBtns {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.postPreview {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.postPreview img {
+  width: 64px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.postPreview div {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+.postBrand {
+  margin: 0;
+  font-family: var(--liora-font-ui);
+  font-size: 16px;
+  line-height: 1.15;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.fieldLabel {
+  display: grid;
+  gap: 8px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (max-width: 960px) {
+  .body {
+    width: calc(100% - 32px);
+  }
+  .top {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 92px 0 20px;
+  }
+  .frames {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .detail {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  .bigImg,
+  .bigSeam {
+    height: 70vh;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .top,
+  .frame {
+    animation: none;
+  }
+  .spin img {
+    animation: none;
+  }
+  .spin img:first-child {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-flat {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* a like says thank you, and goes */
+.thanks {
+  flex-basis: 100%;
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--gold-text);
+  animation: thanks 2600ms var(--liora-ease) both;
+}
+@keyframes thanks {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  12%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* keep what was described: the background, the pose */
+.keepLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.keepLine span {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.keepLine em {
+  font-style: normal;
+  color: var(--ok);
+}
+.cap {
+  flex-wrap: wrap;
+}

@@ -1,0 +1,280 @@
+/* Explore — four sets across one screen, image-led; one opens in place
+   onto the dashboard's node canvas. */
+.page {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 640px;
+  overflow: hidden;
+  background: var(--liora-ink);
+  color: var(--text);
+}
+.ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.ground img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.24) blur(10px);
+  transform: scale(1.04);
+  transition: filter 900ms var(--liora-ease);
+}
+[data-state="chosen"] .ground img {
+  filter: brightness(0.18) blur(12px);
+}
+.dots {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-image: radial-gradient(rgba(239, 232, 218, 0.13) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  transition: opacity 900ms var(--liora-ease);
+  display: none;
+}
+[data-state="chosen"] .dots {
+  opacity: 1;
+}
+
+/* ═════════ the sets ═════════ */
+.sets {
+  position: absolute;
+  z-index: 2;
+  inset: 76px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 4vh, 44px) 44px clamp(28px, 5vh, 52px);
+}
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 32px;
+  padding-bottom: clamp(20px, 3.4vh, 36px);
+  animation: rise 800ms var(--liora-ease) both;
+}
+.head h1 {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(40px, 4.4vw, 68px);
+  line-height: 1;
+  letter-spacing: -0.022em;
+  transition: opacity 450ms var(--liora-ease);
+}
+.head p {
+  max-width: 36ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-2);
+  text-align: right;
+}
+[data-state="peek"] .head h1 {
+  opacity: 0.55;
+}
+.grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line-2);
+}
+.grid > li {
+  min-height: 0;
+  border-left: 1px solid var(--line);
+  animation: fade 900ms var(--liora-ease) calc(200ms + var(--i) * 90ms) both;
+  transition: opacity 400ms var(--liora-ease);
+}
+.grid > li:first-child {
+  border-left: 0;
+}
+[data-state="peek"] .grid > li:not(.on) {
+  opacity: 0.45;
+}
+.set {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) auto auto auto;
+  column-gap: 12px;
+  padding: clamp(18px, 2.6vh, 28px) clamp(16px, 1.8vw, 28px) 0;
+  text-align: left;
+}
+.set:first-child {
+  padding-left: 0;
+}
+.grid > li:first-child .set {
+  padding-left: 0;
+}
+.grid > li:last-child .set {
+  padding-right: 0;
+}
+/* hover: the column's top line turns gold, as on the dashboard */
+.set::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--liora-gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 500ms var(--liora-ease);
+}
+.on .set::before {
+  transform: scaleX(1);
+}
+.set:focus-visible {
+  outline: 2px solid var(--liora-gold);
+  outline-offset: -2px;
+}
+.shot {
+  grid-column: 1 / -1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+}
+.shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1200ms var(--liora-ease);
+}
+.on .shot img {
+  transform: scale(1.025);
+}
+.strip {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.strip img {
+  width: 34px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 1px;
+  opacity: 0.55;
+}
+.strip img.lead {
+  opacity: 1;
+}
+.idx {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: baseline;
+  margin-top: 14px;
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--gold-text);
+}
+.name {
+  font-family: var(--liora-font-display);
+  grid-column: 1;
+  grid-row: 3;
+  margin-top: 12px;
+  font-weight: 300;
+  font-size: clamp(24px, 2.1vw, 34px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.kind {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+/* ═════════ chosen ═════════ */
+.chosen {
+  position: absolute;
+  z-index: 2;
+  inset: 92px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fade 500ms var(--liora-ease) both;
+}
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  padding-bottom: 6px;
+}
+.switch button {
+  position: relative;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text-3);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.switch button:hover,
+.switch .here {
+  color: var(--text);
+}
+.switch .here::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--liora-gold);
+}
+.switch .close {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  border-radius: 50%;
+}
+.after {
+  position: absolute;
+  bottom: clamp(24px, 4vh, 40px);
+  max-width: 60ch;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .head,
+  .grid > li,
+  .chosen {
+    animation: none;
+  }
+}
+
+/* the flows a set opens — said before its name */
+.leads {
+  margin-top: 16px;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  color: var(--gold-text);
+}

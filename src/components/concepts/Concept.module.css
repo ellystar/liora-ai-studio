@@ -1,0 +1,213 @@
+/* ─────────────────────────────────────────────────────────────
+   Shared ground for the three concept directions.
+   v2 rules, decided after the v1 review:
+   · three value planes in dark — stage, work, raised — never one brown
+   · mono is for numbers only; labels are sentence-case sans
+   · one display question per screen; everything else is quiet
+   · text contrast ≥ 4.5:1 (text-2 on work ≈ 7.9:1, text-3 ≈ 5.8:1)
+   ───────────────────────────────────────────────────────────── */
+.root {
+  --stage: #0a0907;
+  --work: var(--liora-ink);
+  --raised: #1a1712;
+  --raised-2: #231f19;
+  --line: rgba(239, 232, 218, 0.1);
+  --line-2: rgba(239, 232, 218, 0.2);
+  --line-3: rgba(239, 232, 218, 0.36);
+  --text: var(--liora-on-dark);
+  --text-2: #b3a791;
+  --text-3: var(--liora-on-dark-dim);
+  --gold: var(--liora-gold);
+  --gold-text: #d69f52; /* dark-theme --state-warning: gold that reads as text on ink */
+  --paper: #efe8da;
+  --chrome-h: 60px;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--work);
+  color: var(--text);
+  font-family: var(--liora-font-ui);
+  font-size: 15px;
+}
+
+/* ── chrome ── */
+.chrome {
+  position: relative;
+  z-index: 20;
+  height: var(--chrome-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--work);
+}
+.chromeLeft {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.word {
+  font-family: var(--liora-font-display);
+  font-size: 19px;
+  letter-spacing: 0.32em;
+  color: var(--text);
+}
+.crumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+.crumb a:hover {
+  color: var(--text);
+}
+.crumb b {
+  font-weight: 400;
+  color: var(--text);
+}
+.crumbSep {
+  width: 1px;
+  height: 14px;
+  background: var(--line-2);
+}
+.chromeRight {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.quiet {
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.quiet:hover {
+  color: var(--text);
+}
+.credits {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  height: 32px;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius-pill);
+  font-size: 13px;
+  color: var(--text-2);
+}
+.credits span {
+  font-family: var(--liora-font-mono);
+  font-size: 12px;
+  color: var(--text);
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--liora-font-ui);
+  font-size: 11.5px;
+  color: var(--liora-ink);
+  background: #c8bca8;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* ── concept switcher (review tool, not product UI) ── */
+.switcher {
+  position: fixed;
+  left: 50%;
+  top: 12px;
+  translate: -50% 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--liora-radius-pill);
+  background: var(--raised);
+  border: 1px solid var(--line-2);
+}
+.switcher span {
+  padding: 0 10px 0 12px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.switcher a {
+  padding: 7px 14px;
+  border-radius: var(--liora-radius-pill);
+  font-size: 12.5px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease), background var(--liora-dur-fast) var(--liora-ease);
+}
+.switcher a:hover {
+  color: var(--text);
+}
+.switcher a.on {
+  color: var(--liora-ink);
+  background: var(--paper);
+}
+.switcher a b {
+  font-family: var(--liora-font-mono);
+  font-weight: 400;
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+/* ── shared bits ── */
+.num {
+  font-family: var(--liora-font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: var(--liora-radius);
+  background: var(--paper);
+  color: var(--liora-ink);
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: background var(--liora-dur-base) var(--liora-ease), opacity var(--liora-dur-fast);
+}
+.primary:hover {
+  background: var(--liora-oxblood-lift);
+}
+.primary:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.primary svg {
+  transition: transform var(--liora-dur-base) var(--liora-ease);
+}
+.primary:hover svg {
+  transform: translateX(4px);
+}
+.ghostBtn {
+  font-size: 14px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.ghostBtn:hover {
+  color: var(--text);
+}
+
+/* concept E on a phone: the chrome keeps only the name, the balance and you */
+@media (max-width: 767px) {
+  .root[data-concept="e"] .crumb,
+  .root[data-concept="e"] .crumbSep,
+  .root[data-concept="e"] .quiet {
+    display: none;
+  }
+  .root[data-concept="e"] .chrome {
+    padding: 0 20px;
+  }
+}

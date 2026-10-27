@@ -1,0 +1,347 @@
+/* bringing your own: one zone, the images as they were placed, nothing louder */
+.upload {
+  display: grid;
+  gap: 16px;
+  min-height: 60vh;
+  align-content: start;
+}
+.upload[data-over] .zone {
+  border-color: var(--gold-text);
+  color: var(--text);
+}
+.item {
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.item em {
+  font-style: normal;
+  color: var(--text-3);
+  opacity: 0.8;
+}
+.item input {
+  height: 40px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: rgba(8, 7, 5, 0.5);
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius);
+}
+.item input:focus {
+  outline: none;
+  border-color: var(--gold-text);
+}
+.zone {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  min-height: 220px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-2);
+  border: 1px dashed var(--line-2);
+  border-radius: 4px;
+  transition:
+    border-color var(--liora-dur-base) var(--liora-ease),
+    color var(--liora-dur-base) var(--liora-ease);
+}
+.zone:hover {
+  border-color: rgba(239, 232, 218, 0.4);
+  color: var(--text);
+}
+.zone[data-small] {
+  min-height: 0;
+  padding: 14px;
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: 12px;
+}
+.zone b {
+  font-weight: 400;
+  font-size: 15px;
+}
+.zone span {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.errors {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0 0 0 10px;
+  list-style: none;
+  font-size: 13px;
+  color: #e0a2a2;
+  border-left: 1px solid #e0a2a2;
+}
+.hint {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 12px;
+  font-size: 13.5px;
+  color: var(--text);
+  border-left: 1px solid var(--gold-text);
+}
+.hint span {
+  display: flex;
+  gap: 18px;
+}
+.hint a,
+.hint button {
+  font-size: 13px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+}
+.hint a {
+  color: var(--text);
+  border-bottom-color: rgba(214, 159, 82, 0.6);
+}
+.shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 14px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.shots li {
+  display: grid;
+  gap: 6px;
+}
+.pic {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #1a1713;
+}
+.pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+  background: rgba(16, 14, 11, 0.75);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity var(--liora-dur-fast) var(--liora-ease);
+}
+.shots li:hover .remove,
+.remove:focus-visible {
+  opacity: 1;
+}
+.shots select {
+  height: 30px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--liora-radius);
+}
+.sample {
+  justify-self: start;
+  padding-bottom: 1px;
+  font-size: 13px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+}
+.sample:hover {
+  color: var(--text);
+}
+
+/* ── products: what it is (once), how each image shows it (under each) ── */
+.product {
+  display: grid;
+  gap: 12px;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--line);
+}
+.productHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+}
+.productName {
+  font-family: var(--liora-font-display);
+  font-size: 17px;
+  color: var(--text);
+}
+/* a category is a word, chosen with a gold line — the panel's quiet hand */
+.cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.cats button {
+  padding: 2px 0 3px;
+  font-size: 13px;
+  color: var(--text-3);
+  border-bottom: 1px solid transparent;
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.cats button:hover {
+  color: var(--text);
+}
+.cats button[aria-checked="true"] {
+  color: var(--text);
+  border-bottom-color: var(--gold-text);
+}
+.dropProduct {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  border-radius: 50%;
+}
+.dropProduct:hover {
+  color: var(--text);
+  background: rgba(239, 232, 218, 0.06);
+}
+.ask {
+  margin: -4px 0 0;
+  font-size: 12.5px;
+  color: var(--gold-text);
+}
+.addTile {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--text-3);
+  border: 1px dashed var(--line-2);
+  border-radius: 3px;
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.addTile span {
+  font-size: 22px;
+  font-weight: 300;
+}
+.addTile:hover {
+  color: var(--text);
+  border-color: rgba(239, 232, 218, 0.4);
+}
+.tuck {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  padding: 12px 0;
+  font-size: 13px;
+  color: var(--text-2);
+  border-top: 1px solid var(--line);
+}
+.more {
+  justify-self: start;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.more span {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.more:hover {
+  color: var(--gold-text);
+}
+.complements {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+.sectionHead {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.sectionHead em {
+  font-style: normal;
+  color: var(--text-3);
+}
+/* things brought before */
+.assets {
+  display: grid;
+  gap: 10px;
+}
+.shelfToggle {
+  justify-self: start;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 1px;
+  font-size: 13px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+}
+.shelfToggle span {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+.shelfToggle:hover {
+  color: var(--text);
+}
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 12px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.shelf button {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+.shelf img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 3px;
+  background: #1a1713;
+  transition: opacity var(--liora-dur-fast) var(--liora-ease);
+}
+.shelf button:hover img {
+  opacity: 0.8;
+}
+.shelf span {
+  font-size: 12.5px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shelf em {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--text-3);
+}

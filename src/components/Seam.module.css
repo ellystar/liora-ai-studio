@@ -1,0 +1,46 @@
+.seam {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+.img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--fit, cover);
+}
+
+/* hover: dissolve to the input */
+.before {
+  opacity: 0;
+  transition: opacity 600ms var(--liora-ease);
+}
+.hover:hover .before,
+:global(.seam-host):hover .before {
+  opacity: 1;
+}
+
+/* reveal: the output develops over the input, once */
+.after {
+  animation: develop 1600ms var(--liora-ease) var(--delay, 0ms) both;
+}
+@keyframes develop {
+  0% {
+    opacity: 0;
+    filter: brightness(1.25) saturate(0.4) blur(6px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .after {
+    animation: none;
+  }
+}

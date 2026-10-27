@@ -1,0 +1,524 @@
+.b {
+  --gutter: 132px;
+  position: relative;
+  height: calc(100vh - var(--chrome-h));
+  height: calc(100dvh - var(--chrome-h));
+  overflow-y: auto;
+  background: var(--work);
+  scrollbar-width: thin;
+}
+.sheet {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding-right: 48px;
+}
+
+/* ── masthead ── */
+.mast {
+  display: grid;
+  grid-template-columns: var(--gutter) 1fr;
+  padding: 56px 0 46px;
+  border-bottom: 1px solid var(--line);
+}
+.mastMark {
+  font-size: 12.5px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+.kicker {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+.title {
+  margin: 14px 0 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(48px, 5vw, 78px);
+  line-height: 1;
+  letter-spacing: -0.024em;
+}
+.lede {
+  margin: 20px 0 0;
+  max-width: 58ch;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+/* ── rows and the margin thread ── */
+.row {
+  display: grid;
+  grid-template-columns: var(--gutter) 1fr;
+  border-bottom: 1px solid var(--line);
+}
+.gutter {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.no {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-top: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: var(--work);
+  font-family: var(--liora-font-mono);
+  font-size: 12px;
+  color: var(--text-3);
+  transition: all var(--liora-dur-base) var(--liora-ease);
+}
+.line {
+  position: relative;
+  flex: 1;
+  width: 2px;
+  margin: 8px 0 -1px;
+  background: repeating-linear-gradient(to bottom, var(--line-2) 0 6px, transparent 6px 11px);
+}
+.line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 0;
+  background: repeating-linear-gradient(to bottom, var(--gold) 0 6px, transparent 6px 11px);
+  filter: drop-shadow(0 0 4px rgba(176, 122, 46, 0.6));
+  transition: height 700ms var(--liora-ease);
+}
+.done .no {
+  border-color: var(--gold);
+  color: var(--gold-text);
+}
+.done .line {
+  background: repeating-linear-gradient(to bottom, var(--line-3) 0 6px, transparent 6px 11px);
+}
+.open .no {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--liora-ink);
+  box-shadow: 0 0 0 5px rgba(176, 122, 46, 0.18);
+}
+.sewing .line::after {
+  height: 100%;
+  transition-delay: calc(var(--i) * 320ms);
+}
+.content {
+  min-width: 0;
+  padding: 36px 0 42px;
+}
+
+/* ── type ── */
+.h {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.1;
+}
+.q {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: 46px;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+.sub {
+  display: block;
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--text-3);
+}
+.edit {
+  align-self: flex-start;
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-3);
+  padding-bottom: 2px;
+  transition: color var(--liora-dur-fast) var(--liora-ease), border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.edit:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+
+/* ── 01 product, compact ── */
+.compact {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 32px;
+  align-items: end;
+}
+.compactHead {
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  padding-top: 6px;
+}
+.productStrip {
+  display: flex;
+  gap: 14px;
+}
+.productStrip figure {
+  margin: 0;
+}
+.productStrip img {
+  height: 156px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.productStrip figcaption {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* ── strips ── */
+.stripWrap {
+  position: relative;
+  margin: 26px -48px 0 0;
+}
+.strip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 6px 48px 12px 6px;
+  scrollbar-width: none;
+}
+.strip::-webkit-scrollbar {
+  display: none;
+}
+.stripNav {
+  position: absolute;
+  top: -64px;
+  right: 48px;
+  display: flex;
+  gap: 8px;
+}
+.stripNav button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease), border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.stripNav button:hover {
+  color: var(--text);
+  border-color: var(--line-3);
+}
+.portrait,
+.place {
+  flex: none;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  scroll-snap-align: start;
+}
+.portrait {
+  width: 214px;
+}
+.place {
+  width: 330px;
+}
+.img {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+  background: var(--raised);
+  outline: 1px solid transparent;
+  outline-offset: 4px;
+  transition: outline-color var(--liora-dur-base) var(--liora-ease);
+}
+.place .img {
+  aspect-ratio: 4 / 3;
+}
+.img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: filter var(--liora-dur-slow) var(--liora-ease);
+}
+.portrait:hover .img,
+.place:hover .img {
+  outline-color: var(--line-3);
+}
+.sel .img,
+.sel:hover .img {
+  outline-color: var(--gold);
+}
+.locked {
+  cursor: not-allowed;
+}
+.locked img {
+  filter: grayscale(0.8) brightness(0.45);
+}
+.check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--liora-ink);
+}
+.lockChip {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  color: var(--text);
+  background: rgba(10, 8, 6, 0.8);
+  border: 1px solid var(--line-2);
+}
+.name {
+  margin-top: 12px;
+  font-family: var(--liora-font-display);
+  font-size: 21px;
+  line-height: 1.2;
+}
+.note {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.lockedLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+
+/* ── answers and upcoming rows ── */
+.answer {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+.ansPortrait {
+  width: 96px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+}
+.ansPlace {
+  width: 168px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+}
+.ansText {
+  display: grid;
+  gap: 4px;
+}
+.ansTitle {
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+.ansValue {
+  font-family: var(--liora-font-display);
+  font-size: 30px;
+  line-height: 1.1;
+}
+.answer .edit {
+  margin: 0 0 0 auto;
+  align-self: center;
+}
+.todoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.todoTitle {
+  display: block;
+  font-family: var(--liora-font-display);
+  font-size: 28px;
+  color: var(--text-2);
+}
+.todoImgs {
+  display: flex;
+  gap: 8px;
+}
+.todoImgs img {
+  width: 72px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+  opacity: 0.3;
+  filter: grayscale(0.5);
+}
+
+/* ── 04 frames ── */
+.framesRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 26px;
+}
+.frameOpt,
+.ratioOpt {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 12px;
+  min-width: 104px;
+  padding: 18px 14px 14px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  border-radius: var(--liora-radius);
+  transition: all var(--liora-dur-fast) var(--liora-ease);
+}
+.frameOpt:hover,
+.ratioOpt:hover {
+  border-color: var(--line-3);
+  color: var(--text);
+}
+.frameBox {
+  width: 42px;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line-3);
+  color: var(--gold-text);
+}
+.frameOn {
+  border-color: var(--gold);
+  color: var(--text);
+  background: rgba(176, 122, 46, 0.07);
+}
+.frameOn .frameBox {
+  border-style: solid;
+  border-color: var(--gold);
+}
+.ratioOpt {
+  min-width: 84px;
+}
+.ratioBox {
+  width: 36px;
+  border: 1px solid currentColor;
+}
+.divider {
+  width: 1px;
+  margin: 0 12px;
+  background: var(--line);
+}
+
+/* ── 05 result ── */
+.results {
+  display: flex;
+  gap: 22px;
+  margin-top: 28px;
+}
+.result {
+  margin: 0;
+  width: 290px;
+}
+.resultImg {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+  background: var(--raised);
+}
+.resultImg .fill {
+  position: absolute;
+  inset: 0;
+}
+.waiting {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(239, 232, 218, 0.05) 50%, transparent 70%) var(--raised);
+  background-size: 200% 100%;
+  animation: shimmer 1600ms linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.result figcaption {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.tail {
+  height: 140px;
+}
+
+/* ── the binding bar ── */
+.bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 78px;
+  padding: 0 48px 0 40px;
+  border-top: 1px solid var(--line-2);
+  background: rgba(16, 14, 11, 0.92);
+  backdrop-filter: blur(12px);
+}
+.barLeft,
+.barRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.barNo {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.segments {
+  display: flex;
+  gap: 4px;
+}
+.segments i {
+  width: 28px;
+  height: 3px;
+  background: var(--line-2);
+  transition: background var(--liora-dur-base) var(--liora-ease);
+}
+.segments .segOn {
+  background: var(--gold);
+}
+.barNote,
+.barCost {
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiting {
+    animation: none;
+  }
+}

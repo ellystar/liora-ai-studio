@@ -1,0 +1,1523 @@
+/* Concept E — the canvas, third pass: calm and legible.
+   Ink ground, bone words, gold only where something is chosen, active or
+   done. Display serif for the two headings (the project, the question);
+   everything else in the interface face. Pictures carry the screen; nodes
+   have no boxes, shadows or badges — a picture, a name, a state. */
+
+.e {
+  --surface: var(--liora-ink);
+  --surface-2: #15120f;
+  --hair: rgba(239, 232, 218, 0.09);
+  --ok: var(--liora-olive-lift);
+  --warn: var(--liora-oxblood-lift);
+
+  position: relative;
+  height: calc(100dvh - var(--chrome-h));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  overflow: hidden;
+  background: var(--surface);
+}
+/* the earlier way, kept to compare: the canvas gives up half the screen */
+.e[data-panel="split"][data-open="true"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.e .slim {
+  height: 38px;
+  padding: 0 18px;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+/* review tool (?mod): the panel comparison, out of the product's way */
+.review {
+  position: absolute;
+  z-index: 30;
+  top: 14px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  gap: 8px;
+}
+.review > * {
+  background: var(--surface);
+}
+
+/* ═════════ the canvas ═════════ */
+.canvas {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.canvas[data-panning] {
+  cursor: grabbing;
+}
+/* the dashboard's dotted ground; it moves and scales with the canvas */
+.dots {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(239, 232, 218, 0.13) 1px, transparent 1.4px);
+  background-size: calc(28px * var(--z, 1)) calc(28px * var(--z, 1));
+  background-position: var(--gx, 0) var(--gy, 0);
+}
+/* everything that zooms and moves together */
+.world {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transform-origin: 0 0;
+}
+.ports {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+/* zoom: a small floating tool, bottom left */
+.zoom {
+  position: absolute;
+  z-index: 6;
+  left: 22px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: #1c1915;
+  border: 1px solid rgba(239, 232, 218, 0.1);
+  border-radius: var(--liora-radius-pill);
+  cursor: default;
+}
+.zoom button {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text-2);
+  border-radius: var(--liora-radius-pill);
+  transition:
+    background var(--liora-dur-fast) var(--liora-ease),
+    color var(--liora-dur-fast) var(--liora-ease);
+}
+.zoom button:hover:not(:disabled) {
+  color: var(--text);
+  background: rgba(239, 232, 218, 0.07);
+}
+.zoom button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.zoom .zoomPct {
+  min-width: 52px;
+  font-family: var(--liora-font-mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.identity {
+  position: absolute;
+  z-index: 3;
+  top: 32px;
+  left: 40px;
+}
+/* once the canvas moves under it, the name sits on its own plate */
+.identity[data-float] {
+  margin: -12px 0 0 -16px;
+  padding: 12px 16px;
+  background: #1c1915;
+  border-radius: var(--liora-radius);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+  cursor: default;
+}
+.identity h1 {
+  margin: 0 0 8px;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--text);
+}
+.identity p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+
+/* relations: the dashboard's cable — a soft line drawn in, gold and glowing once it carries work */
+.cables {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.cable {
+  fill: none;
+  stroke: rgba(239, 232, 218, 0.34);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 900ms var(--liora-ease) 200ms forwards;
+  transition:
+    stroke 300ms var(--liora-ease),
+    opacity 300ms var(--liora-ease);
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.cable[data-on] {
+  stroke: var(--gold-text);
+  filter: drop-shadow(0 0 6px rgba(214, 159, 82, 0.6));
+}
+.cable[data-faint] {
+  opacity: 0.35;
+}
+/* port bars: a sliver of light where a cable meets a card */
+.port {
+  filter: drop-shadow(0 0 5px rgba(239, 232, 218, 0.35));
+  animation: fade 700ms var(--liora-ease) both;
+}
+.port[data-on] {
+  filter: drop-shadow(0 0 6px rgba(214, 159, 82, 0.6));
+}
+.port[data-faint] {
+  opacity: 0.35;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cable {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── a node: a picture, a name, a state ── */
+.node {
+  --iw: min(calc(var(--w) * 1cqw), calc(var(--ih) * 1cqh * var(--arn)));
+  --pad: 7px;
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--x) * 1%);
+  top: calc(var(--y) * 1%);
+  translate: calc(-50% + var(--dx, 0px)) calc(-50% + var(--dy, 0px));
+  width: calc(var(--iw) + var(--pad) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--pad) var(--pad) 11px;
+  text-align: left;
+  cursor: pointer;
+  --ring: transparent;
+  background: #1c1915;
+  border-radius: var(--liora-radius);
+  box-shadow:
+    inset 0 0 0 1px var(--ring),
+    0 30px 60px -30px rgba(0, 0, 0, 0.8);
+  transition:
+    box-shadow var(--liora-dur-base) var(--liora-ease),
+    background var(--liora-dur-base) var(--liora-ease);
+}
+.node:hover {
+  background: #221e19;
+}
+.node[data-state="next"],
+.node[data-state="review"] {
+  --ring: rgba(214, 159, 82, 0.4);
+}
+.node[data-state="attention"] {
+  --ring: rgba(207, 128, 118, 0.6);
+}
+.node[data-open],
+.node[data-open]:hover {
+  --ring: rgba(214, 159, 82, 0.75);
+  background: #221e19;
+}
+.text {
+  padding: 0 3px;
+}
+.thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--ar);
+  overflow: hidden;
+  border-radius: 1px;
+  background: #1a1713;
+}
+.node[data-state="empty"] .thumb,
+.node[data-state="next"] .thumb,
+.slot .thumb {
+  background: rgba(239, 232, 218, 0.03);
+  box-shadow: inset 0 0 0 1px var(--hair);
+}
+.slot,
+.output.small {
+  cursor: default;
+}
+.slot:hover {
+  border-color: rgba(239, 232, 218, 0.1);
+}
+
+/* several pictures: a stack — the first on top, the rest peeking behind */
+.thumb:has(> .stack) {
+  overflow: visible;
+  background: none;
+}
+.stack {
+  position: absolute;
+  inset: 0;
+}
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1px;
+  z-index: calc(3 - var(--i));
+  transform: translate(calc(var(--i) * 7px), calc(var(--i) * -7px)) scale(calc(1 - var(--i) * 0.05));
+  transform-origin: 100% 0;
+  filter: brightness(calc(1 - var(--i) * 0.32));
+  box-shadow: 0 0 0 1px rgba(16, 14, 11, 0.6);
+  animation: settle var(--liora-dur-slow) var(--liora-ease) both;
+}
+
+.thumb > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: settle var(--liora-dur-slow) var(--liora-ease) both;
+}
+.node[data-landing] .thumb > img {
+  opacity: 0;
+  animation: none;
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+  }
+}
+
+/* frames: empty until the system fills them */
+.blanks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px;
+}
+.blanks > span {
+  flex: 1;
+  min-width: 0;
+  max-height: 100%;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hair);
+  border-radius: 1px;
+  color: var(--text-3);
+}
+
+/* results */
+.slices {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 1px;
+  background: var(--surface);
+}
+.slice {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+.waiting {
+  flex: 1;
+  background: #1d1915;
+  animation: pulse-flat 1.6s ease-in-out infinite;
+}
+@keyframes develop {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+.output {
+  animation: arrive 700ms var(--liora-ease) both;
+}
+@keyframes arrive {
+  from {
+    opacity: 0;
+  }
+}
+.slices > img {
+  object-fit: cover;
+}
+/* kept from the shoot: the backdrop, read from the frame itself */
+.backdrop {
+  object-position: 50% 20%;
+}
+.small .slices {
+  opacity: 0.6;
+}
+
+/* ── the words under a picture ── */
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.label {
+  font-size: 12.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.older {
+  color: var(--text-3);
+}
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.state::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.state[data-state="empty"]::before,
+.state[data-state="old"]::before,
+.state[data-state="kept"]::before {
+  background: none;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.state[data-state="set"],
+.state[data-state="ready"] {
+  color: var(--ok);
+}
+.state[data-state="next"],
+.state[data-state="working"],
+.state[data-state="review"] {
+  color: var(--gold-text);
+}
+.state[data-state="working"]::before {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.state[data-state="attention"] {
+  color: var(--warn);
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+.value {
+  font-family: var(--liora-font-display);
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.3;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.node[data-node="product"] .value {
+  font-size: 20px;
+}
+.node[data-state="empty"] .value,
+.node[data-state="next"] .value {
+  color: var(--text-3);
+}
+.meta,
+.soon {
+  font-size: 12.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.soon {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.issue {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--warn);
+}
+
+/* ── desktop: the decisions share the room left of the panel ──
+   --free is the screen minus the panel (same clamp as the panel) and 62 px
+   (its 14 px inset and 48 px of air). It follows the screen, never the panel
+   opening, so the canvas holds still when a step opens. */
+.canvas[data-fit="panel"] .node {
+  --free: calc(100cqw - clamp(480px, 36vw, 560px) - 62px);
+  left: calc(var(--fx) * var(--free));
+}
+/* the result sits in the panel's half: under the panel while choosing */
+.canvas[data-fit="panel"] [data-zone="result"] {
+  left: calc((var(--free) + 100cqw) / 2);
+}
+
+/* ── the half-width canvas beside the inspector: same nodes, zigzagging down ── */
+.canvas[data-compact="true"] .node {
+  --iw: calc(var(--cw) * 1cqw);
+  left: calc(var(--cx) * 1%);
+  top: calc(var(--cy) * 1%);
+  gap: 8px;
+}
+.canvas[data-compact="true"] .meta,
+.canvas[data-compact="true"] .soon {
+  display: none;
+}
+.canvas[data-compact="true"] .value {
+  font-size: 14px;
+}
+
+/* ═════════ the inspector ═════════ */
+.inspector {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 30px 36px 36px;
+  background: var(--surface-2);
+  border-left: 1px solid var(--hair);
+  animation: inspIn 480ms var(--liora-ease) both;
+}
+.inspector[data-busy] {
+  pointer-events: none;
+}
+
+/* over the canvas: a sheet that floats above a canvas that never moves.
+   It stops above the production bar so progress stays in view. */
+.inspector[data-mode="overlay"] {
+  position: absolute;
+  z-index: 10;
+  top: 14px;
+  right: 14px;
+  bottom: calc(56px + 14px);
+  width: clamp(480px, 36vw, 560px);
+  padding: 22px 26px 28px;
+  border: 1px solid var(--hair);
+  border-radius: var(--liora-radius);
+}
+.inspector[data-leaving] {
+  animation: inspOut 220ms var(--liora-ease) forwards;
+}
+@keyframes inspOut {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+/* below 1200 px: a full-screen step over the canvas, the flow in miniature on
+   top with the way back to the canvas */
+.inspector[data-mode="sheet"] {
+  position: absolute;
+  z-index: 10;
+  inset: 0 0 56px 0;
+  padding: 0 0 40px;
+  background: var(--surface);
+  border-left: 0;
+  animation: sheetIn 360ms var(--liora-ease) both;
+}
+.inspector[data-mode="sheet"][data-leaving] {
+  animation: sheetOut 220ms var(--liora-ease) forwards;
+}
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes sheetOut {
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.inspector[data-mode="sheet"] .panelBody {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 26px 32px 0;
+}
+.strip {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--hair);
+}
+.stripBack {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius-pill);
+  font-size: 13px;
+  color: var(--text);
+  transition: border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.stripBack:hover {
+  border-color: var(--line-3);
+}
+.strip ol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.strip li {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.strip li + li::before {
+  content: "";
+  width: 16px;
+  height: 1px;
+  background: var(--line-2);
+}
+.strip li button,
+.strip li[data-result] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: var(--liora-radius);
+  text-align: left;
+}
+.strip li button:hover {
+  background: rgba(239, 232, 218, 0.05);
+}
+.stripThumb {
+  position: relative;
+  flex: none;
+  width: 27px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 1px;
+  background: rgba(239, 232, 218, 0.04);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  color: var(--text-2);
+}
+.stripThumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.stripThumb[data-landing] img {
+  opacity: 0;
+}
+.strip li[data-open] .stripThumb {
+  box-shadow: 0 0 0 1.5px var(--gold-text);
+}
+.stripText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  white-space: nowrap;
+}
+.stripText b {
+  font-weight: 400;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.stripText em {
+  font-style: normal;
+  font-size: 13px;
+  color: var(--text);
+}
+.strip li[data-open] .stripText b {
+  color: var(--gold-text);
+}
+.strip li[data-state="empty"] .stripText em,
+.strip li[data-state="next"] .stripText em,
+.strip li[data-result] .stripText em {
+  color: var(--text-3);
+}
+
+/* moving from step to step inside the panel: only the content changes */
+.panelBody {
+  animation: stepIn 320ms var(--liora-ease) both;
+}
+@keyframes stepIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes inspIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 16px;
+}
+.headBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+/* what the system will make, said at the head of every step */
+.summary {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.stepNav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.stepNav > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 4px;
+}
+.stepNav > span .num,
+.stepNav > span span {
+  color: var(--text-3);
+}
+.stepNav button {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--text-2);
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    background var(--liora-dur-fast) var(--liora-ease);
+}
+.stepNav button:hover:not(:disabled) {
+  color: var(--text);
+  background: rgba(239, 232, 218, 0.06);
+}
+.stepNav button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.q {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(30px, 2.6vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.headSub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  min-height: 38px;
+}
+.headSub p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.back {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--hair);
+  border-radius: var(--liora-radius-pill);
+  font-size: 12.5px;
+  color: var(--text-2);
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.back:hover {
+  color: var(--text);
+  border-color: var(--line-3);
+}
+.more {
+  margin-top: 6px;
+  padding: 6px 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.more:hover {
+  color: var(--text);
+}
+
+/* a Partner capability: its own section below the curated choices,
+   marked as Partner's — never mixed into Liora's list */
+.tier {
+  margin-top: 30px;
+  padding: 16px 16px 18px;
+  border: 1px solid var(--hair);
+  border-radius: var(--liora-radius);
+  background: rgba(239, 232, 218, 0.02);
+}
+.tierHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.tierHead span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gold-text);
+}
+.tierHead h2 {
+  margin: 0;
+  font-family: var(--liora-font-ui);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--text);
+}
+.tier:not([data-unlocked]) .tierHead {
+  margin-bottom: 12px;
+}
+.tier .describe {
+  margin-top: 6px;
+}
+.describe {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.prompt {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14.5px;
+  outline: none;
+  transition: border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.prompt::placeholder {
+  color: var(--text-3);
+}
+.prompt:focus {
+  border-bottom-color: var(--gold-text);
+}
+
+/* a kept node: why there is nothing to choose, and where to go if there should be */
+.keptNote {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 24px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--hair);
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.keptNote span {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.keptNote a {
+  padding-bottom: 1px;
+  color: var(--text);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.6);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.keptNote a:hover {
+  color: var(--gold-text);
+}
+
+/* a check: what the system made, beside what it came from */
+.checks {
+  display: grid;
+  gap: 26px;
+}
+.pair {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: end;
+  gap: 14px;
+  margin: 0;
+}
+.pairFrom,
+.pairTo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--liora-radius);
+  background: #1a1713;
+}
+.pairFrom {
+  object-fit: cover;
+  opacity: 0.72;
+}
+.pairTo {
+  position: relative;
+  overflow: hidden;
+}
+.pairTo > img,
+.pairTo > .waiting {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pairTo > img {
+  animation: settle var(--liora-dur-slow) var(--liora-ease) both;
+}
+.pair figcaption {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.pair figcaption button {
+  padding-bottom: 1px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.pair figcaption button:hover:not(:disabled) {
+  color: var(--text);
+}
+.pair figcaption button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* a turn: front → three-quarter → back, on a loop */
+.spin {
+  position: absolute;
+  inset: 0;
+}
+.spin img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  animation: turn 4.2s linear infinite;
+  animation-delay: calc(var(--k) * 1.4s);
+}
+@keyframes turn {
+  0% {
+    opacity: 0;
+  }
+  8%,
+  33% {
+    opacity: 1;
+  }
+  41%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin img {
+    animation: none;
+  }
+  .spin img:first-child {
+    opacity: 1;
+  }
+}
+
+/* one product or many — the mode lives in the product step */
+.mode {
+  display: inline-flex;
+  gap: 4px;
+  margin: -4px 0 18px;
+  padding: 3px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius-pill);
+}
+.mode > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 14px;
+  font-size: 13px;
+  color: var(--text-2);
+  border-radius: var(--liora-radius-pill);
+}
+.mode > [aria-current] {
+  color: var(--liora-ink);
+  background: var(--liora-bone);
+}
+.mode a:hover {
+  color: var(--text);
+}
+.mode a[data-locked] {
+  color: var(--text-3);
+}
+
+/* a batch: one row per product, problems first */
+.batch {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.batch li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0 10px 10px;
+  border-top: 1px solid var(--hair);
+}
+.batch li[data-issue] {
+  border-left: 1px solid rgba(207, 128, 118, 0.7);
+}
+.batch li[data-out] {
+  opacity: 0.45;
+}
+.batchThumbs {
+  display: flex;
+  gap: 4px;
+}
+.batchThumbs img {
+  width: 36px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.batchName {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.batchName b {
+  font-weight: 400;
+  font-size: 14px;
+}
+.batchName b .num {
+  margin-right: 4px;
+}
+.batchName em {
+  font-style: normal;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.batchActs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.batchActs button {
+  padding-bottom: 1px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+}
+.batchActs button:hover {
+  color: var(--text);
+}
+.batchOk {
+  color: var(--ok);
+}
+.batchWarn {
+  color: var(--warn);
+}
+
+/* a new cast, from inside the cast step */
+.newCast {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  border: 1px dashed var(--line-2);
+  border-radius: 3px;
+  transition:
+    border-color var(--liora-dur-base) var(--liora-ease),
+    color var(--liora-dur-base) var(--liora-ease);
+}
+.newCast span {
+  font-family: var(--liora-font-ui);
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 300;
+  letter-spacing: 0;
+}
+.newCast em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.newCast:hover {
+  color: var(--text);
+  border-color: rgba(214, 159, 82, 0.6);
+}
+
+/* outside the package: one line and one example, nothing louder */
+.locked {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.locked img {
+  flex: none;
+  width: 40px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+}
+.locked span {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.locked span svg {
+  flex: none;
+  color: var(--gold-text);
+}
+.locked em {
+  flex: none;
+  font-style: normal;
+  font-size: 12.5px;
+  color: var(--gold-text);
+}
+
+/* ═════════ the production bar ═════════ */
+.bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 56px;
+  padding: 0 20px 0 28px;
+  border-top: 1px solid var(--hair);
+  background: var(--surface);
+}
+.barLeft {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+.barRight {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.progress {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.progress i {
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--line-2);
+  transition: background var(--liora-dur-base) var(--liora-ease);
+}
+.progress i[data-on] {
+  background: var(--gold-text);
+}
+.progress > span {
+  margin-left: 6px;
+  color: var(--text-3);
+}
+.status {
+  font-size: 13.5px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.saved svg {
+  color: var(--ok);
+}
+.cost {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inspector,
+  .output,
+  .thumb > img,
+  .waiting,
+  .state::before {
+    animation: none;
+  }
+}
+
+/* ═════════ on a phone: making happens on desktop ═════════ */
+.desk {
+  min-height: calc(100dvh - var(--chrome-h));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px 24px 48px;
+  background: var(--work);
+}
+.desk img {
+  width: 120px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+  margin-bottom: 12px;
+}
+.desk h1 {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: 34px;
+  line-height: 1.05;
+  color: var(--text);
+}
+.desk p {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.desk .deskMeta,
+.desk .deskNote {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.deskActions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 10px;
+}
+.desk .deskButton {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+/* ═════════ the first visit to a flow: three steps, top right, out of the nodes' way ═════════ */
+.coach {
+  position: absolute;
+  z-index: 12;
+  top: 28px;
+  right: 28px;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--hair);
+  border-radius: var(--liora-radius);
+  animation: coachIn 420ms var(--liora-ease) both;
+}
+@keyframes coachIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.coachStep {
+  color: var(--text-3);
+}
+.coach h2 {
+  margin: 0;
+  font-family: var(--liora-font-ui);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--text);
+}
+.coach p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.coachActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+/* the node the walk-through is talking about breathes in gold */
+.node[data-hint] {
+  animation: hint 1.8s ease-in-out infinite;
+}
+@keyframes hint {
+  50% {
+    border-color: var(--gold-text);
+  }
+}
+.how {
+  margin-left: 12px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--line-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.how:hover {
+  color: var(--text);
+}
+.cost em {
+  font-style: normal;
+  color: var(--text-3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach,
+  .node[data-hint] {
+    animation: none;
+  }
+}
+
+@keyframes pulse-flat {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* the free plan's mark — the same as in the file that downloads */
+.wm {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(-30deg, transparent 0 46px, rgba(239, 232, 218, 0.07) 46px 47px);
+}
+.wm::after {
+  content: "LIORA";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  font-family: var(--liora-font-display);
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: rgba(239, 232, 218, 0.45);
+}
+
+.inspector:focus {
+  outline: none;
+}
+
+/* a moved layout belongs to the canvas, not to the half-width comparison */
+.canvas[data-compact="true"] .node {
+  translate: -50% -50%;
+}
+/* the product node before anything is brought: a place to drop */
+.drop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
+  border: 1px dashed var(--line-2);
+  border-radius: 3px;
+}
+.node[data-state="next"] .drop {
+  color: var(--gold-text);
+  border-color: rgba(214, 159, 82, 0.5);
+}
+.zoom .zoomReset {
+  padding: 0 12px;
+  font-size: 12.5px;
+  border-left: 1px solid var(--hair);
+  border-radius: 0 999px 999px 0;
+}
+
+/* ── panel filters: words, the chosen one underlined in gold ── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: -4px 0 16px;
+}
+.filters button {
+  padding: 2px 0 4px;
+  font-size: 13.5px;
+  color: var(--text-3);
+  border-bottom: 1px solid transparent;
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.filters button:hover {
+  color: var(--text);
+}
+.filters button[aria-pressed="true"] {
+  color: var(--text);
+  border-bottom-color: var(--gold-text);
+}
+/* a card and its star, side by side in the grid cell */
+.faved {
+  position: relative;
+  min-width: 0;
+}
+.fav {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: rgba(239, 232, 218, 0.85);
+  background: rgba(16, 14, 11, 0.55);
+  border-radius: 50%;
+  opacity: 0;
+  transition:
+    opacity var(--liora-dur-fast) var(--liora-ease),
+    color var(--liora-dur-fast) var(--liora-ease);
+}
+.faved:hover .fav,
+.fav:focus-visible,
+.fav[aria-pressed="true"] {
+  opacity: 1;
+}
+.fav[aria-pressed="true"] {
+  color: var(--gold-text);
+}
+.emptyLine {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+.tierNote {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* the way on, lit: the first step on arrival, the frames when they are ready —
+   the same gold glow as a finished cable */
+.lit {
+  box-shadow:
+    0 0 0 1px rgba(214, 159, 82, 0.75),
+    0 0 18px rgba(214, 159, 82, 0.5);
+  animation: litPulse 2.4s var(--liora-ease) infinite;
+}
+@keyframes litPulse {
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(214, 159, 82, 0.4),
+      0 0 8px rgba(214, 159, 82, 0.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lit {
+    animation: none;
+  }
+}
+/* with a panel open, "How it works" moves beside the canvas's left, clear of the panel */
+.coach[data-beside] {
+  right: auto;
+  left: 40px;
+  top: 128px;
+}

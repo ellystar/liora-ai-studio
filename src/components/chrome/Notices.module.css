@@ -1,0 +1,145 @@
+/* the bell and its panel — a rule marks the unread, a dot marks the bell */
+.wrap {
+  position: relative;
+}
+.bell {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: var(--text-2, #b3a791);
+  border-radius: 50%;
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    background var(--liora-dur-fast) var(--liora-ease);
+}
+.bell:hover,
+.bell[aria-expanded="true"] {
+  color: var(--text, #efe8da);
+  background: rgba(239, 232, 218, 0.06);
+}
+.bell i {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--liora-gold);
+  box-shadow: 0 0 0 2px var(--liora-ink);
+}
+.panel {
+  position: absolute;
+  z-index: 60;
+  top: 46px;
+  right: -8px;
+  width: 380px;
+  max-height: min(560px, 75vh);
+  display: flex;
+  flex-direction: column;
+  color: var(--text, #efe8da);
+  background: #1a1712;
+  border: 1px solid rgba(239, 232, 218, 0.14);
+  border-radius: 6px;
+  animation: open 220ms var(--liora-ease) both;
+}
+@keyframes open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.panel header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(239, 232, 218, 0.08);
+}
+.panel header b {
+  font-family: var(--liora-font-ui);
+  font-weight: 400;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.panel header button {
+  font-size: 12.5px;
+  color: var(--text-3, #978c78);
+}
+.panel header button:hover {
+  color: var(--text, #efe8da);
+}
+.panel ul {
+  flex: 1;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.panel li a {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  padding: 11px 18px 11px 20px;
+  transition: background var(--liora-dur-fast) var(--liora-ease);
+}
+.panel li a:hover {
+  background: rgba(239, 232, 218, 0.04);
+}
+.panel li a[data-unread]::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  background: var(--gold-text, #d69f52);
+}
+.panel li b {
+  grid-column: 1;
+  font-weight: 400;
+  font-size: 14px;
+}
+.panel li a:not([data-unread]) b {
+  color: var(--text-2, #b3a791);
+}
+.panel li span {
+  grid-column: 1;
+  font-size: 12.5px;
+  color: var(--text-3, #978c78);
+}
+.panel li svg {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--text-3, #978c78);
+}
+.panel li a:hover svg {
+  color: var(--gold-text, #d69f52);
+}
+.empty {
+  font-family: var(--liora-font-display);
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 22px 18px;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+.empty span {
+  font-family: var(--liora-font-ui);
+  font-size: 13px;
+  color: var(--text-3, #978c78);
+}
+.prefs {
+  padding: 11px 18px 13px;
+  font-size: 12.5px;
+  color: var(--text-3, #978c78);
+  border-top: 1px solid rgba(239, 232, 218, 0.08);
+}
+.prefs:hover {
+  color: var(--text, #efe8da);
+}

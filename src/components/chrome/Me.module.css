@@ -1,0 +1,110 @@
+/* your name, your initials, the rooms not on screen */
+.wrap {
+  position: relative;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.name {
+  font-size: 13.5px;
+  color: var(--text, #efe8da);
+  white-space: nowrap;
+}
+.avatar {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-family: var(--liora-font-ui);
+  font-size: 11.5px;
+  color: var(--liora-ink);
+  background: #c8bca8;
+  transition: box-shadow var(--liora-dur-fast) var(--liora-ease);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.who:hover .avatar,
+.who[aria-expanded="true"] .avatar {
+  box-shadow: 0 0 0 2px rgba(214, 159, 82, 0.5);
+}
+.menu {
+  position: absolute;
+  z-index: 60;
+  top: 46px;
+  right: 0;
+  width: 240px;
+  display: grid;
+  padding: 8px 0;
+  color: var(--text, #efe8da);
+  background: #1a1712;
+  border: 1px solid rgba(239, 232, 218, 0.14);
+  border-radius: 6px;
+  animation: open 220ms var(--liora-ease) both;
+}
+@keyframes open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.role {
+  margin: 0;
+  padding: 8px 18px 12px;
+  font-size: 12.5px;
+  color: var(--gold-text, #d69f52);
+  border-bottom: 1px solid rgba(239, 232, 218, 0.08);
+}
+.menu a {
+  display: grid;
+  gap: 2px;
+  padding: 9px 18px;
+  font-size: 14px;
+  transition: background var(--liora-dur-fast) var(--liora-ease);
+}
+.menu a:hover {
+  background: rgba(239, 232, 218, 0.04);
+}
+.menu a em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--gold-text, #d69f52);
+}
+.menu a.sep {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(239, 232, 218, 0.08);
+}
+.lang {
+  display: flex;
+  gap: 4px;
+  padding: 8px 18px 6px;
+}
+.lang button {
+  padding: 4px 10px;
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--text-3, #978c78);
+  border-radius: var(--liora-radius-pill);
+}
+.lang button[aria-pressed="true"] {
+  color: var(--liora-ink);
+  background: var(--liora-on-dark);
+}
+.menu a.out {
+  margin-top: 6px;
+  padding-top: 12px;
+  font-size: 13px;
+  color: var(--text-2, #b3a791);
+  border-top: 1px solid rgba(239, 232, 218, 0.08);
+}
+.menu a.out:hover {
+  color: var(--text, #efe8da);
+}
+@media (max-width: 760px) {
+  .name {
+    display: none;
+  }
+}

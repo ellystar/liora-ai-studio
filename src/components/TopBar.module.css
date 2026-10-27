@@ -1,0 +1,299 @@
+.bar {
+  position: relative;
+  z-index: 40;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(20px, 3vw, 44px);
+}
+.overlay {
+  position: absolute;
+  inset: 0 0 auto 0;
+  background: linear-gradient(to bottom, rgba(10, 8, 6, 0.55), rgba(10, 8, 6, 0));
+}
+.solid {
+  background: var(--surface-page);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.review {
+  background: var(--surface-review);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 4vw, 56px);
+}
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.word {
+  font-family: var(--liora-font-display);
+  font-weight: 400;
+  font-size: 21px;
+  letter-spacing: 0.34em;
+  color: var(--content-primary);
+}
+.sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border-strong);
+}
+.sub {
+  font-family: var(--liora-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: var(--content-label);
+}
+
+.nav {
+  display: flex;
+  gap: 26px;
+}
+.nav a {
+  position: relative;
+  font-family: var(--liora-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--content-label);
+  padding: 6px 0;
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.nav a:hover {
+  color: var(--content-primary);
+}
+.nav a.active {
+  color: var(--content-primary);
+}
+.nav a.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--accent-primary);
+}
+
+.right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.bell {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: var(--content-secondary);
+  border-radius: var(--liora-radius-pill);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.bell:hover {
+  color: var(--content-primary);
+}
+.dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--surface-page);
+}
+.credits {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--liora-radius-pill);
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--content-secondary);
+  background: rgba(16, 14, 11, 0.35);
+  backdrop-filter: blur(8px);
+  transition: border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.credits span:first-child {
+  color: var(--content-primary);
+}
+.credits:hover {
+  border-color: var(--content-primary);
+}
+.credits.low {
+  border-color: var(--state-warning);
+  color: var(--state-warning);
+}
+.credits.low span:first-child {
+  color: var(--state-warning);
+}
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-family: var(--liora-font-display);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--liora-ink);
+  background: radial-gradient(120% 120% at 30% 25%, #e7d6bb 0%, #b8966a 55%, #5f4a33 100%);
+  box-shadow: inset 0 0 0 1px rgba(239, 232, 218, 0.25);
+}
+
+/* dropdown panels */
+.panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 380px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--liora-radius);
+  box-shadow: var(--elevation-3);
+  z-index: 60;
+}
+.panelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.panelHead button:hover {
+  color: var(--content-primary);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.list li {
+  border-bottom: 1px solid var(--border-subtle);
+  border-left: 2px solid transparent;
+}
+.list li:last-child {
+  border-bottom: 0;
+}
+.list li.unread {
+  border-left-color: var(--accent-primary);
+}
+.list a {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 14px 44px 14px 16px;
+  transition: background var(--liora-dur-fast) var(--liora-ease);
+}
+.list a:hover {
+  background: rgba(239, 232, 218, 0.03);
+}
+.nTitle {
+  font-size: 14px;
+  color: var(--content-primary);
+}
+.nSub {
+  font-size: 12px;
+  color: var(--content-secondary);
+}
+.nArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--content-label);
+}
+.empty {
+  padding: 26px 18px 28px;
+}
+.emptyTitle {
+  font-family: var(--liora-font-display);
+  font-size: 20px;
+  font-weight: 300;
+  margin: 0 0 6px;
+}
+.emptySub {
+  font-size: 13px;
+  color: var(--content-secondary);
+  margin: 0;
+}
+
+.account {
+  width: 320px;
+  padding: 6px 0 0;
+}
+.who {
+  display: grid;
+  gap: 4px;
+  padding: 14px 18px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.whoName {
+  font-family: var(--liora-font-display);
+  font-size: 20px;
+  font-weight: 300;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+.badge {
+  font-family: var(--liora-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+}
+.lowText {
+  color: var(--state-warning);
+}
+.lowNote {
+  margin: 0;
+  padding: 10px 18px;
+  font-size: 12.5px;
+  color: var(--state-warning);
+  background: var(--state-warning-surface);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.lang {
+  display: flex;
+  gap: 4px;
+}
+.lang button {
+  font-family: var(--liora-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  padding: 4px 8px;
+  color: var(--content-label);
+  border-radius: var(--liora-radius-pill);
+}
+.lang button.on {
+  color: var(--liora-ink);
+  background: var(--liora-on-dark);
+}
+.phase {
+  margin: 0;
+  padding: 12px 18px 14px;
+  font-size: 12px;
+  color: var(--content-label);
+}
+
+@media (max-width: 860px) {
+  .nav {
+    display: none;
+  }
+}

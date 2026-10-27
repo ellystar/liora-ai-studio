@@ -1,0 +1,613 @@
+/* The band — wide and low across the foot, like the dashboard's strip.
+   Three columns: the question, the choices, the action. */
+.band {
+  position: relative;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr) minmax(190px, 230px);
+  gap: clamp(24px, 3vw, 48px);
+  padding: 30px 44px 28px;
+  animation: enter 380ms var(--liora-ease) both;
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.idx {
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--gold-text);
+}
+.title {
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(28px, 2.3vw, 38px);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+}
+.hint {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.body {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+}
+.acts {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 12px;
+}
+.note {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* primary: the DS action — bone on ink */
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: var(--liora-radius);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-fg);
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background var(--liora-dur-base) var(--liora-ease),
+    color var(--liora-dur-base) var(--liora-ease),
+    opacity var(--liora-dur-fast) var(--liora-ease);
+}
+.primary:hover:not(:disabled) {
+  background: var(--action-primary-bg-hover);
+  color: var(--action-primary-fg-hover);
+}
+.primary svg {
+  transition: transform var(--liora-dur-base) var(--liora-ease);
+}
+.primary:hover:not(:disabled) svg {
+  transform: translateX(4px);
+}
+.primary:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+.quietBtn {
+  align-self: flex-start;
+  padding-bottom: 3px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+  transition:
+    color var(--liora-dur-fast) var(--liora-ease),
+    border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.quietBtn:hover {
+  color: var(--gold-text);
+  border-color: rgba(214, 159, 82, 0.6);
+}
+.primary:focus-visible,
+.quietBtn:focus-visible,
+.tile:focus-visible,
+.drop:focus-visible {
+  outline: 2px solid var(--liora-gold);
+  outline-offset: 3px;
+}
+
+/* ── a row of pictures ── */
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 2px 2px 4px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(239, 232, 218, 0.15) transparent;
+}
+.row > li {
+  flex: none;
+}
+.group {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  padding: 0 4px 0 12px;
+  border-left: 1px solid var(--line-2);
+  writing-mode: vertical-rl;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.row > .group:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+.groupNote {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 150px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.tile {
+  display: grid;
+  gap: 3px;
+  width: clamp(96px, 7.6vw, 124px);
+  text-align: left;
+}
+.tileImg {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--liora-radius);
+  outline: 1px solid transparent;
+  outline-offset: 2px;
+  background: rgba(239, 232, 218, 0.03);
+  transition: outline-color 250ms var(--liora-ease);
+}
+.tileImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 700ms var(--liora-ease),
+    filter 300ms var(--liora-ease);
+}
+.tile:hover .tileImg img {
+  transform: scale(1.04);
+}
+.tile.sel .tileImg {
+  outline-color: var(--gold-text);
+}
+.tile.locked .tileImg img {
+  filter: grayscale(0.6) brightness(0.5);
+}
+.tile:disabled {
+  cursor: not-allowed;
+}
+.tileName {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tileSub {
+  font-size: 11px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gold-text);
+  color: var(--liora-ink);
+}
+.lock {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.newTile .tileImg {
+  border: 1px dashed var(--line-2);
+  background: transparent;
+  color: var(--text-2);
+}
+.upsell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  color: var(--text);
+}
+.upsell a {
+  color: var(--gold-text);
+  border-bottom: 1px solid rgba(214, 159, 82, 0.5);
+}
+
+/* ── intro / ghost: before → after ── */
+.pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  width: 100%;
+}
+.pair figure {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.pair figcaption {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.thumbs {
+  display: flex;
+  gap: 8px;
+}
+.thumbs img {
+  width: clamp(84px, 6.6vw, 108px);
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+}
+.pairArrow {
+  align-self: center;
+  color: var(--text-3);
+}
+.alt {
+  align-self: flex-end;
+  max-width: 30ch;
+  margin: 0 0 0 auto;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.alt a {
+  color: var(--text);
+  border-bottom: 1px solid var(--line-2);
+}
+.alt a:hover {
+  color: var(--gold-text);
+}
+
+/* ── upload ── */
+.drop {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px dashed rgba(239, 232, 218, 0.24);
+  border-radius: var(--liora-radius);
+  cursor: pointer;
+  transition:
+    border-color 250ms var(--liora-ease),
+    background 250ms var(--liora-ease);
+}
+.drop:hover,
+.over {
+  border-color: var(--gold-text);
+  background: rgba(214, 159, 82, 0.04);
+}
+.dropTitle {
+  font-family: var(--liora-font-display);
+  font-size: 22px;
+}
+.dropSub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.body:has(.drop) {
+  flex-direction: column;
+  gap: 12px;
+}
+.samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.samples button {
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line-2);
+}
+.samples button:hover {
+  color: var(--gold-text);
+}
+.errors {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--liora-oxblood-lift);
+}
+.up {
+  position: relative;
+  width: clamp(96px, 7.6vw, 124px);
+}
+.up img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--liora-radius);
+}
+.scan img {
+  animation: scan 1.4s var(--liora-ease) infinite;
+}
+@keyframes scan {
+  50% {
+    filter: brightness(1.35) saturate(0.4);
+  }
+}
+.slot,
+.slotFixed {
+  position: relative;
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.slot > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  border-bottom: 1px solid var(--line-2);
+}
+.slotMenu {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  min-width: 140px;
+  padding: 6px 0;
+  background: #1a1712;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--elevation-3);
+}
+.slotMenu button {
+  padding: 7px 14px;
+  text-align: left;
+  color: var(--text-2);
+}
+.slotMenu button:hover,
+.slotMenu .on {
+  color: var(--gold-text);
+}
+.failed {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  border: 1px dashed var(--line-2);
+}
+.missing {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ── framing: the styling note sits at the row's end ── */
+.styling {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  padding-left: 18px;
+  border-left: 1px solid var(--line-2);
+}
+.styling label {
+  display: grid;
+  gap: 8px;
+  width: 220px;
+}
+.styling span {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.styling input {
+  height: 38px;
+  padding: 0 2px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line-2);
+  outline: none;
+}
+.styling input:focus {
+  border-bottom-color: var(--gold-text);
+}
+
+/* ── ratio and quality ── */
+.quality {
+  display: flex;
+  align-items: flex-end;
+  gap: 48px;
+}
+.ratios {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+.ratios button {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  font-family: var(--liora-font-mono);
+  font-size: 12px;
+  color: var(--text-2);
+}
+.ratios button span {
+  display: block;
+  height: 104px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius);
+  transition:
+    border-color 250ms var(--liora-ease),
+    background 250ms var(--liora-ease);
+}
+.ratios button:hover span {
+  border-color: rgba(239, 232, 218, 0.4);
+}
+.ratios .sel {
+  color: var(--gold-text);
+}
+.ratios .sel span {
+  border-color: var(--gold-text);
+  background: rgba(214, 159, 82, 0.06);
+}
+.segment {
+  display: inline-flex;
+  border: 1px solid var(--line-2);
+  border-radius: var(--liora-radius);
+}
+.segment button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  color: var(--text-2);
+  transition:
+    background 250ms var(--liora-ease),
+    color 250ms var(--liora-ease);
+}
+.segment button + button {
+  border-left: 1px solid var(--line-2);
+}
+.segment em {
+  font-style: normal;
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+.segment .on {
+  color: var(--liora-ink);
+  background: var(--liora-on-dark);
+}
+.segment .on em {
+  color: var(--liora-ink);
+}
+
+/* ── ready: the cost, set large ── */
+.cost {
+  align-self: flex-end;
+  display: grid;
+  gap: 10px;
+}
+.costBig {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: clamp(30px, 2.6vw, 42px);
+  line-height: 1;
+}
+.costBig i {
+  width: 48px;
+  height: 1px;
+  background: var(--line-2);
+}
+.costSub,
+.costShort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.costSub b {
+  font-family: var(--liora-font-mono);
+  font-weight: 400;
+  color: var(--text);
+}
+.costShort {
+  color: var(--liora-oxblood-lift);
+}
+.costShort a,
+.costShort button {
+  color: var(--text);
+  border-bottom: 1px solid var(--line-2);
+}
+
+/* ── production ── */
+.progress {
+  align-self: flex-end;
+  display: grid;
+  gap: 14px;
+  width: min(100%, 520px);
+}
+.progress p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.progress b {
+  font-family: var(--liora-font-display);
+  font-weight: 300;
+  font-size: 42px;
+  color: var(--text);
+}
+.track {
+  display: block;
+  height: 1px;
+  background: var(--line-2);
+}
+.track span {
+  display: block;
+  height: 100%;
+  background: var(--gold-text);
+  box-shadow: 0 0 10px rgba(214, 159, 82, 0.6);
+  transition: width 800ms var(--liora-ease);
+}
+
+@media (max-width: 1100px) {
+  .band {
+    grid-template-columns: 220px minmax(0, 1fr) 190px;
+    padding: 24px 28px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .band,
+  .scan img {
+    animation: none;
+  }
+}

@@ -1,0 +1,195 @@
+/* Flow surface: the dashboard's ground at rest, the chain across the
+   middle, the band at the foot. Fits one screen; nothing scrolls. */
+.page {
+  --band-h: clamp(250px, 32vh, 300px);
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 640px;
+  overflow: hidden;
+  background: var(--liora-ink);
+  color: var(--text);
+}
+
+.ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.ground img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.2) blur(10px);
+  transform: scale(1.04);
+}
+.dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(239, 232, 218, 0.13) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 95%);
+}
+
+.canvas {
+  position: absolute;
+  z-index: 2;
+  inset: 76px 0 var(--band-h) 0;
+}
+
+.foot {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--band-h);
+  border-top: 1px solid var(--line-2);
+  background: linear-gradient(to bottom, rgba(12, 10, 8, 0.86), rgba(12, 10, 8, 0.96));
+}
+.bandWrap {
+  height: 100%;
+}
+
+/* the flow you are in */
+.switch {
+  position: relative;
+}
+.switch > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px;
+  font-family: var(--liora-font-display);
+  font-size: 19px;
+  color: var(--text);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--liora-dur-fast) var(--liora-ease);
+}
+.switch > button:hover {
+  border-color: var(--line-2);
+}
+.switch > button svg {
+  color: var(--text-3);
+}
+.switchList {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 30;
+  min-width: 300px;
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  background: #1a1712;
+  border: 1px solid var(--line-2);
+  box-shadow: var(--elevation-3);
+  animation: fade 200ms var(--liora-ease) both;
+}
+.switchList a,
+.switchList .soon {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 18px;
+  font-size: 14px;
+  color: var(--text);
+}
+.switchList a span,
+.switchList .soon span {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.switchList a:hover {
+  background: rgba(239, 232, 218, 0.04);
+}
+.switchList .here {
+  color: var(--gold-text);
+}
+.switchList .soon {
+  color: var(--text-3);
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.save {
+  font-size: 13.5px;
+  color: var(--text-2);
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line-2);
+  transition: color var(--liora-dur-fast) var(--liora-ease);
+}
+.save:hover {
+  color: var(--gold-text);
+}
+
+/* node drawings */
+.schema {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 5px;
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+}
+.schema span {
+  width: 26%;
+  aspect-ratio: 3 / 4;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(239, 232, 218, 0.45);
+  border-radius: 1px;
+  font-family: var(--liora-font-mono);
+  font-size: 11px;
+  color: var(--text);
+}
+.ratioMark {
+  display: grid;
+  place-items: center;
+  height: 62%;
+  border: 1px solid rgba(239, 232, 218, 0.5);
+  border-radius: 1px;
+  font-family: var(--liora-font-mono);
+  font-size: 12px;
+  color: var(--text);
+}
+.dev {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+}
+.dev[data-n="1"] {
+  grid-template-columns: 1fr;
+}
+.dev > span {
+  position: relative;
+  overflow: hidden;
+  border: 1px dashed rgba(239, 232, 218, 0.22);
+  border-radius: 1px;
+}
+.dev > span.in {
+  border-color: transparent;
+}
+.dev img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: develop 700ms var(--liora-ease) both;
+}
+@keyframes develop {
+  from {
+    opacity: 0;
+    filter: brightness(1.6) blur(4px);
+  }
+}
