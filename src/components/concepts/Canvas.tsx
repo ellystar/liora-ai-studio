@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type FormEvent, type MouseEvent as RMouseEvent, type PointerEvent as RPointerEvent, type ReactNode } from "react";
 import { EMPTY_PROFILE, suggestCast, suggestSetting } from "@/lib/brand";
 import { readGuest, writeGuest } from "@/lib/guest";
-import { ANGLES, CASTS, OWN_SETTINGS, RATIOS, ROLE_META, SAMPLE_PRO, SETTINGS, SLOTS, type Angle, type NodeKind, type Frame as JobFrame, type Job, type L, type Ratio, type Setting } from "@/lib/data";
-import { useAtelier, type Setup, type Shot } from "@/lib/store";
+import { ANGLES, RATIOS, ROLE_META, SAMPLE_PRO, SLOTS, type Angle, type NodeKind, type Frame as JobFrame, type Job, type L, type Ratio, type Setting } from "@/lib/data";
+import { catalogOf, useAtelier, type Setup, type Shot } from "@/lib/store";
 import { downloadImage, fileName } from "@/lib/download";
 import { CATEGORY_LABEL, SLOT_LABEL, Upload, guessCategory, looksFlat, readShots, type Asset, type Category, type Product as Piece, type Rules, type ShotSlot } from "./Upload";
 import { Seam } from "../Seam";
@@ -539,16 +539,19 @@ export function Canvas({
     return () => clearTimeout(id);
   }, [flow.auto, phase]);
 
-  const own = s.casts.filter((c) => !c.archived);
-  /* the brand's fit comes first and says why — the rest keep their order */
-  const fitCast = s.profile ? suggestCast(s.profile, s.role) : null;
-  const fitSetting = s.profile ? suggestSetting(s.profile, s.role) : null;
-  const castList = fitCast ? [fitCast, ...CASTS.filter((x) => x.id !== fitCast.id)] : CASTS;
-  const settingList = fitSetting ? [fitSetting, ...SETTINGS.filter((x) => x.id !== fitSetting.id)] : SETTINGS;
+  /* live: the backend's cast and settings; demo: the prototype's */
+  const cat = catalogOf(s);
+  const own = cat.ownCasts;
+  /* the brand's fit comes first and says why — the rest keep their order.
+     Live, the fit waits: the suggestions name demo cards the catalogue lacks. */
+  const fitCast = s.profile && !s.catalog ? suggestCast(s.profile, s.role) : null;
+  const fitSetting = s.profile && !s.catalog ? suggestSetting(s.profile, s.role) : null;
+  const castList = fitCast ? [fitCast, ...cat.casts.filter((x) => x.id !== fitCast.id)] : cat.casts;
+  const settingList = fitSetting ? [fitSetting, ...cat.settings.filter((x) => x.id !== fitSetting.id)] : cat.settings;
   const FIT = { en: "Fits your brand", tr: "Markana göre" };
-  const cast = [...own, ...CASTS].find((x) => x.id === castId && !x.pending);
-  const setting = settingId === "custom" ? CUSTOM : [...OWN_SETTINGS, ...SETTINGS].find((x) => x.id === settingId);
-  const ownSetting = settingId === "custom" || OWN_SETTINGS.some((o) => o.id === settingId);
+  const cast = [...own, ...cat.casts].find((x) => x.id === castId && !x.pending);
+  const setting = settingId === "custom" ? CUSTOM : [...cat.ownSettings, ...cat.settings].find((x) => x.id === settingId);
+  const ownSetting = settingId === "custom" || cat.ownSettings.some((o) => o.id === settingId);
   const angleOuts = angles.map((a) => ANGLES.find((x) => x.id === a)!);
   /* a restyle's own pieces sit beside the shoot, not in it */
   const baseShots = flowId === "campaign" ? shots : shots.filter((x) => !x.product);
@@ -1581,7 +1584,7 @@ export function Canvas({
                           <p className={css.emptyLine}>{castFilter === "fav" ? t({ en: "No favourites yet — tap a card's star.", tr: "Henüz favorin yok; bir kartın yıldızına dokun." }) : t({ en: "No one here yet.", tr: "Burada henüz kimse yok." })}</p>
                         );
                       })()}
-                      {layout === "split" && castFilter === "all" && <More count={CASTS.length} first={FIRST.cast} all={all} setAll={setAll} />}
+                      {layout === "split" && castFilter === "all" && <More count={cat.casts.length} first={FIRST.cast} all={all} setAll={setAll} />}
                     </>
                   )}
                 </>
@@ -1596,15 +1599,20 @@ export function Canvas({
                     onChange={setSettingFilter}
                     items={[
                       ["all", { en: "All", tr: "Tümü" }],
-                      ["studio", { en: "Studio", tr: "Stüdyo" }],
-                      ["outdoor", { en: "Outdoor", tr: "Dış mekân" }],
+                      /* live backgrounds carry no studio/outdoor mark yet: those filters wait */
+                      ...(s.catalog
+                        ? []
+                        : ([
+                            ["studio", { en: "Studio", tr: "Stüdyo" }],
+                            ["outdoor", { en: "Outdoor", tr: "Dış mekân" }],
+                          ] as ["studio" | "outdoor", L][])),
                       ["own", { en: "My themes", tr: "Kendi temalarım" }],
                     ]}
                   />
                   {settingFilter === "own" ? (
                     <Tier title={t({ en: "Your themes", tr: "Kendi temaların" })} line={t({ en: "Describe a setting in your words; keep it when it's right.", tr: "Ortamı kendi cümlenle tarif et; beğenirsen kaydet." })} example={CUSTOM.img} unlocked={partner}>
                       <div className={ch.grid} style={{ "--ratio": "4 / 3", "--min": "200px" } as CSSProperties}>
-                        {[...OWN_SETTINGS, ...s.themes.map((x) => ({ ...x, minRole: "partner" as const, own: true }))].map((x) => (
+                        {[...cat.ownSettings, ...s.themes.map((x) => ({ ...x, minRole: "partner" as const, own: true }))].map((x) => (
                           <Card key={x.id} plain img={x.img} name={t(x.name)} sel={settingId === x.id} onPick={(el) => choose("setting", x.id, el, x.img)} />
                         ))}
                         {(making || described) && (
@@ -1649,7 +1657,7 @@ export function Canvas({
                           );
                         })}
                       </div>
-                      {layout === "split" && settingFilter === "all" && <More count={SETTINGS.length} first={FIRST.setting} all={all} setAll={setAll} />}
+                      {layout === "split" && settingFilter === "all" && <More count={cat.settings.length} first={FIRST.setting} all={all} setAll={setAll} />}
                     </>
                   )}
                 </>

@@ -302,7 +302,10 @@ function Plan() {
             {ROLE_META[s.role].package} <em>{t(ROLE_META[s.role].label)}</em>
           </p>
           <p className={css.line}>
-            {paid
+            {/* live: no subscription exists yet; the team loads credits by hand until payments open */}
+            {s.live
+              ? t({ en: "Managed by the Liora team for now · credits are added by hand", tr: "Şimdilik Liora ekibince yönetiliyor · krediler elle yükleniyor" })
+              : paid
               ? s.cancelled
                 ? t({ en: "Ends on 14 Nov · then Free", tr: "14 Kas'ta biter · sonra Free" })
                 : t({ en: "Renews on 14 Nov · 30 credits", tr: "14 Kas'ta yenilenir · 30 kredi" })
@@ -313,12 +316,12 @@ function Plan() {
           <Link href="/packages?from=%2Fprofile%3Ftab%3Dplan" className={css.primary}>
             {paid ? t({ en: "Change package", tr: "Paketi değiştir" }) : t({ en: "See packages", tr: "Paketlere bak" })} <Arrow size={12} />
           </Link>
-          {paid && !s.cancelled && !asking && (
+          {paid && !s.live && !s.cancelled && !asking && (
             <button className={css.quiet} onClick={() => setAsking(true)}>
               {t({ en: "Cancel subscription", tr: "Aboneliği iptal et" })}
             </button>
           )}
-          {paid && s.cancelled && (
+          {paid && !s.live && s.cancelled && (
             <button className={css.quiet} onClick={() => set({ cancelled: false })}>
               {t({ en: "Keep it", tr: "Vazgeç, devam etsin" })}
             </button>
@@ -365,7 +368,7 @@ function Plan() {
             </li>
           ))}
         </ul>
-        <p className={css.note}>{t({ en: "Package credits are spent first; extra credits stay through renewals.", tr: "Önce paket kredisi harcanır; ek kredi yenilemede kalır." })}</p>
+        {!s.live && <p className={css.note}>{t({ en: "Package credits are spent first; extra credits stay through renewals.", tr: "Önce paket kredisi harcanır; ek kredi yenilemede kalır." })}</p>}
       </section>
     </div>
   );

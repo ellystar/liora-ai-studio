@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { ANGLES, flowBySlug, settingById, type Frame, type Job } from "@/lib/data";
-import { findCast, fmtDate, useAtelier } from "@/lib/store";
+import { ANGLES, flowBySlug, type Frame, type Job } from "@/lib/data";
+import { findCast, findSetting, fmtDate, useAtelier } from "@/lib/store";
 import { Masthead } from "../chrome/Masthead";
 import { Seam } from "../Seam";
 import { Arrow, ArrowLeft, Download, ThumbDown, ThumbUp } from "../icons";
@@ -66,7 +66,7 @@ export function ReviewSurface({ id }: { id: string }) {
 
   const flow = flowBySlug(job.flow)!;
   const cast = findCast(s, job.castId);
-  const setting = settingById(job.settingId);
+  const setting = findSetting(s, job.settingId);
   const watermark = s.role === "explorer";
   const days = job.expiresInDays ?? 7;
   const running = job.status === "running";
