@@ -1459,6 +1459,11 @@
   position: relative;
   min-width: 0;
 }
+/* the card is a button: unwrapped, the grid stretches it; in here it would
+   shrink to its words, and the picture with it */
+.faved > button:first-child {
+  width: 100%;
+}
 .fav {
   position: absolute;
   z-index: 2;
