@@ -1,0 +1,695 @@
+{
+"columns": [
+{
+"def": "gen_random_uuid()",
+"n": "id",
+"nn": true,
+"t": "backgrounds",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "name",
+"nn": true,
+"t": "backgrounds",
+"ty": "text"
+},
+{
+"def": null,
+"n": "thumbnail_url",
+"nn": true,
+"t": "backgrounds",
+"ty": "text"
+},
+{
+"def": null,
+"n": "prompt",
+"nn": true,
+"t": "backgrounds",
+"ty": "text"
+},
+{
+"def": "true",
+"n": "is_active",
+"nn": true,
+"t": "backgrounds",
+"ty": "boolean"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "backgrounds",
+"ty": "timestamp with time zone"
+},
+{
+"def": null,
+"n": "owner_id",
+"nn": false,
+"t": "backgrounds",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "image_path",
+"nn": false,
+"t": "backgrounds",
+"ty": "text"
+},
+{
+"def": "'preset'::text",
+"n": "source",
+"nn": true,
+"t": "backgrounds",
+"ty": "text"
+},
+{
+"def": "gen_random_uuid()",
+"n": "id",
+"nn": true,
+"t": "generation_images",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "generation_id",
+"nn": true,
+"t": "generation_images",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "user_id",
+"nn": true,
+"t": "generation_images",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "tool",
+"nn": true,
+"t": "generation_images",
+"ty": "text"
+},
+{
+"def": null,
+"n": "model_id",
+"nn": false,
+"t": "generation_images",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "storage_path",
+"nn": true,
+"t": "generation_images",
+"ty": "text"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "generation_images",
+"ty": "timestamp with time zone"
+},
+{
+"def": "(now() + '7 days'::interval)",
+"n": "expires_at",
+"nn": true,
+"t": "generation_images",
+"ty": "timestamp with time zone"
+},
+{
+"def": null,
+"n": "deleted_at",
+"nn": false,
+"t": "generation_images",
+"ty": "timestamp with time zone"
+},
+{
+"def": "gen_random_uuid()",
+"n": "id",
+"nn": true,
+"t": "generations",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "user_id",
+"nn": true,
+"t": "generations",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "tool",
+"nn": true,
+"t": "generations",
+"ty": "text"
+},
+{
+"def": "'pending'::text",
+"n": "status",
+"nn": true,
+"t": "generations",
+"ty": "text"
+},
+{
+"def": "0",
+"n": "credits_charged",
+"nn": true,
+"t": "generations",
+"ty": "integer"
+},
+{
+"def": "0",
+"n": "image_count",
+"nn": true,
+"t": "generations",
+"ty": "integer"
+},
+{
+"def": null,
+"n": "params",
+"nn": false,
+"t": "generations",
+"ty": "jsonb"
+},
+{
+"def": null,
+"n": "error",
+"nn": false,
+"t": "generations",
+"ty": "text"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "generations",
+"ty": "timestamp with time zone"
+},
+{
+"def": null,
+"n": "system",
+"nn": false,
+"t": "generations",
+"ty": "text"
+},
+{
+"def": "gen_random_uuid()",
+"n": "id",
+"nn": true,
+"t": "models",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "name",
+"nn": true,
+"t": "models",
+"ty": "text"
+},
+{
+"def": null,
+"n": "gender",
+"nn": false,
+"t": "models",
+"ty": "text"
+},
+{
+"def": null,
+"n": "image_url",
+"nn": true,
+"t": "models",
+"ty": "text"
+},
+{
+"def": "'general'::text",
+"n": "scope",
+"nn": true,
+"t": "models",
+"ty": "text"
+},
+{
+"def": null,
+"n": "owner_user_id",
+"nn": false,
+"t": "models",
+"ty": "uuid"
+},
+{
+"def": "true",
+"n": "is_active",
+"nn": true,
+"t": "models",
+"ty": "boolean"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "models",
+"ty": "timestamp with time zone"
+},
+{
+"def": null,
+"n": "owner_id",
+"nn": false,
+"t": "models",
+"ty": "uuid"
+},
+{
+"def": "'admin'::text",
+"n": "source",
+"nn": true,
+"t": "models",
+"ty": "text"
+},
+{
+"def": null,
+"n": "image_path",
+"nn": false,
+"t": "models",
+"ty": "text"
+},
+{
+"def": "gen_random_uuid()",
+"n": "id",
+"nn": true,
+"t": "poses",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "name",
+"nn": true,
+"t": "poses",
+"ty": "text"
+},
+{
+"def": null,
+"n": "thumbnail_url",
+"nn": true,
+"t": "poses",
+"ty": "text"
+},
+{
+"def": null,
+"n": "prompt",
+"nn": true,
+"t": "poses",
+"ty": "text"
+},
+{
+"def": "true",
+"n": "is_active",
+"nn": true,
+"t": "poses",
+"ty": "boolean"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "poses",
+"ty": "timestamp with time zone"
+},
+{
+"def": null,
+"n": "shot_type",
+"nn": false,
+"t": "poses",
+"ty": "text"
+},
+{
+"def": "'general'::text",
+"n": "category",
+"nn": true,
+"t": "poses",
+"ty": "text"
+},
+{
+"def": null,
+"n": "direction",
+"nn": false,
+"t": "poses",
+"ty": "text"
+},
+{
+"def": null,
+"n": "id",
+"nn": true,
+"t": "profiles",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "email",
+"nn": false,
+"t": "profiles",
+"ty": "text"
+},
+{
+"def": null,
+"n": "full_name",
+"nn": false,
+"t": "profiles",
+"ty": "text"
+},
+{
+"def": "0",
+"n": "credits",
+"nn": true,
+"t": "profiles",
+"ty": "integer"
+},
+{
+"def": "'user'::text",
+"n": "role",
+"nn": true,
+"t": "profiles",
+"ty": "text"
+},
+{
+"def": "'tr'::text",
+"n": "preferred_language",
+"nn": true,
+"t": "profiles",
+"ty": "text"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "profiles",
+"ty": "timestamp with time zone"
+},
+{
+"def": "now()",
+"n": "updated_at",
+"nn": true,
+"t": "profiles",
+"ty": "timestamp with time zone"
+},
+{
+"def": null,
+"n": "id",
+"nn": true,
+"t": "systems",
+"ty": "text"
+},
+{
+"def": null,
+"n": "name",
+"nn": true,
+"t": "systems",
+"ty": "text"
+},
+{
+"def": null,
+"n": "unit",
+"nn": true,
+"t": "systems",
+"ty": "text"
+},
+{
+"def": null,
+"n": "price",
+"nn": true,
+"t": "systems",
+"ty": "integer"
+},
+{
+"def": "0",
+"n": "sort",
+"nn": true,
+"t": "systems",
+"ty": "integer"
+},
+{
+"def": "true",
+"n": "is_active",
+"nn": true,
+"t": "systems",
+"ty": "boolean"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "systems",
+"ty": "timestamp with time zone"
+},
+{
+"def": "gen_random_uuid()",
+"n": "id",
+"nn": true,
+"t": "video_jobs",
+"ty": "uuid"
+},
+{
+"def": null,
+"n": "user_id",
+"nn": true,
+"t": "video_jobs",
+"ty": "uuid"
+},
+{
+"def": "'pending'::text",
+"n": "status",
+"nn": true,
+"t": "video_jobs",
+"ty": "text"
+},
+{
+"def": null,
+"n": "provider_task_id",
+"nn": false,
+"t": "video_jobs",
+"ty": "text"
+},
+{
+"def": null,
+"n": "prompt",
+"nn": false,
+"t": "video_jobs",
+"ty": "text"
+},
+{
+"def": null,
+"n": "resolution",
+"nn": true,
+"t": "video_jobs",
+"ty": "text"
+},
+{
+"def": null,
+"n": "duration",
+"nn": true,
+"t": "video_jobs",
+"ty": "integer"
+},
+{
+"def": null,
+"n": "credits_cost",
+"nn": true,
+"t": "video_jobs",
+"ty": "integer"
+},
+{
+"def": "false",
+"n": "credits_charged",
+"nn": true,
+"t": "video_jobs",
+"ty": "boolean"
+},
+{
+"def": null,
+"n": "error_code",
+"nn": false,
+"t": "video_jobs",
+"ty": "text"
+},
+{
+"def": "now()",
+"n": "created_at",
+"nn": true,
+"t": "video_jobs",
+"ty": "timestamp with time zone"
+},
+{
+"def": "now()",
+"n": "updated_at",
+"nn": true,
+"t": "video_jobs",
+"ty": "timestamp with time zone"
+}
+],
+"constraints": [
+{
+"d": "CHECK ((credits >= 0))",
+"n": "profiles_credits_check",
+"t": "profiles"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "profiles_pkey",
+"t": "profiles"
+},
+{
+"d": "CHECK ((preferred_language = ANY (ARRAY['tr'::text, 'en'::text])))",
+"n": "profiles_preferred_language_check",
+"t": "profiles"
+},
+{
+"d": "CHECK ((role = ANY (ARRAY['user'::text, 'admin'::text])))",
+"n": "profiles_role_check",
+"t": "profiles"
+},
+{
+"d": "CHECK ((gender = ANY (ARRAY['female'::text, 'male'::text, 'unisex'::text])))",
+"n": "models_gender_check",
+"t": "models"
+},
+{
+"d": "CHECK (((gender IS NULL) OR (gender = ANY (ARRAY['female'::text, 'male'::text]))))",
+"n": "models_gender_chk",
+"t": "models"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "models_pkey",
+"t": "models"
+},
+{
+"d": "CHECK ((scope = ANY (ARRAY['general'::text, 'own'::text])))",
+"n": "models_scope_check",
+"t": "models"
+},
+{
+"d": "CHECK ((source = ANY (ARRAY['admin'::text, 'user'::text])))",
+"n": "models_source_chk",
+"t": "models"
+},
+{
+"d": "CHECK ((category = ANY (ARRAY['general'::text, 'shoe'::text])))",
+"n": "poses_category_chk",
+"t": "poses"
+},
+{
+"d": "CHECK ((direction = ANY (ARRAY['front'::text, 'back'::text])))",
+"n": "poses_direction_check",
+"t": "poses"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "poses_pkey",
+"t": "poses"
+},
+{
+"d": "CHECK (((shot_type IS NULL) OR (shot_type = ANY (ARRAY['full_body'::text, 'medium_shot'::text, 'close_up'::text]))))",
+"n": "poses_shot_type_chk",
+"t": "poses"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "backgrounds_pkey",
+"t": "backgrounds"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "generations_pkey",
+"t": "generations"
+},
+{
+"d": "CHECK ((status = ANY (ARRAY['pending'::text, 'success'::text, 'failed'::text])))",
+"n": "generations_status_check",
+"t": "generations"
+},
+{
+"d": "CHECK ((tool = ANY (ARRAY['ecom_studio'::text, 'pose_generator'::text, 'flat_to_ghost'::text, 'edit_photo'::text, 'style_transfer'::text, 'ai_video'::text])))",
+"n": "generations_tool_check",
+"t": "generations"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "video_jobs_pkey",
+"t": "video_jobs"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "generation_images_pkey",
+"t": "generation_images"
+},
+{
+"d": "PRIMARY KEY (id)",
+"n": "systems_pkey",
+"t": "systems"
+},
+{
+"d": "CHECK ((price > 0))",
+"n": "systems_price_check",
+"t": "systems"
+},
+{
+"d": "CHECK ((unit = ANY (ARRAY['frame'::text, 'job'::text])))",
+"n": "systems_unit_check",
+"t": "systems"
+}
+],
+"functions": [
+"CREATE OR REPLACE FUNCTION public.add_credits(p_user_id uuid, p_amount integer, p_description text DEFAULT 'manual topup'::text)\n RETURNS integer\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare v_balance integer;\nbegin\n  update public.profiles set credits = credits + p_amount where id = p_user_id;\n\n  insert into public.credit_transactions (user_id, amount, type, description)\n  values (p_user_id, p_amount, 'topup', p_description);\n\n  select credits into v_balance from public.profiles where id = p_user_id;\n  return v_balance;\nend;\n$function$\n",
+"CREATE OR REPLACE FUNCTION public.deduct_credits(p_user_id uuid, p_amount integer, p_tool text DEFAULT NULL::text)\n RETURNS integer\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_balance integer;\nbegin\n  if p_amount <= 0 then\n    raise exception 'amount_must_be_positive';\n  end if;\n\n  select credits into v_balance\n    from public.profiles\n    where id = p_user_id\n    for update;\n\n  if v_balance is null then\n    raise exception 'profile_not_found';\n  end if;\n\n  if v_balance < p_amount then\n    raise exception 'insufficient_credits';\n  end if;\n\n  update public.profiles set credits = credits - p_amount where id = p_user_id;\n\n  insert into public.credit_transactions (user_id, amount, type, tool, description)\n  values (p_user_id, -p_amount, 'usage', p_tool, 'tool usage');\n\n  select credits into v_balance from public.profiles where id = p_user_id;\n  return v_balance;\nend;\n$function$\n",
+"CREATE OR REPLACE FUNCTION public.is_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.profiles\n    where id = auth.uid() and role = 'admin'\n  );\n$function$\n",
+"CREATE OR REPLACE FUNCTION public.refund_credits(p_user_id uuid, p_amount integer, p_tool text DEFAULT NULL::text)\n RETURNS integer\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare v_balance integer;\nbegin\n  update public.profiles set credits = credits + p_amount where id = p_user_id;\n\n  insert into public.credit_transactions (user_id, amount, type, tool, description)\n  values (p_user_id, p_amount, 'refund', p_tool, 'failed generation refund');\n\n  select credits into v_balance from public.profiles where id = p_user_id;\n  return v_balance;\nend;\n$function$\n",
+"CREATE OR REPLACE FUNCTION public.set_updated_at()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nbegin\n  new.updated_at = now();\n  return new;\nend;\n$function$\n"
+],
+"systems": [
+{
+"created_at": "2026-09-12T09:16:21.232539+00:00",
+"id": "flat_to_form",
+"is_active": true,
+"name": "Flat to Form",
+"price": 1,
+"sort": 1,
+"unit": "frame"
+},
+{
+"created_at": "2026-09-12T09:16:21.232539+00:00",
+"id": "ghost_to_campaign",
+"is_active": true,
+"name": "From Ghost to Campaign",
+"price": 1,
+"sort": 2,
+"unit": "frame"
+},
+{
+"created_at": "2026-09-12T09:16:21.232539+00:00",
+"id": "rebuild_shoot",
+"is_active": true,
+"name": "Rebuild the Shoot",
+"price": 2,
+"sort": 3,
+"unit": "frame"
+},
+{
+"created_at": "2026-09-12T09:16:21.232539+00:00",
+"id": "many_markets",
+"is_active": true,
+"name": "One Product, Many Markets",
+"price": 1,
+"sort": 4,
+"unit": "frame"
+},
+{
+"created_at": "2026-09-12T09:16:21.232539+00:00",
+"id": "product_video",
+"is_active": true,
+"name": "180° Product Video",
+"price": 4,
+"sort": 5,
+"unit": "job"
+}
+]
+}
