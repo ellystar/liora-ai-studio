@@ -11,16 +11,11 @@ import {
   type ReactNode,
 } from "react";
 import {
-  CASTS,
   OWN_CASTS,
-  OWN_SETTINGS,
-  SETTINGS,
   castById,
   seedJobs,
-  settingById,
   type Angle,
   type Cast,
-  type Setting,
   type Slot,
   type InputType,
   type Job,
@@ -30,7 +25,7 @@ import {
   type FlowSlug,
 } from "./data";
 import { normalizeProfile, type BrandProfile } from "./brand";
-import { readAccount, readCatalog, type LiveCatalog } from "./live";
+import { readAccount } from "./live";
 import { createClient, hasBackend } from "./supabase/client";
 
 /* ─────────────────────────────────────────────────────────────
@@ -118,7 +113,6 @@ export interface State {
   poses: { id: string; name: string; img: string }[]; // poses described and kept (Partner)
   themes: { id: string; name: L; img: string }[]; // settings described and kept (Partner)
   live: { id: string; email: string } | null; // signed in to the live backend: the balance is the server's
-  catalog: LiveCatalog | null; // the live cast and settings; null on demo data
 }
 
 /* wf-12 · 02: mail is on by default only where the user may have left the panel */
@@ -166,10 +160,9 @@ function initialState(session: Session = "returning", lang: Lang = "en"): State 
           },
         ]
       : [],
-    /* the demo account: plainly not a real person, so it is never mistaken for the live one */
-    brand: returning ? "Demo Atelier" : "",
-    username: returning ? "demo" : "",
-    name: returning ? "Demo" : "",
+    brand: returning ? "Atelier Doğan" : "",
+    username: returning ? "melis.dogan" : "",
+    name: returning ? "Melis Doğan" : "",
     website: "",
     provider: "email",
     casts: returning ? OWN_CASTS : [],
@@ -206,7 +199,6 @@ function initialState(session: Session = "returning", lang: Lang = "en"): State 
     poses: [],
     themes: [],
     live: null,
-    catalog: null,
     profile: returning ? { for: "own", rack: ["outer", "knit"], who: ["women"], ages: ["25-35", "35-50"], tier: "premium", style: ["catalog", "light"], where: ["site", "social"] } : null,
   };
 }
@@ -312,8 +304,8 @@ function load(): State {
     if (raw) {
       const saved = JSON.parse(raw) as Partial<State>;
       /* answers saved in an older shape are read in today's */
-      /* `live` and `catalog` are never trusted from storage: the session check sets them */
-      return { ...initialState(), ...saved, live: null, catalog: null, profile: saved.profile ? normalizeProfile(saved.profile) : (saved.profile ?? null) };
+      /* `live` is never trusted from storage: the session check below sets it */
+      return { ...initialState(), ...saved, live: null, profile: saved.profile ? normalizeProfile(saved.profile) : (saved.profile ?? null) };
     }
   } catch {
     /* private mode or blocked storage: run on defaults */
@@ -350,16 +342,13 @@ export function AtelierProvider({ children }: { children: ReactNode }) {
         const account = await readAccount();
         if (gone) return;
         if (!account) {
-          dispatch({ type: "set", patch: { live: null, catalog: null } });
+          dispatch({ type: "set", patch: { live: null } });
           return;
         }
-        const catalog = await readCatalog(account.id);
-        if (gone) return;
         dispatch({
           type: "set",
           patch: {
             live: { id: account.id, email: account.email },
-            catalog,
             credits: account.credits,
             name: account.name,
             username: account.email.split("@")[0],
@@ -427,18 +416,8 @@ export const initials = (s: State) => {
   return (words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2)).toLocaleUpperCase(s.lang === "tr" ? "tr" : "en");
 };
 
-/* The cast and settings a screen offers: live from the backend when signed
-   in, the prototype's catalogue otherwise. `own*` are the person's alone. */
-export const catalogOf = (s: State): LiveCatalog =>
-  s.catalog ?? { casts: CASTS, ownCasts: s.casts.filter((c) => !c.archived), settings: SETTINGS, ownSettings: OWN_SETTINGS };
-
 /* a cast by id: the user's own first (Cast Studio), then the catalogue */
-export const findCast = (s: State, id?: string): Cast | undefined =>
-  (s.catalog ? [...s.catalog.ownCasts, ...s.catalog.casts] : s.casts).find((c) => c.id === id) ?? castById(id);
-
-/* a setting by id, the same way */
-export const findSetting = (s: State, id?: string): Setting | undefined =>
-  (s.catalog ? [...s.catalog.ownSettings, ...s.catalog.settings] : []).find((x) => x.id === id) ?? settingById(id);
+export const findCast = (s: State, id?: string) => s.casts.find((c) => c.id === id) ?? castById(id);
 
 /* Small formatting helpers shared by screens. */
 export function fmtDate(iso: string, lang: Lang) {

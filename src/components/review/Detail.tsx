@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import {
   ROLE_META,
   flowBySlug,
+  settingById,
   type Frame,
   type Job,
   type L,
 } from "@/lib/data";
-import { findCast, findSetting, fmtDate, useAtelier } from "@/lib/store";
+import { findCast, fmtDate, useAtelier } from "@/lib/store";
 import { Seam } from "../Seam";
 import { Chevron, Close, Download, Lock, ThumbDown, ThumbUp } from "../icons";
 import { downloadImage, fileName } from "@/lib/download";
@@ -45,7 +46,7 @@ export function Detail({
   const f = job.frames[index];
   const flow = flowBySlug(job.flow)!;
   const cast = findCast(s, job.castId);
-  const setting = findSetting(s, job.settingId);
+  const setting = settingById(job.settingId);
   const name = frameName(f);
   const watermark = s.role === "explorer";
   const days = job.expiresInDays ?? 7;

@@ -111,14 +111,9 @@ export function Packages({ from }: { from: string | null }) {
                 {PLANS.find((p) => p.id === buy)!.price} · {t(PLANS.find((p) => p.id === buy)!.credits)} {t({ en: "credits", tr: "kredi" })}
               </p>
               <div className={css.provider}>{t({ en: "Payment provider", tr: "Ödeme sağlayıcısı" })}</div>
-              <p className={css.small}>
-                {/* live: payments open with PayTR (Aşama 6); until then a demo purchase must not look real */}
-                {s.live
-                  ? t({ en: "Payments aren't open yet; the Liora team adds credits by hand.", tr: "Ödeme henüz açık değil; krediyi Liora ekibi elle yüklüyor." })
-                  : t({ en: "Card details are never kept in Liora.", tr: "Kart bilgisi Liora'da tutulmaz." })}
-              </p>
+              <p className={css.small}>{t({ en: "Card details are never kept in Liora.", tr: "Kart bilgisi Liora'da tutulmaz." })}</p>
               <span className={css.actions}>
-                <button className={css.primary} onClick={complete} disabled={Boolean(s.live)}>
+                <button className={css.primary} onClick={complete}>
                   {t({ en: "Complete payment", tr: "Ödemeyi tamamla" })} <Arrow size={14} />
                 </button>
                 <button className={css.quiet} onClick={() => setBuy(null)}>
@@ -181,9 +176,7 @@ export function Packages({ from }: { from: string | null }) {
         {/* extra credits: paid packages only; the reason is one line, never hidden (B-F-05) */}
         <section className={css.extra}>
           <h2>{t({ en: "Extra credits", tr: "Ek kredi" })}</h2>
-          {s.live ? (
-            <p className={css.locked}>{t({ en: "Extra credits open with payments; for now the Liora team adds them.", tr: "Ek kredi ödemeyle açılacak; şimdilik Liora ekibi yüklüyor." })}</p>
-          ) : paid ? (
+          {paid ? (
             <>
               <div className={css.packs}>
                 {EXTRA.map((n) => (
