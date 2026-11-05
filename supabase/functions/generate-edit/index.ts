@@ -105,7 +105,9 @@ Deno.serve(async (req) => {
     const images = body.images as { base64: string; mimeType: string }[] | undefined
     const message = (body.message as string | undefined)?.trim()
     const ratio = body.ratio as string | undefined
-    const quality = (body.quality as string | undefined) ?? '1k'
+    // Gemini imageSize'i yalnizca buyuk harfle kabul ediyor ('1K', '2K');
+    // arayuz kucuk harf gonderiyor. generate-ecom ile ayni esleme.
+    const quality = body.quality === '2k' ? '2K' : '1K'
     const modelId: string | null = body.modelId ?? null
 
     if (!images?.length || !message) {
