@@ -1,13 +1,11 @@
 -- v2 · Aşama 3 · iş açma, kare kapanışı ve takılan kare kurtarma (sözleşme K15, K16).
--- Yalnızca ekleme: bir indeks ve dört fonksiyon. Mevcut tablo, sütun, kısıt ve kurallara dokunmaz.
+-- Yalnızca ekleme: dört fonksiyon. Mevcut tablo, sütun, kısıt ve kurallara dokunmaz.
 -- Dört fonksiyonu da yalnızca service_role çağırabilir (v2 edge function'ları ve pg_cron).
 -- Kare, iş sayaçları, iade ve inceleme kaydı tek işlemde güncellenir; aynı kare iki kez
 -- kapanamaz, bu yüzden iade de kare başına en fazla bir kez yapılır.
+-- Aynı kullanıcı aynı anda birden çok iş çalıştırabilir (prototip böyle; sözleşme: Bilinen
+-- boşluklar, "Rezervasyon yok"). Bakiye kontrolü start-run-v2'de, açık işlerin kareleri dahil.
 begin;
-
--- Aynı kullanıcı için aynı anda tek iş (sözleşme: Bilinen boşluklar, "Rezervasyon yok").
-create unique index jobs_one_active_per_user on public.jobs (user_id)
-  where status in ('queued', 'running');
 
 -- İşi ve karelerini açar. Kareler pose_keys sırasıyla idx 0, 1, 2... alır.
 -- Fiyat ve bakiye kontrolü çağıran edge function'da (start-run-v2); burada yalnızca kayıt.
@@ -39,14 +37,10 @@ begin
     raise exception 'setup_not_found';
   end if;
 
-  begin
-    insert into public.jobs (user_id, setup_id, flow, title, status, planned, params, started_at)
-    values (p_user_id, p_setup_id, p_flow, coalesce(p_title, ''), 'running',
-            cardinality(p_pose_keys), coalesce(p_params, '{}'::jsonb), now())
-    returning id into v_job;
-  exception when unique_violation then
-    raise exception 'job_already_running';
-  end;
+  insert into public.jobs (user_id, setup_id, flow, title, status, planned, params, started_at)
+  values (p_user_id, p_setup_id, p_flow, coalesce(p_title, ''), 'running',
+          cardinality(p_pose_keys), coalesce(p_params, '{}'::jsonb), now())
+  returning id into v_job;
 
   with ins as (
     insert into public.job_frames (job_id, user_id, idx, pose_key)
@@ -137,14 +131,19 @@ $$;
 -- Kareyi kendi kaydına göre kapatır (K15, K16). Kredinin doğrusu tek yerde belirlenir:
 -- run-frame-v2 motordan kesin bir yanıt aldıktan sonra, v2_recover_frames de takılan
 -- kareler için bunu çağırır. Yanıttaki creditsCharged'a güvenilmez; kareye bağlı kayıt
--- aranır (generations.params.poses içinde karenin kimliği) ve dört durum ayrılır:
---   1  kayıt (kredi düşmüş) + görsel    -> done, yeni ücret yok
---   2  kayıt (kredi düşmüş), görsel yok -> failed (image_lost), düşen kredi iade
---   2b kayıt var, kredi düşmemiş        -> failed (p_error_code ya da generation_failed), ücret yok
---   3  kayıt yok                        -> failed (p_error_code ya da timeout); kare açıldıktan
+-- aranır (generations.params.poses içinde karenin kimliği) ve durumlar ayrılır:
+--   1  kayıt (kredi düşmüş) + görsel kaydı -> done, yeni ücret yok
+--   1b görsel kaydı yok ama dosya depoda   -> done, kredi kayıttan (kayıt yoksa işin fiyatı)
+--      run-frame-v2'nin kopyası (outputs/<kullanıcı>/v2/frames/<kare>.<uzantı>) ya da motorun
+--      yükleyip kaydını yazamadığı dosya (outputs/<kullanıcı>/<kayıt>/0.<uzantı>). Kopya yalnızca
+--      motor başarılı yanıt verdiyse yazılır; o yanıt kredi düşmeden dönmez.
+--   2  kayıt (kredi düşmüş), görsel ne kayıtta ne depoda -> failed (image_lost), düşen kredi iade
+--   2b kayıt var, kredi düşmemiş           -> failed (p_error_code ya da generation_failed), ücret yok
+--   3  kayıt yok, dosya yok                -> failed (p_error_code ya da timeout); kare açıldıktan
 --      sonraki 10 dakikada ecom_studio kredi satırı varsa "ücret alınmadı" denmez:
 --      failed (charge_unclear) ve iade incelemesine düşer
--- Kare zaten kapanmışsa hiçbir şey yapmaz; iade bu yüzden kare başına en fazla bir kez.
+-- İade yalnızca görsel gerçekten elde yoksa yapılır. Kare zaten kapanmışsa hiçbir şey
+-- yapmaz; iade bu yüzden kare başına en fazla bir kez.
 -- p_error_code: motorun yanıtındaki hata (ör. model_busy); takılan karede boş.
 -- İlk sürüm yalnızca Ghost'tan Kampanyaya (campaign -> generate-ecom, ecom_studio).
 create function public.v2_reconcile_frame(p_frame_id uuid, p_error_code text default null)
@@ -160,14 +159,19 @@ declare
   v_created timestamptz;
   v_status text;
   v_flow text;
+  v_price integer;
   v_gen_id uuid;
   v_gen_credits integer;
   v_img_id uuid;
   v_img_path text;
+  v_copy text;
   v_outcome text;
 begin
-  select f.user_id, f.created_at, f.status, j.flow
-  into v_user, v_created, v_status, v_flow
+  -- Fiyat işin anlık görüntüsünden (start-run-v2 yazar). Bozuksa null; dönüştürme hatası
+  -- kurtarma turunun tamamını düşürmesin.
+  select f.user_id, f.created_at, f.status, j.flow,
+         case when j.params ->> 'price' ~ '^[0-9]{1,6}$' then (j.params ->> 'price')::integer end
+  into v_user, v_created, v_status, v_flow, v_price
   from public.job_frames f
   join public.jobs j on j.id = f.job_id
   where f.id = p_frame_id
@@ -199,9 +203,33 @@ begin
     limit 1;
   end if;
 
+  -- Görsel kaydı yoksa depoda dosya var mı (silinmiş ya da arşivlenmiş dosya sayılmaz).
+  -- Yollar kare sahibinin klasöründe; başkasının dosyası eşleşemez.
+  if v_img_id is null then
+    select o.name into v_copy
+    from storage.objects o
+    where o.bucket_id = 'outputs'
+      and o.archived_at is null
+      and not o.is_delete_marker
+      and o.name in (
+        select v_user::text || '/v2/frames/' || p_frame_id::text || '.' || e.x
+        from unnest(array['png', 'jpg', 'webp']) as e(x)
+        union all
+        select v_user::text || '/' || v_gen_id::text || '/0.' || e.x
+        from unnest(array['png', 'jpg', 'webp']) as e(x)
+        where v_gen_id is not null
+      )
+    order by o.created_at
+    limit 1;
+  end if;
+
   if v_gen_id is not null and v_gen_credits > 0 and v_img_id is not null then
     -- 1
     perform public.v2_finish_frame(p_frame_id, 'done', v_gen_credits, v_img_id, v_img_path, null);
+    v_outcome := 'done';
+  elsif v_copy is not null then
+    -- 1b
+    perform public.v2_finish_frame(p_frame_id, 'done', coalesce(v_gen_credits, v_price, 0), null, v_copy, null);
     v_outcome := 'done';
   elsif v_gen_id is not null and v_gen_credits > 0 then
     -- 2. İade yalnızca kare bu çağrıda kapandıysa. Birinci güvence yukarıdaki kilit ve durum

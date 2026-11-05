@@ -64,17 +64,24 @@ Deno.serve(async (req) => {
     }
     if (!sys.is_active) return json({ error: 'system_unavailable' }, 503)
     const price = sys.price as number
-    const required = price * parsed.input.frames.length
 
-    // Bakiye başta kontrol edilir, ayrılmaz (sözleşme: Bilinen boşluklar). Asıl kontrol generate-ecom'da.
+    // Aynı kullanıcı aynı anda birden çok iş çalıştırabilir. Bakiye ayrılmaz, ama açık
+    // işlerdeki bitmemiş kareler de hesaba katılır (sözleşme: Bilinen boşluklar, "Rezervasyon
+    // yok"). Bu yumuşak bir kontrol: aynı anda başlatılan iki iş yine aşabilir; o zaman kare
+    // generate-ecom'da düşer, ücret alınmaz. Kesin kontrol generate-ecom'da, kare başına.
+    const { count: openFrames, error: openFramesErr } = await admin
+      .from('job_frames').select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id).in('status', ['queued', 'running'])
     const { data: profile, error: profileErr } = await admin
       .from('profiles').select('credits').eq('id', user.id).single()
-    if (profileErr || !profile) {
-      console.error('profiles read failed', user.id, profileErr)
+    if (openFramesErr || profileErr || !profile) {
+      console.error('balance read failed', user.id, openFramesErr ?? profileErr)
       return json({ error: 'server_error', detail: 'balance_lookup_failed' }, 500)
     }
+    const pending = openFrames ?? 0
+    const required = price * (parsed.input.frames.length + pending)
     const balance = (profile.credits as number) ?? 0
-    if (balance < required) return json({ error: 'insufficient_credits', balance, required }, 402)
+    if (balance < required) return json({ error: 'insufficient_credits', balance, required, pending }, 402)
 
     const params: CampaignParams = { ...parsed.input, price }
     const { data: opened, error: openErr } = await admin.rpc('v2_open_job', {
@@ -87,7 +94,6 @@ Deno.serve(async (req) => {
     })
     if (openErr) {
       const msg = openErr.message ?? ''
-      if (msg.includes('job_already_running')) return json({ error: 'job_already_running' }, 409)
       if (msg.includes('setup_not_found')) return json({ error: 'setup_not_found' }, 404)
       console.error('v2_open_job failed', user.id, openErr)
       return json({ error: 'server_error', detail: 'open_job_failed' }, 500)

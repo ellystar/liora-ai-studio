@@ -4,7 +4,8 @@
 // Kareyi sahiplenir (queued -> running; aynı kare iki kez çalışmaz), hemen 202 döner,
 // üretimi arka planda yürütür. generate-ecom kullanıcının kendi oturumuyla çağrılır;
 // kredi orada, mevcut yoldan düşer. Kare her zaman kendi kaydına göre kapanır
-// (v2_reconcile_frame); yanıttaki creditsCharged'a güvenilmez.
+// (v2_reconcile_frame); yanıttaki creditsCharged'a güvenilmez. Görsel yanıtta olup
+// kaydedilmediyse önce kendi kopyası yazılır; iade yalnızca görsel gerçekten elde yoksa.
 // Motordan kesin bir yanıt alınamazsa kare kapatılmaz: running kalır, 10 dakika sonra
 // kurtarma (v2_recover_frames) kaydına göre kapatır.
 //
@@ -157,17 +158,11 @@ async function processFrame(ctx: Ctx) {
 
     if (res.ok && images.length > 0 && saved.length === 0) {
       // Kredi düştü, görsel yanıtta ama kaydı düşmüş: görseli kendimiz saklarız
-      // (sözleşme: Bilinen boşluklar). Saklayamazsak kayda göre kapanır (iade ya da inceleme).
-      const path = await saveOwnCopy(admin, userId, frame.id, images[0])
-      if (path) {
-        const credits = (await chargedFor(admin, userId, frame.id)) ?? params.price
-        const { error } = await admin.rpc('v2_finish_frame', {
-          p_frame_id: frame.id, p_status: 'done', p_credits: credits,
-          p_generation_image_id: null, p_storage_path: path, p_error_code: null,
-        })
-        if (error) console.error('v2_finish_frame failed', frame.id, error)
-        return
-      }
+      // (sözleşme: Bilinen boşluklar, "kullanıcı karesini kaybetmez"). Kare yine kayda göre
+      // kapanır: v2_reconcile_frame bu kopyayı depoda bulur (durum 1b), iade etmez.
+      // Kopya üç denemede de yazılamazsa görsel gerçekten elde yoktur: iade (durum 2).
+      // Kopya yazıldıktan sonra bu fonksiyon düşerse kurtarma aynı kopyayı bulur.
+      await saveOwnCopy(admin, userId, frame.id, images[0])
     }
 
     const { error } = await admin.rpc('v2_reconcile_frame', {
@@ -203,32 +198,24 @@ async function loadInputs(admin: SupabaseClient, p: CampaignParams, userId: stri
   return { cast, products, ...(backgroundRef ? { backgroundRef } : {}) }
 }
 
-// Kareye bağlı kayıttaki düşen kredi (K15). Kayıt yazılamadıysa null.
-async function chargedFor(admin: SupabaseClient, userId: string, frameId: string): Promise<number | null> {
-  const { data, error } = await admin
-    .from('generations')
-    .select('credits_charged')
-    .eq('user_id', userId)
-    .eq('tool', 'ecom_studio')
-    .contains('params', { poses: [frameId] })
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-  if (error) console.error('generation lookup failed', frameId, error)
-  return data ? (data.credits_charged as number) : null
-}
-
 // outputs/<kullanıcı>/v2/frames/<kare>.<uzantı>: kullanıcı imzalı adresle okuyabilir
 // (kural: ilk klasör kullanıcı kimliği). generation_images'a yazılmaz; cleanup-expired
 // bu dosyaya dokunmaz, v2 için ayrı saklama kuralı gerekecek (Kural 8).
+// Yol ve uzantılar (png, jpg, webp) v2_reconcile_frame'deki aramayla aynı olmalı.
+const COPY_ATTEMPTS = 3
+
 async function saveOwnCopy(admin: SupabaseClient, userId: string, frameId: string, dataUrl: unknown): Promise<string | null> {
   const img = parseDataUrl(dataUrl)
-  if (!img) return null
-  const path = `${userId}/v2/frames/${frameId}.${img.ext}`
-  const { error } = await admin.storage.from('outputs').upload(path, img.bytes, { contentType: img.mime, upsert: true })
-  if (error) {
-    console.error('own copy upload failed', frameId, error)
+  if (!img) {
+    console.error('own copy skipped: unreadable image', frameId)
     return null
   }
-  return path
+  const path = `${userId}/v2/frames/${frameId}.${img.ext}`
+  for (let attempt = 1; attempt <= COPY_ATTEMPTS; attempt++) {
+    const { error } = await admin.storage.from('outputs').upload(path, img.bytes, { contentType: img.mime, upsert: true })
+    if (!error) return path
+    console.error('own copy upload failed', frameId, attempt, error)
+    if (attempt < COPY_ATTEMPTS) await new Promise((r) => setTimeout(r, attempt * 1000))
+  }
+  return null
 }
