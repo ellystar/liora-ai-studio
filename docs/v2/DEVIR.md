@@ -24,7 +24,7 @@ sırada ne var, nasıl yapılır.
 
 - **GitHub:** `main` = `7badf55`, `v2` = bu notun commit'i. `main` korumasını Elif açtığını bildirdi; ayar doğrulanmadı.
 - **Vercel:** `main` canlıya kuruluyor. Önizlemeler korumalı (Standard Protection); Supabase anahtarları Production ve Preview için tanımlı.
-- **Supabase:** Pro plan, günlük yedek (sonuncusu 5 Kasım 01:59 UTC). 27 tablo. v2 tablolarında hiç satır yok. Bütün `plans` satırları kapalı. Aşama 3'ün dört veritabanı fonksiyonu (`v2_open_job`, `v2_finish_frame`, `v2_reconcile_frame`, `v2_recover_frames`) 5 Kasım öğleden sonra uygulandı; yalnızca `service_role` çağırabilir, `pg_cron`'da ikinci iş `v2-recover-frames` (her 5 dakikada `v2_recover_frames()`, aynı gün uygulandı).
+- **Supabase:** Pro plan, günlük yedek (sonuncusu 5 Kasım 01:59 UTC). 27 tablo. v2 tablolarında yalnızca ilk testin satırları var (1 iş, 1 kare; Elif'in hesabı). Bütün `plans` satırları kapalı. Aşama 3'ün dört veritabanı fonksiyonu (`v2_open_job`, `v2_finish_frame`, `v2_reconcile_frame`, `v2_recover_frames`) 5 Kasım öğleden sonra uygulandı; yalnızca `service_role` çağırabilir, `pg_cron`'da ikinci iş `v2-recover-frames` (her 5 dakikada `v2_recover_frames()`, aynı gün uygulandı).
 - **Fiyatlar (`systems`):** `flat_to_form` 1, `ghost_to_campaign` 1, `rebuild_shoot` 2, `many_markets` 1 (kare başına), `product_video` 4 (iş başına). `cast_studio_try` 1 ve `cast_exclusive` 30 kapalı.
 - **Edge function'lar:** ecom v49, pose v31, ghost v22, edit v25, video-submit v15, video-status v14, request-access v12, style-transfer v11, cleanup-expired v2. v2'nin ilk iki fonksiyonu: `start-run-v2` v1 ve `run-frame-v2` v1 (5 Kasım, JWT kapalı; bugün onları çağıran ekran yok). 27 Ekim'deki karşılaştırmadan ve PR #4'ten sonra dokuzunun da canlı kodu `main` ile aynı (`generate-ghost`'ta yalnızca dosya sonu boşluğu farkı).
 - **Hesaplar:** MVP'de hesaplar Supabase panelinden elle açılıyor; yeni kayıt ve e-posta onayı kapalı, Google kullanılmıyor.
@@ -105,7 +105,7 @@ select public.add_credits(
 | Kullanıcı dosyaları açık kovada (A4) | 15 manken, 3 arka plan yalnızca tam adresle açılıyor; acil değil, geçişte kapalı kovaya taşınır | Aşama 6 |
 | `username_available` | Oturumsuz çağrılabiliyor; istek sınırı gerekiyor | Aşama 4 |
 | T5 · ghost kalitesi | Mankenli çekimde `generate-ghost` kalitesi test edilmedi | Aşama 3 |
-| T3 · oranlar | 5 oranın Gemini'de çalıştığı ilk test üretiminde doğrulanır | Aşama 3 |
+| T3 · oranlar | 4:5 ilk testte doğrulandı (5 Kasım, 2K: 1856×2304); 2:3, 3:4, 1:1 ve 9:16 denenmedi | Aşama 3 |
 | T8 · test Supabase'i | İsteğe bağlı; Kural 3'ü esnetecek işler için | — |
 | `main` koruması | Elif açtığını bildirdi; ayar kontrol edilmedi | Elif |
 
