@@ -5,6 +5,7 @@
 begin;
 
 drop function public.v2_recover_frames(interval);
+drop function public.v2_reconcile_frame(uuid, text);
 drop function public.v2_finish_frame(uuid, text, integer, uuid, text, text);
 drop function public.v2_open_job(uuid, text, text, jsonb, text[], uuid);
 drop index public.jobs_one_active_per_user;

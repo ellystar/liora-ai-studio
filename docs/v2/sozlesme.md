@@ -383,9 +383,43 @@ Süre sınırı (T2): bir edge function en fazla 150 sn (Free) ya da 400 sn (üc
 
 Normal yol bunun dışında: `run-frame-v2` yanıtı aldıysa ama görsel kaydedilememişse (`savedImages` boş) görseli yanıttan alıp `v2/` altına kendisi kaydeder, kare `done` olur (bkz. Bilinen boşluklar).
 
-Uygulama biçimi: kurtarma ve kare kapanışı veritabanı fonksiyonlarıdır (`v2_recover_frames`, `v2_finish_frame`; yalnızca `service_role`). Kare güncellemesi, iş sayaçları, iade ve inceleme kaydı tek işlemde yapılır; aynı kare iki kez işlenemez. Zamanlayıcı `pg_cron` bu fonksiyonu doğrudan çağırır; ayrı bir `resume-run-v2` edge function'ı ve zamanlanmış işte gizli anahtar gerekmez. `pg_cron` işinin eklenmesi canlıya yazmaktır, ayrı onayla yapılır.
+Uygulama biçimi: dört durumlu kontrol tek bir veritabanı fonksiyonudur (`v2_reconcile_frame`). `run-frame-v2` motordan kesin bir yanıt aldıktan sonra kareyi bununla kapatır; yanıttaki `creditsCharged`'a ya da hata koduna bakarak "ücret alınmadı" demez (motor krediyi düşüp sonra hata dönmüş olabilir). Takılan kareler için `v2_recover_frames` aynı fonksiyonu çağırır. Motordan yanıt hiç alınamazsa (bağlantı koptu) `run-frame-v2` kareyi kapatmaz; kare `running` kalır ve kurtarmayı bekler. Kare güncellemesi, iş sayaçları, iade ve inceleme kaydı tek işlemde yapılır; aynı kare iki kez işlenemez. Fonksiyonların hepsi yalnızca `service_role`'a açık. Zamanlayıcı `pg_cron` `v2_recover_frames`'i doğrudan çağırır (her 5 dakikada; migration `20261105100200_v2_recover_cron`); ayrı bir `resume-run-v2` edge function'ı ve zamanlanmış işte gizli anahtar gerekmez. İşin eklenmesi canlıya yazmaktır, ayrı onayla yapılır.
 
 İlk sürüm yalnızca Ghost'tan Kampanyaya karelerini (`generate-ecom`, `ecom_studio`) kurtarır. Diğer akışlar kendi motorları bağlandıkça eklenir.
+
+### İlk sürümün istek biçimi (Ghost'tan Kampanyaya, tek kare)
+
+Doğrulama ve `generate-ecom` eşlemesi `supabase/functions/_v2/campaign.ts`'te; iki fonksiyon da onu kullanır.
+
+**Depolama yolları.** Kural 8'deki `v2/` öneki kökte değil, kullanıcı klasörünün altındadır. `user-assets` ve `outputs` kovalarının kuralları ilk klasörün kullanıcı kimliği olmasını istiyor (canlıdan okundu, 5 Kasım 2026); kökteki `v2/` klasörüne kullanıcı ne yükleyebilir ne okuyabilir.
+- Girdiler (kast, ürün, ortam referansı): `user-assets/<kullanıcı>/v2/uploads/<dosya>.png|jpg|jpeg|webp`. Arayüz yükler. Sunucu dosyaları service role ile indirdiği için başka bir yol reddedilir; başkasının dosyası bu yoldan okunamaz.
+- Kaydı düşen karenin kopyası: `outputs/<kullanıcı>/v2/frames/<kare>.<uzantı>`. `generation_images`'a yazılmadığı için `cleanup-expired` bu dosyayı silmez; v2 için saklama kuralı ayrıca yazılmalı (açık).
+- MVP depolamayı listelemiyor; bu dosyalar MVP ekranlarında görünmez.
+
+**`start-run-v2`** (`POST`, kullanıcının oturumuyla):
+
+```json
+{
+  "flow": "campaign",
+  "title": "Kaban",
+  "setupId": null,
+  "cast": { "path": "<kullanıcı>/v2/uploads/cast.jpg" },
+  "products": [
+    { "category": "top", "front": "<kullanıcı>/v2/uploads/a.png", "back": null, "detail": "<kullanıcı>/v2/uploads/a-logo.png" }
+  ],
+  "tuck": "in",
+  "background": { "prompt": "alçı stüdyo", "refPath": null },
+  "ratio": "4:5",
+  "frames": [{ "key": "pose-01", "prompt": "standing, hands in pockets", "shotType": "full_body", "side": "front" }]
+}
+```
+
+- Sınırlar: en fazla 4 ürün, her üründe ön görsel zorunlu; ilk sürümde tam olarak 1 kare; oranlar 2:3, 4:5, 3:4, 1:1, 9:16; metinler en fazla 600 karakter. `tuck` yalnızca üst ve alt birlikteyse gider.
+- Fiyat `systems`'tan okunur, bakiye kontrol edilir (ayrılmaz), iş `v2_open_job` ile açılır ve isteğin anlık görüntüsü `jobs.params`'a yazılır. Kare `run-frame-v2`'ye beklemeden tetiklenir.
+- Yanıt: `202 { jobId, frames: [{ id, idx }] }`. Hatalar: `400 invalid_input` (+ `field`), `401 unauthorized`, `402 insufficient_credits`, `404 setup_not_found`, `409 job_already_running`, `503 system_unavailable`.
+- Henüz yok: paket kilidi (`min_plan`; katalog bağlanınca), Partner'a özel alanların denetimi, birden fazla kare (zincir).
+
+**`run-frame-v2`** (`POST { frameId }`, kullanıcının oturumuyla): kareyi sahiplenir (`queued` → `running`; ikinci tetikleme `409 frame_not_queued`), `202` döner, üretimi arka planda yürütür. İstek her zaman `jobs.params`'tan kurulur, arayüzden gelmez. Girdi indirilemezse kare `failed` (`input_missing`) olur; motor çağrılmadığı için kredi düşmüş olamaz.
 
 ### Kredi kuralları
 
@@ -666,7 +700,12 @@ v2 arayüzü sahte depo yerine gerçek veriyi okur. Yeni tablo yok.
 
 ### Aşama 3 · Üretim
 
-**Durum · 5 Kasım 2026.** Devirden sonra başladı (Elif). `v2`'nin `supabase/functions` klasörü `main` ile birebir eşitlendi (`7821aae`): `v2` dalı PR #2–#4'ten önce açıldığı için `generate-ecom` ve `generate-edit` eskiydi. `generate-edit` canlı v25 ile bayt bayt, `generate-ecom` canlı v49 ile açıklamalar dışında aynı. K15 ve K16 kararlaştırıldı. İlk parça: Ghost'tan Kampanyaya, tek kare (tek poz, tek görsel), uçtan uca. Önce veritabanı fonksiyonları (iş açma, kare kapanışı, kurtarma), sonra `start-run-v2` ve `run-frame-v2`; hepsi yerelde, dağıtım ve canlıya uygulama ayrı onayla.
+**Durum · 5 Kasım 2026.** Devirden sonra başladı (Elif). `v2`'nin `supabase/functions` klasörü `main` ile birebir eşitlendi (`7821aae`): `v2` dalı PR #2–#4'ten önce açıldığı için `generate-ecom` ve `generate-edit` eskiydi. `generate-edit` canlı v25 ile bayt bayt, `generate-ecom` canlı v49 ile açıklamalar dışında aynı. K15 ve K16 kararlaştırıldı. İlk parça: Ghost'tan Kampanyaya, tek kare (tek poz, tek görsel), uçtan uca. Yerelde yazıldı, canlıya uygulanmadı ve dağıtılmadı:
+- Migration `20261105100100_v2_frame_runs`: kullanıcı başına tek açık iş, `v2_open_job`, `v2_finish_frame`, `v2_reconcile_frame`, `v2_recover_frames`. İade iki ayrı güvenceyle kare başına bir kez: kayda göre kapatma kareyi kilitleyip durumunu kontrol eder, iade de ancak kare o çağrıda gerçekten kapandıysa yapılır.
+- Migration `20261105100200_v2_recover_cron`: `pg_cron`'a `v2-recover-frames` işi, her 5 dakikada `select public.v2_recover_frames()`. Mevcut `cleanup-expired-outputs` işine dokunmaz.
+- Sınav 145/0 (sınavda `pg_cron` yerine aynı çağrıları taşıyan bir benzer). Bilerek bozulan kopyaların hepsini yakaladı: rol izinleri, iade, kullanıcı eşlemesi, kredi satırı kontrolü, iki "bir kez" güvencesinin ikisi birden. Tek bir güvence kaldırıldığında iade yine bir kez kalıyor. Eşzamanlı iki kurtarma çağrısı sınanamadı (PGlite tek bağlantı); bu satır kilidine (`for update`) dayanıyor.
+- `start-run-v2`, `run-frame-v2` ve ortak `_v2/campaign.ts`: Deno tip kontrolü ve lint temiz, `campaign.test.ts` 7/7. Fonksiyonlar gerçek ortamda çalıştırılmadı.
+- Sırada: canlıya uygulama ve dağıtım (onayla), `pg_cron` kurtarma işi (onayla), arayüzün bağlanması, test hesabıyla tek kare.
 
 - `start-run-v2`, `run-frame-v2`, `generate-style-transfer-v2` (Model Swap), `generate-video-status-v2`; K3 kararına göre `generate-ghost-v2`. Takılan kare için edge function değil, veritabanı fonksiyonu ve `pg_cron` (K16).
 - Taslaklar `setups`'a; İşlerim ve sonuç sayfası `jobs` / `job_frames`'ten.

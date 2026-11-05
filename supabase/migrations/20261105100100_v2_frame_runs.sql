@@ -1,6 +1,6 @@
 -- v2 · Aşama 3 · iş açma, kare kapanışı ve takılan kare kurtarma (sözleşme K15, K16).
--- Yalnızca ekleme: bir indeks ve üç fonksiyon. Mevcut tablo, sütun, kısıt ve kurallara dokunmaz.
--- Üç fonksiyonu da yalnızca service_role çağırabilir (v2 edge function'ları ve pg_cron).
+-- Yalnızca ekleme: bir indeks ve dört fonksiyon. Mevcut tablo, sütun, kısıt ve kurallara dokunmaz.
+-- Dört fonksiyonu da yalnızca service_role çağırabilir (v2 edge function'ları ve pg_cron).
 -- Kare, iş sayaçları, iade ve inceleme kaydı tek işlemde güncellenir; aynı kare iki kez
 -- kapanamaz, bu yüzden iade de kare başına en fazla bir kez yapılır.
 begin;
@@ -134,16 +134,115 @@ begin
 end;
 $$;
 
--- Takılan kareleri kurtarır (K16). Yeniden üretmez; kareye bağlı kaydı arar (K15:
--- generations.params.poses içinde karenin kimliği) ve dört durumu ayırır:
---   1  kayıt (kredi düşmüş) + görsel   -> done, yeni ücret yok
+-- Kareyi kendi kaydına göre kapatır (K15, K16). Kredinin doğrusu tek yerde belirlenir:
+-- run-frame-v2 motordan kesin bir yanıt aldıktan sonra, v2_recover_frames de takılan
+-- kareler için bunu çağırır. Yanıttaki creditsCharged'a güvenilmez; kareye bağlı kayıt
+-- aranır (generations.params.poses içinde karenin kimliği) ve dört durum ayrılır:
+--   1  kayıt (kredi düşmüş) + görsel    -> done, yeni ücret yok
 --   2  kayıt (kredi düşmüş), görsel yok -> failed (image_lost), düşen kredi iade
---   2b kayıt var, kredi düşmemiş        -> failed (generation_failed), ücret yok
---   3  kayıt yok                       -> failed (timeout); aynı dakikalarda ecom_studio
---      kredi satırı varsa failed (charge_unclear) ve iade incelemesine düşer
--- p_stale 10 dakikadan kısa olamaz: fonksiyon süre sınırından (400 sn) uzun olmalı ki
--- kurtarılan kare için çalışan bir çağrı kalmamış olsun.
+--   2b kayıt var, kredi düşmemiş        -> failed (p_error_code ya da generation_failed), ücret yok
+--   3  kayıt yok                        -> failed (p_error_code ya da timeout); kare açıldıktan
+--      sonraki 10 dakikada ecom_studio kredi satırı varsa "ücret alınmadı" denmez:
+--      failed (charge_unclear) ve iade incelemesine düşer
+-- Kare zaten kapanmışsa hiçbir şey yapmaz; iade bu yüzden kare başına en fazla bir kez.
+-- p_error_code: motorun yanıtındaki hata (ör. model_busy); takılan karede boş.
 -- İlk sürüm yalnızca Ghost'tan Kampanyaya (campaign -> generate-ecom, ecom_studio).
+create function public.v2_reconcile_frame(p_frame_id uuid, p_error_code text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_tool constant text := 'ecom_studio';
+  v_window constant interval := interval '10 minutes';
+  v_user uuid;
+  v_created timestamptz;
+  v_status text;
+  v_flow text;
+  v_gen_id uuid;
+  v_gen_credits integer;
+  v_img_id uuid;
+  v_img_path text;
+  v_outcome text;
+begin
+  select f.user_id, f.created_at, f.status, j.flow
+  into v_user, v_created, v_status, v_flow
+  from public.job_frames f
+  join public.jobs j on j.id = f.job_id
+  where f.id = p_frame_id
+  for update of f;
+  if v_user is null then
+    raise exception 'frame_not_found';
+  end if;
+  if v_status not in ('queued', 'running') then
+    return jsonb_build_object('applied', false, 'frame_status', v_status);
+  end if;
+  if v_flow <> 'campaign' then
+    raise exception 'flow_not_supported';
+  end if;
+
+  select g.id, g.credits_charged into v_gen_id, v_gen_credits
+  from public.generations g
+  where g.user_id = v_user
+    and g.tool = v_tool
+    and g.params -> 'poses' ? p_frame_id::text
+    and g.created_at >= v_created
+  order by g.created_at
+  limit 1;
+
+  if v_gen_id is not null then
+    select i.id, i.storage_path into v_img_id, v_img_path
+    from public.generation_images i
+    where i.generation_id = v_gen_id and i.deleted_at is null
+    order by i.created_at
+    limit 1;
+  end if;
+
+  if v_gen_id is not null and v_gen_credits > 0 and v_img_id is not null then
+    -- 1
+    perform public.v2_finish_frame(p_frame_id, 'done', v_gen_credits, v_img_id, v_img_path, null);
+    v_outcome := 'done';
+  elsif v_gen_id is not null and v_gen_credits > 0 then
+    -- 2. İade yalnızca kare bu çağrıda kapandıysa. Birinci güvence yukarıdaki kilit ve durum
+    -- kontrolü; bu ikincisi: kare kapanmadıysa iade yok.
+    if not coalesce((public.v2_finish_frame(p_frame_id, 'failed', 0, null, null, 'image_lost') ->> 'applied')::boolean, false) then
+      return jsonb_build_object('applied', false);
+    end if;
+    perform public.refund_credits(v_user, v_gen_credits, v_tool);
+    v_outcome := 'refunded';
+  elsif v_gen_id is not null then
+    -- 2b
+    perform public.v2_finish_frame(p_frame_id, 'failed', 0, null, null, coalesce(p_error_code, 'generation_failed'));
+    v_outcome := 'failed';
+  elsif exists (
+    select 1 from public.credit_transactions t
+    where t.user_id = v_user
+      and t.tool = v_tool
+      and t.type = 'usage'
+      and t.created_at >= v_created
+      and t.created_at < v_created + v_window
+  ) then
+    -- 3, kredi satırı var
+    perform public.v2_finish_frame(p_frame_id, 'failed', 0, null, null, 'charge_unclear');
+    insert into public.frame_reviews (frame_id, user_id, reasons, note)
+    values (p_frame_id, v_user, array['other']::text[],
+            'Otomatik: karenin kaydı bulunamadı; kare açıldıktan sonraki 10 dakikada ecom_studio kredi satırı var.')
+    on conflict (frame_id) do nothing;
+    v_outcome := 'review';
+  else
+    -- 3, kredi satırı yok: ücret alınmamış
+    perform public.v2_finish_frame(p_frame_id, 'failed', 0, null, null, coalesce(p_error_code, 'timeout'));
+    v_outcome := 'failed';
+  end if;
+
+  return jsonb_build_object('applied', true, 'outcome', v_outcome);
+end;
+$$;
+
+-- Takılan kareleri kurtarır (K16): yeniden üretmez, her kareyi v2_reconcile_frame ile kapatır.
+-- p_stale 10 dakikadan kısa olamaz: fonksiyon süre sınırından (400 sn) uzun olmalı ki
+-- kurtarılan kare için çalışan bir çağrı kalmamış olsun. pg_cron bunu doğrudan çağırır.
 create function public.v2_recover_frames(p_stale interval default interval '10 minutes')
 returns jsonb
 language plpgsql
@@ -152,11 +251,7 @@ set search_path = ''
 as $$
 declare
   v_frame record;
-  v_tool constant text := 'ecom_studio';
-  v_gen_id uuid;
-  v_gen_credits integer;
-  v_img_id uuid;
-  v_img_path text;
+  v_outcome text;
   v_done integer := 0;
   v_refunded integer := 0;
   v_failed integer := 0;
@@ -167,7 +262,7 @@ begin
   end if;
 
   for v_frame in
-    select f.id, f.user_id, f.created_at
+    select f.id
     from public.job_frames f
     join public.jobs j on j.id = f.job_id
     where f.status in ('queued', 'running')
@@ -176,60 +271,11 @@ begin
     order by f.created_at
     for update of f skip locked
   loop
-    v_gen_id := null;
-    v_gen_credits := null;
-    v_img_id := null;
-    v_img_path := null;
-
-    select g.id, g.credits_charged into v_gen_id, v_gen_credits
-    from public.generations g
-    where g.user_id = v_frame.user_id
-      and g.tool = v_tool
-      and g.params -> 'poses' ? v_frame.id::text
-      and g.created_at >= v_frame.created_at
-    order by g.created_at
-    limit 1;
-
-    if v_gen_id is not null then
-      select i.id, i.storage_path into v_img_id, v_img_path
-      from public.generation_images i
-      where i.generation_id = v_gen_id and i.deleted_at is null
-      order by i.created_at
-      limit 1;
-    end if;
-
-    if v_gen_id is not null and v_gen_credits > 0 and v_img_id is not null then
-      -- 1
-      perform public.v2_finish_frame(v_frame.id, 'done', v_gen_credits, v_img_id, v_img_path, null);
-      v_done := v_done + 1;
-    elsif v_gen_id is not null and v_gen_credits > 0 then
-      -- 2
-      perform public.v2_finish_frame(v_frame.id, 'failed', 0, null, null, 'image_lost');
-      perform public.refund_credits(v_frame.user_id, v_gen_credits, v_tool);
-      v_refunded := v_refunded + 1;
-    elsif v_gen_id is not null then
-      -- 2b
-      perform public.v2_finish_frame(v_frame.id, 'failed', 0, null, null, 'generation_failed');
-      v_failed := v_failed + 1;
-    elsif exists (
-      select 1 from public.credit_transactions t
-      where t.user_id = v_frame.user_id
-        and t.tool = v_tool
-        and t.type = 'usage'
-        and t.created_at >= v_frame.created_at
-        and t.created_at < v_frame.created_at + p_stale
-    ) then
-      -- 3, kredi satırı var: "ücret alınmadı" denmez
-      perform public.v2_finish_frame(v_frame.id, 'failed', 0, null, null, 'charge_unclear');
-      insert into public.frame_reviews (frame_id, user_id, reasons, note)
-      values (v_frame.id, v_frame.user_id, array['other']::text[],
-              'Otomatik: kare 10 dakikada sonuçlanmadı ve kaydı bulunamadı; aynı dakikalarda ecom_studio kredi satırı var.')
-      on conflict (frame_id) do nothing;
-      v_review := v_review + 1;
-    else
-      -- 3, kredi satırı yok: ücret alınmamış
-      perform public.v2_finish_frame(v_frame.id, 'failed', 0, null, null, 'timeout');
-      v_failed := v_failed + 1;
+    v_outcome := public.v2_reconcile_frame(v_frame.id, null) ->> 'outcome';
+    if v_outcome = 'done' then v_done := v_done + 1;
+    elsif v_outcome = 'refunded' then v_refunded := v_refunded + 1;
+    elsif v_outcome = 'review' then v_review := v_review + 1;
+    else v_failed := v_failed + 1;
     end if;
   end loop;
 
@@ -239,10 +285,12 @@ $$;
 
 revoke all on function public.v2_open_job(uuid, text, text, jsonb, text[], uuid) from public, anon, authenticated;
 revoke all on function public.v2_finish_frame(uuid, text, integer, uuid, text, text) from public, anon, authenticated;
+revoke all on function public.v2_reconcile_frame(uuid, text) from public, anon, authenticated;
 revoke all on function public.v2_recover_frames(interval) from public, anon, authenticated;
 
 grant execute on function public.v2_open_job(uuid, text, text, jsonb, text[], uuid) to service_role;
 grant execute on function public.v2_finish_frame(uuid, text, integer, uuid, text, text) to service_role;
+grant execute on function public.v2_reconcile_frame(uuid, text) to service_role;
 grant execute on function public.v2_recover_frames(interval) to service_role;
 
 commit;

@@ -60,6 +60,17 @@ await db.exec(`
   revoke all on function public.deduct_credits(uuid, integer, text) from public, anon, authenticated;
   revoke all on function public.refund_credits(uuid, integer, text) from public, anon, authenticated;
 `);
+/* pg_cron is not in PGlite: a stand-in with the same calls, and the live cleanup job (Betik 3) */
+await db.exec(`
+  create schema cron;
+  create table cron.job (jobid bigserial primary key, jobname text unique, schedule text not null, command text not null, active boolean not null default true);
+  create function cron.schedule(p_name text, p_schedule text, p_command text) returns bigint language sql as $$
+    insert into cron.job (jobname, schedule, command) values (p_name, p_schedule, p_command)
+    on conflict (jobname) do update set schedule = excluded.schedule, command = excluded.command returning jobid $$;
+  create function cron.unschedule(p_name text) returns boolean language sql as $$
+    with d as (delete from cron.job where jobname = p_name returning 1) select count(*) > 0 from d $$;
+  insert into cron.job (jobname, schedule, command) values ('cleanup-expired-outputs', '0 3 * * *', 'select cleanup-expired');
+`);
 
 const snapshot = async () =>
   JSON.stringify({
@@ -69,6 +80,7 @@ const snapshot = async () =>
     policies: await rows("select tablename, policyname, cmd, roles::text, qual, with_check from pg_policies where schemaname='public' order by 1,2"),
     functions: await rows("select proname, pg_get_function_identity_arguments(oid) a from pg_proc where pronamespace='public'::regnamespace order by 1,2"),
     systems: await rows("select id, price, is_active from public.systems order by id"),
+    cron: await rows("select jobname, schedule, command, active from cron.job order by jobname"),
   });
 const before = await snapshot();
 const oldCols = await rows("select table_name, column_name, data_type, is_nullable, column_default from information_schema.columns where table_schema='public' order by 1,2");
@@ -92,6 +104,9 @@ const added = newCols.filter((n) => ["models", "backgrounds", "poses", "video_jo
 ok("15 yeni sütun", added === 15, `(${added})`);
 const newTables = await rows("select count(*)::int n from pg_tables where schemaname='public' and tablename in ('accounts','brand_profiles','consents','setups','jobs','job_frames','frame_feedback','frame_reviews','user_poses','plans','notices','notification_prefs') and rowsecurity");
 ok("12 tablonun hepsinde RLS açık", newTables[0].n === 12, `(${newTables[0].n})`);
+const cronJobs = await rows("select jobname, schedule, command, active from cron.job order by jobname");
+ok("kurtarma işi 5 dakikada bir, yalnızca v2_recover_frames", JSON.stringify(cronJobs.find((j) => j.jobname === "v2-recover-frames")) === JSON.stringify({ jobname: "v2-recover-frames", schedule: "*/5 * * * *", command: "select public.v2_recover_frames()", active: true }), JSON.stringify(cronJobs));
+ok("canlı temizlik işi değişmedi", JSON.stringify(cronJobs.find((j) => j.jobname === "cleanup-expired-outputs")) === JSON.stringify({ jobname: "cleanup-expired-outputs", schedule: "0 3 * * *", command: "select cleanup-expired", active: true }) && cronJobs.length === 2);
 ok("MVP fiyatları değişmedi", JSON.stringify(await rows("select id, price from public.systems where is_active order by id")) === JSON.stringify([...live.systems].sort((a, b) => (a.id < b.id ? -1 : 1)).map((s) => ({ id: s.id, price: s.price }))));
 
 /* ── people ── */
@@ -247,6 +262,7 @@ for (const r of ["anon", "authenticated"]) {
   await denied(`${r} iş açamaz`, `select public.v2_open_job('${F}', 'campaign', 'x', '{}', array['p1'])`, /permission denied/);
   await denied(`${r} kare kapatamaz`, `select public.v2_finish_frame('${F}', 'done')`, /permission denied/);
   await denied(`${r} kurtarma çalıştıramaz`, `select public.v2_recover_frames()`, /permission denied/);
+  await denied(`${r} kareyi kayda göre kapatamaz`, `select public.v2_reconcile_frame('${F}')`, /permission denied/);
 }
 const lit = (v) => (v === null ? "null" : `'${v}'`);
 const open = async (keys = ["p1"], flow = "campaign", setup = null) => {
@@ -266,11 +282,11 @@ const frame = async (id) => (await rows("select status, credits_charged, generat
 const refunds = async () => (await rows("select amount, tool from public.credit_transactions where user_id=$1 and type='refund'", [F]));
 /* simulates live generate-ecom: deduct, then the generations row, then maybe the image */
 const stale = async (id) => { await reset(); await db.exec(`update public.job_frames set created_at = now() - interval '11 minutes' where id = '${id}'`); };
-const gen = async (frameId, credits, status, withImage, user = F) => {
+const gen = async (frameId, credits, status, withImage, user = F, ago = "10 minutes") => {
   await reset();
   if (credits > 0) await db.exec(`select public.deduct_credits('${user}', ${credits}, 'ecom_studio')`);
   const g = (await rows(`insert into public.generations (user_id, tool, system, status, credits_charged, image_count, params, created_at)
-    values ($1, 'ecom_studio', 'ghost_to_campaign', $2, $3, $4, jsonb_build_object('poses', jsonb_build_array($5::text), 'quality', '2K'), now() - interval '10 minutes') returning id`,
+    values ($1, 'ecom_studio', 'ghost_to_campaign', $2, $3, $4, jsonb_build_object('poses', jsonb_build_array($5::text), 'quality', '2K'), now() - interval '${ago}') returning id`,
     [user, status, credits, withImage ? 1 : 0, frameId]))[0].id;
   if (!withImage) return { g };
   const i = (await rows("insert into public.generation_images (generation_id, user_id, tool, storage_path) values ($1, $2, 'ecom_studio', $3) returning id", [g, user, `${user}/${g}/0.png`]))[0].id;
@@ -392,6 +408,38 @@ f1 = await frame(r3b.frames[0].id);
 ok("durum 3: kayıt ve kredi satırı yok: failed (timeout)", f1.status === "failed" && f1.error_code === "timeout" && (await rows("select 1 from public.frame_reviews where frame_id=$1", [r3b.frames[0].id])).length === 0, JSON.stringify(f1));
 ok("başka kullanıcının kaydı kareye bağlanmaz", f1.generation_image_id === null && (await job(r3b.job_id)).credits_spent === 0);
 ok("açık iş kalmadı", (await rows("select 1 from public.jobs where user_id=$1 and status in ('queued','running')", [F])).length === 0);
+
+/* right after the engine answers (not stuck): run-frame-v2 closes the frame by its record */
+const reconcile = async (id, err = null) => {
+  await as("service_role");
+  return (await rows(`select public.v2_reconcile_frame('${id}', ${lit(err)}) r`))[0].r;
+};
+const n1 = await open();
+const sn1 = await gen(n1.frames[0].id, 1, "success", true, F, "0 minutes");
+let rr = await reconcile(n1.frames[0].id);
+await db.exec("reset role;");
+f1 = await frame(n1.frames[0].id);
+ok("yanıttan sonra: kayıt ve görsel varsa done, kredi kayıttan", rr.outcome === "done" && f1.status === "done" && f1.generation_image_id === sn1.i && f1.credits_charged === 1 && (await job(n1.job_id)).credits_spent === 1, JSON.stringify({ rr, f1 }));
+rr = await reconcile(n1.frames[0].id, "model_busy");
+await db.exec("reset role;");
+ok("kapanmış kare yeniden kapanmaz", rr.applied === false && (await frame(n1.frames[0].id)).status === "done");
+const beforeAgain = await credits(F);
+rr = await reconcile(r2.frames[0].id);
+await db.exec("reset role;");
+ok("iadesi yapılmış kare doğrudan yeniden kapatılırsa ikinci iade yok", rr.applied === false && (await refunds()).length === 1 && (await credits(F)) === beforeAgain && (await frame(r2.frames[0].id)).error_code === "image_lost", JSON.stringify(rr));
+const n2 = await open();
+await gen(n2.frames[0].id, 0, "failed", false, F, "0 minutes");
+rr = await reconcile(n2.frames[0].id, "model_busy");
+await db.exec("reset role;");
+ok("yanıttan sonra: kredisiz kayıt, motorun hata kodu yazılır", rr.outcome === "failed" && (await frame(n2.frames[0].id)).error_code === "model_busy");
+const n3 = await open();
+rr = await reconcile(n3.frames[0].id, "insufficient_credits");
+await db.exec("reset role;");
+ok("yanıttan sonra: kayıt ve kredi satırı yok, motorun hata kodu yazılır", rr.outcome === "failed" && (await frame(n3.frames[0].id)).error_code === "insufficient_credits" && (await refunds()).length === 1);
+const n4 = await open(["p1"], "ghost");
+await as("service_role");
+await denied("ilk sürüm başka akışın karesini kapatmaz", `select public.v2_reconcile_frame('${n4.frames[0].id}')`, /flow_not_supported/);
+await finish(n4.frames[0].id, "failed");
 await reset();
 
 /* ── 9. rollback returns to the starting point ── */
