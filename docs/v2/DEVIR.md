@@ -65,7 +65,7 @@ döngüsü" bölümlerinde.
 
 **Yapılacaklar (sözleşmeden):**
 
-- `start-run-v2`: işi açar (`jobs`, `job_frames`), kareleri tetikler. `run-frame-v2`: tek kare üretir. `resume-run-v2`: 10 dakika takılan kareyi bir kez yeniden tetikler.
+- `start-run-v2`: işi açar (`jobs`, `job_frames`), kareleri tetikler. `run-frame-v2`: tek kare üretir. Takılan kare yeniden üretilmez, kurtarılır (K16, 5 Kasım 2026; sözleşmede "Takılan kare: kurtarma").
 - Akışlar mevcut motorlara gider: Ghost'tan Kampanyaya ve Batch → `generate-ecom`; Look Composer → `generate-ecom` (`rebuild_shoot`); Model Swap → `generate-style-transfer-v2` (`c1` dalındaki kod); Flat'ten Ghost'a → `generate-ghost`; Look Composer'ın ücretsiz ghost adımı → `generate-ghost-v2` (K3); 180° Video → `generate-video-submit` + `generate-video-status-v2` (videonun adresini saklar, çift ücreti önler).
 - Taslaklar `setups`'a, İşlerim ve sonuç sayfası `jobs` / `job_frames`'ten okunur. Kareyi düzenle, tekrar dene, yeniden üret, Beğendim.
 

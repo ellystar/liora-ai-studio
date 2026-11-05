@@ -233,7 +233,7 @@ Canlı MVP motorları doğrudan çağırmaya devam eder. v2 aynı motorlara `sta
 | Ürün kategorisi | `clothes[].category` | Eşleme: `top` → `top`, `bottom` → `bottom`, `outer` → `outerwear`, `onepiece` → `onepiece`, `shoes` → `shoes`, `acc` → `accessory`. Sunucu `shoes` ve `bottom` değerlerini kadraja göre eleme için kullanır. |
 | Ön / Arka / Detay görünüşü | `front` / `back` / `frontDetail` | "Detay (baskı, logo, doku)" → `frontDetail`. Detay görseli varsa sunucu kaliteyi 2K'ya zorlar. |
 | Üst içeride / dışarıda | `tuck: 'in' \| 'out'` | Yalnızca üst ve alt birlikteyse gönderilir. |
-| Kare (poz) | `poses[] {id, prompt, shot_type}` | v2 poz kimlikleri `poses` kataloğuna eşlenir. Arka poz için `side: 'back'`. |
+| Kare (poz) | `poses[] {id, prompt, shot_type}` | Her çağrıda tek poz gider. `id` alanına poz kimliği değil **karenin kimliği (`job_frames.id`)** yazılır (K15); fonksiyon bu alanı yalnızca günlüğe ve `generations.params.poses`'a yazar, MVP arayüzü okumaz. Seçilen poz `job_frames.pose_key`'de durur. Arka poz için `side: 'back'`. |
 | Kendi pozum (Partner) | `poses[].prompt` | Kullanıcının cümlesi poz metni olarak gider. |
 | Ortam | `backgroundPrompt` ya da `backgroundRef` | v2 ortamı bir `backgrounds` satırıdır. Tarif edilen ortam `backgroundPrompt` olur. |
 | Oran | `ratio` | Sunucu doğrulamıyor. 2:3, 4:5, 3:4, 1:1, 9:16 değerlerinin modelde desteklendiği test edilecek. |
@@ -361,11 +361,31 @@ Bir v2 işi `queued → running → done` (ya da tüm kareler başarısızsa `fa
    - Model Swap: `generate-style-transfer-v2`'ye kare başına bir çağrı. Flat'ten Ghost'a: `generate-ghost`. 180° Video: başvuru ve durum sorgusu.
    - Aynı anda en fazla 3 çağrı.
    - Mevcut fonksiyon kullanıcının kendi oturum anahtarıyla çağrılır. Böylece kredi doğru kullanıcıdan, mevcut yoldan düşer.
-   - Her yanıt `job_frames`'e işlenir: başarılıysa `done`, dosya yolu, `generation_image_id`, düşen kredi; başarısızsa `failed` ve hata kodu (`insufficient_credits`, `content_blocked`, `model_busy`, `generation_failed`, `credit_charge_failed`).
+   - Her yanıt `job_frames`'e işlenir: başarılıysa `done`, dosya yolu, `generation_image_id`, düşen kredi; başarısızsa `failed` ve hata kodu (`insufficient_credits`, `content_blocked`, `model_busy`, `generation_failed`, `no_image`, `credit_charge_failed`). `no_image`: canlı `generate-ecom`'un 14 Ekim sürümünde var (422; görsel gelmedi, içerik engeli de yok).
+   - Düşen kredi yanıttaki `creditsCharged`'dan değil, kareye bağlı `generations.credits_charged`'dan okunur (K15).
 5. Son kare bitince iş kapanır: en az bir kare geldiyse `done`, hiçbiri gelmediyse `failed`. `credits_spent` karelerin toplamıdır. `done` ya da `failed` bildirimi yazılır.
 6. Arayüz işin durumunu kendi satırlarına abone olarak (Supabase Realtime) ya da 3 saniyede bir sorgulayarak izler.
 
-Süre sınırı (T2): bir edge function en fazla 150 sn (Free) ya da 400 sn (ücretli) çalışır; arka plan işi de buna dahil. Bu yüzden `start-run-v2` işi açıp kareleri tetikler, her kare ise kendi çağrısında üretilir (`run-frame-v2`). İlk kare bitince kalan kareler tetiklenir. Bir kare 10 dakika içinde sonuçlanmazsa zamanlanmış `resume-run-v2` onu bir kez yeniden tetikler, ikinci kez de olmazsa kare `failed` olur ve ücretlendirilmez.
+Süre sınırı (T2): bir edge function en fazla 150 sn (Free) ya da 400 sn (ücretli) çalışır; arka plan işi de buna dahil. Bu yüzden `start-run-v2` işi açıp kareleri tetikler, her kare ise kendi çağrısında üretilir (`run-frame-v2`). İlk kare bitince kalan kareler tetiklenir.
+
+### Takılan kare: kurtarma (K16, 5 Kasım 2026)
+
+10 dakika içinde sonuçlanmayan kare **yeniden üretilmez, kurtarılır**. Neden: zamanlanmış görevde kullanıcının oturumu yok, `generate-ecom` ise yalnızca kullanıcının oturumuyla çalışıyor. Ayrıca `run-frame-v2` beklerken düşse bile `generate-ecom` işini bitirip krediyi düşmüş olabilir; körlemesine yeniden üretim çift ücret demek. Eski karar ("bir kez otomatik yeniden tetikler") bununla değişti.
+
+10 dakika, fonksiyon süre sınırından (400 sn) uzun seçildi: kurtarma çalıştığında o kare için çalışan bir çağrı kalmamış olur. Kurtarma kareye bağlı kaydı arar (K15: `generations.params.poses` içinde karenin kimliği) ve dört durumu ayırır:
+
+| Durum | Ne bulundu | Kare | Kredi |
+| --- | --- | --- | --- |
+| 1 | `generations` kaydı (kredi düşmüş) ve `generation_images` görseli | `done`, görsel bağlanır | Yeni ücret yok; düşen kredi kareye yazılır |
+| 2 | `generations` kaydı, kredi düşmüş (`credits_charged > 0`), görsel yok | `failed` (`image_lost`) | Düşen kredi `refund_credits` ile iade edilir; sunucuda, kare başına bir kez (kare aynı işlemde `failed` olur, ikinci kurtarma bulamaz) |
+| 2b | `generations` kaydı var ama kredi düşmemiş (`status = 'failed'`, `credits_charged = 0`) | `failed` (`generation_failed`) | Ücret yok. Canlı `generate-ecom` görsel üretemediğinde de kayıt yazıyor; "kayıt var" her zaman "kredi düştü" demek değil |
+| 3 | Kayıt yok | `failed` (`timeout`) | Kare açıldıktan sonraki 10 dakikada o kullanıcının `ecom_studio` için bir kredi satırı varsa "ücret alınmadı" denmez: kare iade incelemesine düşer (`frame_reviews`, `pending`, gerekçe `other`, notta otomatik açıldığı yazar; `charge_unclear`). Kredi satırı yoksa ücret alınmamıştır |
+
+Normal yol bunun dışında: `run-frame-v2` yanıtı aldıysa ama görsel kaydedilememişse (`savedImages` boş) görseli yanıttan alıp `v2/` altına kendisi kaydeder, kare `done` olur (bkz. Bilinen boşluklar).
+
+Uygulama biçimi: kurtarma ve kare kapanışı veritabanı fonksiyonlarıdır (`v2_recover_frames`, `v2_finish_frame`; yalnızca `service_role`). Kare güncellemesi, iş sayaçları, iade ve inceleme kaydı tek işlemde yapılır; aynı kare iki kez işlenemez. Zamanlayıcı `pg_cron` bu fonksiyonu doğrudan çağırır; ayrı bir `resume-run-v2` edge function'ı ve zamanlanmış işte gizli anahtar gerekmez. `pg_cron` işinin eklenmesi canlıya yazmaktır, ayrı onayla yapılır.
+
+İlk sürüm yalnızca Ghost'tan Kampanyaya karelerini (`generate-ecom`, `ecom_studio`) kurtarır. Diğer akışlar kendi motorları bağlandıkça eklenir.
 
 ### Kredi kuralları
 
@@ -373,6 +393,8 @@ Süre sınırı (T2): bir edge function en fazla 150 sn (Free) ya da 400 sn (üc
 | --- | --- | --- |
 | Kare başarıyla geldi | Akışın fiyatı (`systems`) | Mevcut fonksiyon içinde, kare geldikten sonra |
 | Kare gelmedi | 0 | — |
+| Takılan kare: kayıt var, kredi düşmüş, görsel yok | Düşen kredi iade | Kurtarmada, sunucuda `refund_credits`, kare başına bir kez (K16) |
+| Takılan kare: kayıt yok ama aynı dakikalarda kredi satırı var | İade incelemesi | Kurtarmada `frame_reviews`'a düşer; karar admin'in (K16) |
 | Tekrar dene (gelmeyen kare) | Akışın fiyatı | Başarılıysa |
 | Yeniden üret (gelen kareyi değiştir) | Akışın fiyatı | Başarılıysa; eski kare `version` zincirinde kalır |
 | Kareyi düzenle | 1 | `generate-edit`, başarılıysa |
@@ -390,7 +412,8 @@ Süre sınırı (T2): bir edge function en fazla 150 sn (Free) ya da 400 sn (üc
 ### Bilinen boşluklar ve v2'deki önlem
 
 - **Rezervasyon yok.** Bakiye başta kontrol edilir ama ayırılmaz; eşzamanlı işlerde son kareler `credit_charge_failed` ile düşebilir. Müşteri ücretlendirilmez ama yapay zekâ maliyeti boşa gider. İlk aşamada kabul edilir; v2 aynı kullanıcı için aynı anda tek iş çalıştırır.
-- **Ücret düştü ama kayıt düştü.** Mevcut fonksiyon krediyi düşüp görseli kaydedemezse görsel yalnızca yanıtta kalır. `start-run-v2` bu durumda görseli yanıttan alıp `v2/` altına kendisi kaydeder; kullanıcı karesini kaybetmez.
+- **Ücret düştü ama kayıt düştü.** Mevcut fonksiyon krediyi düşüp görseli kaydedemezse görsel yalnızca yanıtta kalır. `run-frame-v2` bu durumda görseli yanıttan alıp `v2/` altına kendisi kaydeder; kullanıcı karesini kaybetmez. Yanıt hiç gelmediyse görsel kaybolmuştur; kurtarma krediyi iade eder (K16, durum 2).
+- **Kredi defterinde iş kimliği yok.** `credit_transactions` satırı yalnızca kullanıcı, tutar, araç ve zaman taşıyor. Kare kayda kesin bağlanır (K15); kayıt deftere aynı kullanıcı, `ecom_studio`, aynı tutar ve aynı çağrının zamanıyla eşlenir. Aynı kullanıcı aynı anda MVP'de de üretim yaparsa eşleşme karışabilir; test hesaplarında olmaz.
 - **İade yolu hiç kullanılmamış.** İade şartları sayfası iade vaat ediyor. v2'de iade yalnızca admin kararıyla ve `frame_reviews` üzerinden yapılır.
 - **Tek bakiye.** Prototip "önce paket kredisi harcanır, ek kredi yenilemede kalır" diyor; tek bakiyeyle bu mümkün değil. Ya iki ayrı bakiye gerekir ya da metin değişir.
 - **Filigran tarayıcıda.** Prototip Free indirmelerde filigranı tarayıcıda basıyor, atlatılabilir. Kalıcı çözüm: Free kullanıcıya dosyayı sunucunun filigranlı vermesi (sonraki aşama).
@@ -443,7 +466,7 @@ Canlıdaki müşterinin v2'ye girebilmesi için `accounts` satırı gerekir. Ge�
 
 ## Açık sorular ve karar bekleyenler
 
-28 madde: 6'sı canlı müşteriyi v2'den bağımsız ilgilendiriyor ve önce bakılmalı, 14'ü Elif'in ürün kararı, 8'i backend'in teknik doğrulaması. Karar verilince Durum sütunu değiştirilir ve sonuç ilgili bölüme işlenir.
+30 madde: 6'sı canlı müşteriyi v2'den bağımsız ilgilendiriyor ve önce bakılmalı, 16'sı Elif'in ürün kararı, 8'i backend'in teknik doğrulaması. Karar verilince Durum sütunu değiştirilir ve sonuç ilgili bölüme işlenir.
 
 ### Acil: canlıyı ilgilendiren
 
@@ -474,6 +497,8 @@ Canlıdaki müşterinin v2'ye girebilmesi için `accounts` satırı gerekir. Ge�
 | K12 | Ödeme sağlayıcısı | iyzico · PayTR · Stripe · diğer | Türkiye'de faturalama ve TL için yerel sağlayıcı; karar sizin | Doğrulandıpay TR |
 | K13 | Mevcut müşterinin geçişi | Tarih, paket, bilgilendirme | Beta adresinde birlikte deneme, sonra alan adı değişimi; eski sürüm bir süre geri dönüş için hazır | Doğrulandı |
 | K14 | KVKK metinleri | Aydınlatma metni, izin metinlerinin sürümleri | `consents.text_version` ile sürümlü; metinleri hukuk onaylar | Doğrulandı |
+| K15 | Kare ile kredinin bağlanması | A: poz kimliği alanında karenin kimliği gider, kayıt kareye kesin bağlanır, defter kayda tutar ve zamanla eşlenir; canlıya dokunmaz · B: `credit_transactions`'a yeni sütun, yeni kredi fonksiyonu ve `generate-ecom-v2` kopyası | A. Karar: Elif, 5 Kasım 2026. Ayrıntı: Ghost'tan Kampanyaya eşleme tablosu, Bilinen boşluklar | Karar verildi |
+| K16 | Takılan kare | A: yeniden üretim yok, kurtarma (dört durum) · B: otomatik yeniden üretim (kullanıcının oturum anahtarı saklanmalı) | A, Elif'in üç durumlu ekiyle; 2b alt durumu canlı koddan eklendi. Karar: Elif, 5 Kasım 2026. Ayrıntı: "Takılan kare: kurtarma" | Karar verildi |
 
 ### Teknik doğrulamalar (backend)
 
@@ -641,7 +666,9 @@ v2 arayüzü sahte depo yerine gerçek veriyi okur. Yeni tablo yok.
 
 ### Aşama 3 · Üretim
 
-- `start-run-v2`, `generate-style-transfer-v2` (Model Swap), `generate-video-status-v2`; K3 kararına göre `generate-ghost-v2`.
+**Durum · 5 Kasım 2026.** Devirden sonra başladı (Elif). `v2`'nin `supabase/functions` klasörü `main` ile birebir eşitlendi (`7821aae`): `v2` dalı PR #2–#4'ten önce açıldığı için `generate-ecom` ve `generate-edit` eskiydi. `generate-edit` canlı v25 ile bayt bayt, `generate-ecom` canlı v49 ile açıklamalar dışında aynı. K15 ve K16 kararlaştırıldı. İlk parça: Ghost'tan Kampanyaya, tek kare (tek poz, tek görsel), uçtan uca. Önce veritabanı fonksiyonları (iş açma, kare kapanışı, kurtarma), sonra `start-run-v2` ve `run-frame-v2`; hepsi yerelde, dağıtım ve canlıya uygulama ayrı onayla.
+
+- `start-run-v2`, `run-frame-v2`, `generate-style-transfer-v2` (Model Swap), `generate-video-status-v2`; K3 kararına göre `generate-ghost-v2`. Takılan kare için edge function değil, veritabanı fonksiyonu ve `pg_cron` (K16).
 - Taslaklar `setups`'a; İşlerim ve sonuç sayfası `jobs` / `job_frames`'ten.
 - Kareyi düzenle, tekrar dene, yeniden üret, Beğendim.
 

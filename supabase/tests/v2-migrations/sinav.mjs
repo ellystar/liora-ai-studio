@@ -237,6 +237,163 @@ await db.exec(`delete from public.frame_reviews; delete from public.frame_feedba
 await db.exec(`delete from public.credit_transactions; delete from public.generations; delete from public.profiles where id = '${B}'; delete from auth.users where id = '${B}';`);
 ok("kullanıcı silinince v2 satırları da gider", (await rows(`select 1 from public.accounts where user_id='${B}'`)).length === 0 && (await rows(`select 1 from public.accounts where user_id='${A}'`)).length === 1);
 
+/* ── 8b. Aşama 3: iş açma, kare kapanışı, takılan kare kurtarma (K15, K16) ── */
+const F = "ffffffff-0000-4000-8000-000000000006";
+await db.query("insert into auth.users (id, email) values ($1, 'f@x.io')", [F]);
+await db.query("insert into public.profiles (id, email, credits, role) values ($1, 'f@x.io', 0, 'user')", [F]);
+await db.exec(`select public.add_credits('${F}', 20, 'sınav')`);
+for (const r of ["anon", "authenticated"]) {
+  await as(r, F);
+  await denied(`${r} iş açamaz`, `select public.v2_open_job('${F}', 'campaign', 'x', '{}', array['p1'])`, /permission denied/);
+  await denied(`${r} kare kapatamaz`, `select public.v2_finish_frame('${F}', 'done')`, /permission denied/);
+  await denied(`${r} kurtarma çalıştıramaz`, `select public.v2_recover_frames()`, /permission denied/);
+}
+const lit = (v) => (v === null ? "null" : `'${v}'`);
+const open = async (keys = ["p1"], flow = "campaign", setup = null) => {
+  await as("service_role");
+  return (await rows(`select public.v2_open_job('${F}', '${flow}', 'Kaban', '{}'::jsonb, array[${keys.map(lit).join(",")}]::text[], ${lit(setup)}) r`))[0].r;
+};
+const finish = async (frame, status, credits = 0, path = null, err = null) => {
+  await as("service_role");
+  return (await rows(`select public.v2_finish_frame('${frame}', '${status}', ${credits}, null, ${lit(path)}, ${lit(err)}) r`))[0].r;
+};
+const recover = async () => {
+  await as("service_role");
+  return (await rows("select public.v2_recover_frames() r"))[0].r;
+};
+const job = async (id) => (await rows("select status, planned, done, failed, credits_spent, cover_path, finished_at, expires_at from public.jobs where id=$1", [id]))[0];
+const frame = async (id) => (await rows("select status, credits_charged, generation_image_id, storage_path, error_code, finished_at from public.job_frames where id=$1", [id]))[0];
+const refunds = async () => (await rows("select amount, tool from public.credit_transactions where user_id=$1 and type='refund'", [F]));
+/* simulates live generate-ecom: deduct, then the generations row, then maybe the image */
+const stale = async (id) => { await reset(); await db.exec(`update public.job_frames set created_at = now() - interval '11 minutes' where id = '${id}'`); };
+const gen = async (frameId, credits, status, withImage, user = F) => {
+  await reset();
+  if (credits > 0) await db.exec(`select public.deduct_credits('${user}', ${credits}, 'ecom_studio')`);
+  const g = (await rows(`insert into public.generations (user_id, tool, system, status, credits_charged, image_count, params, created_at)
+    values ($1, 'ecom_studio', 'ghost_to_campaign', $2, $3, $4, jsonb_build_object('poses', jsonb_build_array($5::text), 'quality', '2K'), now() - interval '10 minutes') returning id`,
+    [user, status, credits, withImage ? 1 : 0, frameId]))[0].id;
+  if (!withImage) return { g };
+  const i = (await rows("insert into public.generation_images (generation_id, user_id, tool, storage_path) values ($1, $2, 'ecom_studio', $3) returning id", [g, user, `${user}/${g}/0.png`]))[0].id;
+  return { g, i, path: `${user}/${g}/0.png` };
+};
+
+/* open and finish */
+const j1 = await open();
+await db.exec("reset role;");
+const j1f = j1.frames[0].id;
+let jr = await job(j1.job_id);
+ok("iş açıldı: running, 1 kare", jr.status === "running" && jr.planned === 1 && j1.frames.length === 1, JSON.stringify(jr));
+ok("kare queued, idx 0, poz anahtarı yazıldı", (await frame(j1f)).status === "queued" && j1.frames[0].idx === 0 && j1.frames[0].pose_key === "p1");
+await as("service_role");
+await denied("aynı kullanıcıya ikinci iş açılmaz", `select public.v2_open_job('${F}', 'campaign', 'x', '{}', array['p1'])`, /job_already_running/);
+await denied("başkasının kurulumuyla iş açılmaz", `select public.v2_open_job('${F}', 'campaign', 'x', '{}', array['p1'], '${setupA}')`, /setup_not_found/);
+await denied("karesiz iş açılmaz", `select public.v2_open_job('${F}', 'campaign', 'x', '{}', array[]::text[])`, /no_frames/);
+await denied("geçersiz kare durumu", `select public.v2_finish_frame('${j1f}', 'running')`, /invalid_status/);
+let fr1 = await finish(j1f, "done", 1, `${F}/x/0.png`);
+await db.exec("reset role;");
+jr = await job(j1.job_id);
+ok("kare kapandı, iş done", fr1.applied === true && jr.status === "done" && jr.done === 1 && jr.failed === 0 && jr.credits_spent === 1, JSON.stringify(jr));
+ok("kapak, bitiş ve 7 gün yazıldı", jr.cover_path === `${F}/x/0.png` && jr.finished_at !== null && jr.expires_at !== null);
+fr1 = await finish(j1f, "failed", 5);
+await db.exec("reset role;");
+jr = await job(j1.job_id);
+ok("aynı kare ikinci kez kapanmaz, sayaçlar ve kredi değişmez", fr1.applied === false && jr.done === 1 && jr.failed === 0 && jr.credits_spent === 1 && (await frame(j1f)).status === "done", JSON.stringify(fr1));
+
+/* two frames: the job closes only with the last one */
+const j2 = await open(["p1", "p2"]);
+await finish(j2.frames[0].id, "failed", 0, null, "model_busy");
+await db.exec("reset role;");
+ok("ilk kare kapanınca iş açık kalır", (await job(j2.job_id)).status === "running");
+await finish(j2.frames[1].id, "done", 1, `${F}/y/0.png`);
+await db.exec("reset role;");
+jr = await job(j2.job_id);
+ok("son kare kapanınca iş done (1 geldi, 1 gelmedi)", jr.status === "done" && jr.done === 1 && jr.failed === 1 && jr.credits_spent === 1, JSON.stringify(jr));
+ok("hata kodu kareye yazıldı", (await frame(j2.frames[0].id)).error_code === "model_busy");
+
+/* recovery */
+await as("service_role");
+await denied("kurtarma 10 dakikadan kısa çalışmaz", "select public.v2_recover_frames(interval '5 minutes')", /stale_too_short/);
+
+/* not stale yet, and other flows: left alone */
+const jf = await open();
+let rc = await recover();
+await db.exec("reset role;");
+ok("10 dakika dolmamış kareye dokunulmaz", (await frame(jf.frames[0].id)).status === "queued" && rc.done + rc.refunded + rc.failed + rc.review === 0, JSON.stringify(rc));
+await finish(jf.frames[0].id, "failed");
+const jg = await open(["p1"], "ghost");
+await stale(jg.frames[0].id);
+await recover();
+await db.exec("reset role;");
+ok("ilk sürüm başka akışın karesine dokunmaz", (await frame(jg.frames[0].id)).status === "queued");
+await finish(jg.frames[0].id, "failed");
+
+/* 1: record (charged) and image -> done, no new charge */
+const r1 = await open();
+await stale(r1.frames[0].id);
+const c1before = await credits(F);
+const s1 = await gen(r1.frames[0].id, 1, "success", true);
+rc = await recover();
+await db.exec("reset role;");
+let f1 = await frame(r1.frames[0].id);
+jr = await job(r1.job_id);
+ok("durum 1: kare done, görsel bağlandı", rc.done === 1 && f1.status === "done" && f1.generation_image_id === s1.i && f1.storage_path === s1.path && f1.credits_charged === 1, JSON.stringify({ rc, f1 }));
+ok("durum 1: iş done, harcanan 1, yeni ücret yok", jr.status === "done" && jr.credits_spent === 1 && (await credits(F)) === c1before - 1 && (await refunds()).length === 0);
+
+/* 2: record (charged), no image -> failed, refund once */
+const r2 = await open();
+await stale(r2.frames[0].id);
+const c2before = await credits(F);
+await gen(r2.frames[0].id, 1, "success", false);
+ok("durum 2 öncesi: kredi düştü", (await credits(F)) === c2before - 1);
+rc = await recover();
+await db.exec("reset role;");
+f1 = await frame(r2.frames[0].id);
+jr = await job(r2.job_id);
+ok("durum 2: kare failed (image_lost), kredi iade edildi", rc.refunded === 1 && f1.status === "failed" && f1.error_code === "image_lost" && f1.credits_charged === 0 && (await credits(F)) === c2before, JSON.stringify({ rc, f1, c: await credits(F), c2before }));
+ok("durum 2: iade defterde bir satır, ecom_studio", JSON.stringify(await refunds()) === JSON.stringify([{ amount: 1, tool: "ecom_studio" }]));
+ok("durum 2: iş failed, net harcama 0", jr.status === "failed" && jr.credits_spent === 0 && jr.failed === 1);
+rc = await recover();
+await db.exec("reset role;");
+ok("durum 2: ikinci kurtarma ikinci iade yapmaz", rc.refunded === 0 && (await refunds()).length === 1 && (await credits(F)) === c2before);
+
+/* 2b: record without charge -> failed, no refund */
+const r2b = await open();
+await stale(r2b.frames[0].id);
+const c2bBefore = await credits(F);
+await gen(r2b.frames[0].id, 0, "failed", false);
+rc = await recover();
+await db.exec("reset role;");
+f1 = await frame(r2b.frames[0].id);
+ok("durum 2b: kayıt var, kredi düşmemiş: failed, iade yok", f1.status === "failed" && f1.error_code === "generation_failed" && (await refunds()).length === 1 && (await credits(F)) === c2bBefore, JSON.stringify(f1));
+
+/* 3: no record, but a credit row in the same minutes -> review */
+const r3 = await open();
+await stale(r3.frames[0].id);
+await reset();
+await db.query("insert into public.credit_transactions (user_id, amount, type, tool, description, created_at) values ($1, -1, 'usage', 'ecom_studio', 'tool usage', now() - interval '10 minutes')", [F]);
+rc = await recover();
+await db.exec("reset role;");
+f1 = await frame(r3.frames[0].id);
+const rv = await rows("select status, reasons, note from public.frame_reviews where frame_id=$1", [r3.frames[0].id]);
+ok("durum 3: kayıt yok, kredi satırı var: failed (charge_unclear)", rc.review === 1 && f1.status === "failed" && f1.error_code === "charge_unclear" && f1.credits_charged === 0, JSON.stringify(f1));
+ok("durum 3: iade incelemesine düştü (pending, other, otomatik not)", rv.length === 1 && rv[0].status === "pending" && JSON.stringify(rv[0].reasons) === '["other"]' && rv[0].note.startsWith("Otomatik"), JSON.stringify(rv));
+ok("durum 3: kendiliğinden iade yok", (await refunds()).length === 1);
+
+/* 3: no record, no credit row -> failed, nothing charged; another user's record does not match */
+await reset();
+await db.exec(`delete from public.credit_transactions where user_id = '${F}' and created_at < now() - interval '5 minutes'`);
+await db.exec(`select public.add_credits('${A}', 5, 'sınav')`);
+const r3b = await open();
+await stale(r3b.frames[0].id);
+await gen(r3b.frames[0].id, 1, "success", true, A);
+rc = await recover();
+await db.exec("reset role;");
+f1 = await frame(r3b.frames[0].id);
+ok("durum 3: kayıt ve kredi satırı yok: failed (timeout)", f1.status === "failed" && f1.error_code === "timeout" && (await rows("select 1 from public.frame_reviews where frame_id=$1", [r3b.frames[0].id])).length === 0, JSON.stringify(f1));
+ok("başka kullanıcının kaydı kareye bağlanmaz", f1.generation_image_id === null && (await job(r3b.job_id)).credits_spent === 0);
+ok("açık iş kalmadı", (await rows("select 1 from public.jobs where user_id=$1 and status in ('queued','running')", [F])).length === 0);
+await reset();
+
 /* ── 9. rollback returns to the starting point ── */
 await reset();
 await db.exec("truncate public.profiles cascade; delete from auth.users;");
